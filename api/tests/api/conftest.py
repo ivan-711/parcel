@@ -34,6 +34,7 @@ os.environ.update(
     SECRET_KEY="test-secret-key-that-is-long-enough-for-hs256",
 )
 
+from parcel.adapters.fixtures import FixtureData  # noqa: E402
 from parcel.app import create_app  # noqa: E402
 from parcel.db.session import db  # noqa: E402
 from parcel.settings import get_settings  # noqa: E402
@@ -96,7 +97,12 @@ async def clean() -> AsyncIterator[None]:
 
 
 @pytest.fixture
-async def app(keys: Keys) -> AsyncIterator[FastAPI]:
+def property_data() -> FixtureData:
+    return FixtureData()
+
+
+@pytest.fixture
+async def app(keys: Keys, property_data: FixtureData) -> AsyncIterator[FastAPI]:
     get_settings.cache_clear()
 
     def clerk(request: httpx.Request) -> httpx.Response:
@@ -106,7 +112,7 @@ async def app(keys: Keys) -> AsyncIterator[FastAPI]:
         return httpx.Response(404)
 
     outbound = httpx.AsyncClient(transport=httpx.MockTransport(clerk))
-    application = create_app(http=outbound)
+    application = create_app(http=outbound, property_data=property_data)
     async with LifespanManager(application):
         yield application
     await outbound.aclose()

@@ -12,16 +12,22 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from parcel import logging
 from parcel.adapters.clerk import ClerkVerifier
+from parcel.adapters.fixtures import FixtureData
+from parcel.adapters.property_data import LiveData, PropertyData
 from parcel.db.session import db
 from parcel.errors import Problem
 from parcel.http.problems import problem_handler, validation_handler
-from parcel.http.routes import account, analyze, deals
+from parcel.http.routes import account, analyze, deals, lookup
 from parcel.settings import Settings, get_settings
 
 log = structlog.get_logger()
 
 
-def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    http: httpx.AsyncClient | None = None,
+    property_data: PropertyData | None = None,
+) -> FastAPI:
     settings = settings or get_settings()
     logging.configure(json=settings.log_json)
     if settings.sentry_dsn:
@@ -34,6 +40,7 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
         client = http or httpx.AsyncClient(timeout=httpx.Timeout(10, connect=5))
         app.state.http = client
         app.state.clerk = ClerkVerifier(settings.clerk_issuer, settings.web_origins, client)
+        app.state.property_data = property_data or _property_data(settings, client)
         yield
         if http is None:
             await client.aclose()
@@ -56,7 +63,14 @@ def create_app(settings: Settings | None = None, http: httpx.AsyncClient | None 
     app.middleware("http")(_request_context)
     app.add_exception_handler(Problem, problem_handler)
     app.add_exception_handler(RequestValidationError, validation_handler)
-    for router in (account.health, account.router, deals.router, deals.public, analyze.router):
+    for router in (
+        account.health,
+        account.router,
+        deals.router,
+        deals.public,
+        analyze.router,
+        lookup.router,
+    ):
         app.include_router(router)
     return app
 
@@ -81,3 +95,15 @@ async def _request_context(
             ms=round(elapsed, 1),
         )
     return response
+
+
+def _property_data(settings: Settings, client: httpx.AsyncClient) -> PropertyData:
+    if settings.providers == "fixtures":
+        return FixtureData()
+    return LiveData(
+        client,
+        rentcast_key=settings.rentcast_api_key.get_secret_value(),
+        geoapify_key=settings.geoapify_api_key.get_secret_value(),
+        fred_key=settings.fred_api_key.get_secret_value(),
+        hud_token=settings.hud_api_token.get_secret_value(),
+    )
