@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from parcel import logging
+from parcel.adapters.billing import Billing, StripeBilling
 from parcel.adapters.clerk import ClerkVerifier
 from parcel.adapters.fixtures import FixtureData
 from parcel.adapters.property_data import LiveData, PropertyData
@@ -18,6 +19,7 @@ from parcel.db.session import db
 from parcel.errors import Problem
 from parcel.http.problems import problem_handler, validation_handler
 from parcel.http.routes import account, analyze, deals, lookup
+from parcel.http.routes import billing as billing_routes
 from parcel.settings import Settings, get_settings
 
 log = structlog.get_logger()
@@ -27,6 +29,7 @@ def create_app(
     settings: Settings | None = None,
     http: httpx.AsyncClient | None = None,
     property_data: PropertyData | None = None,
+    billing: Billing | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     logging.configure(json=settings.log_json)
@@ -41,6 +44,7 @@ def create_app(
         app.state.http = client
         app.state.clerk = ClerkVerifier(settings.clerk_issuer, settings.web_origins, client)
         app.state.property_data = property_data or _property_data(settings, client)
+        app.state.billing = billing or _billing(settings)
         yield
         if http is None:
             await client.aclose()
@@ -70,6 +74,8 @@ def create_app(
         deals.public,
         analyze.router,
         lookup.router,
+        billing_routes.router,
+        billing_routes.webhooks,
     ):
         app.include_router(router)
     return app
@@ -107,3 +113,10 @@ def _property_data(settings: Settings, client: httpx.AsyncClient) -> PropertyDat
         fred_key=settings.fred_api_key.get_secret_value(),
         hud_token=settings.hud_api_token.get_secret_value(),
     )
+
+
+def _billing(settings: Settings) -> Billing | None:
+    key = settings.stripe_secret_key.get_secret_value()
+    if not key or not settings.stripe_pro_price_id:
+        return None
+    return StripeBilling(key, settings.stripe_pro_price_id)

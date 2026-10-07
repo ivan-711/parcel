@@ -32,6 +32,8 @@ os.environ.update(
     WEB_ORIGINS=f'["{ORIGIN}"]',
     PROVIDERS="fixtures",
     SECRET_KEY="test-secret-key-that-is-long-enough-for-hs256",
+    STRIPE_WEBHOOK_SECRET="whsec_test_stripe",
+    CLERK_WEBHOOK_SECRET="whsec_dGVzdC1jbGVyay13ZWJob29rLXNlY3JldA==",
 )
 
 from parcel.adapters.fixtures import FixtureData  # noqa: E402
@@ -101,8 +103,29 @@ def property_data() -> FixtureData:
     return FixtureData()
 
 
+class FakeBilling:
+    def __init__(self) -> None:
+        self.checkouts: list[dict[str, object]] = []
+
+    async def checkout_url(
+        self, *, user_id: str, email: str | None, customer_id: str | None, return_to: str
+    ) -> str:
+        self.checkouts.append({"user_id": user_id, "email": email, "customer_id": customer_id})
+        return f"https://checkout.stripe.test/session?back={return_to}"
+
+    async def portal_url(self, *, customer_id: str, return_to: str) -> str:
+        return f"https://billing.stripe.test/{customer_id}?back={return_to}"
+
+
 @pytest.fixture
-async def app(keys: Keys, property_data: FixtureData) -> AsyncIterator[FastAPI]:
+def billing() -> FakeBilling:
+    return FakeBilling()
+
+
+@pytest.fixture
+async def app(
+    keys: Keys, property_data: FixtureData, billing: FakeBilling
+) -> AsyncIterator[FastAPI]:
     get_settings.cache_clear()
 
     def clerk(request: httpx.Request) -> httpx.Response:
@@ -112,7 +135,7 @@ async def app(keys: Keys, property_data: FixtureData) -> AsyncIterator[FastAPI]:
         return httpx.Response(404)
 
     outbound = httpx.AsyncClient(transport=httpx.MockTransport(clerk))
-    application = create_app(http=outbound, property_data=property_data)
+    application = create_app(http=outbound, property_data=property_data, billing=billing)
     async with LifespanManager(application):
         yield application
     await outbound.aclose()
