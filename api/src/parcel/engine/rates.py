@@ -13,7 +13,8 @@ _HIGHEST = 1.0
 def npv(monthly_rate: Vec | float, flows: NDArray[np.float64]) -> Vec:
     t = np.arange(flows.shape[-1])
     r = np.asarray(monthly_rate, dtype=np.float64).reshape(-1, 1)
-    return np.asarray((flows / (1 + r) ** t).sum(axis=-1))
+    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+        return np.asarray((flows / (1 + r) ** t).sum(axis=-1))
 
 
 def monthly_irr(flows: NDArray[np.float64], tol: float = 1e-10) -> Vec:
@@ -32,10 +33,11 @@ def monthly_irr(flows: NDArray[np.float64], tol: float = 1e-10) -> Vec:
     while live.size and steps < 50:
         steps += 1
         f, r = flows[live], rate[live, None]
-        disc = np.exp(-t * np.log1p(r))
-        value = (f * disc).sum(axis=1)
-        slope = -(t * f * disc).sum(axis=1) / (1 + r[:, 0])
-        step = np.divide(value, slope, out=np.zeros_like(value), where=slope != 0)
+        with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+            disc = np.exp(-t * np.log1p(r))
+            value = (f * disc).sum(axis=1)
+            slope = -(t * f * disc).sum(axis=1) / (1 + r[:, 0])
+            step = np.divide(value, slope, out=np.zeros_like(value), where=slope != 0)
         rate[live] = np.clip(r[:, 0] - step, _LOWEST, _HIGHEST)
         live = live[(np.abs(value) > limit[live]) & (step != 0)]
     settled = np.abs(npv(rate, flows)) <= limit
