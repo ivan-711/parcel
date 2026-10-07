@@ -4,7 +4,20 @@ version = "0.1.0"
 description = "Underwriting engine and API for Parcel"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.20.0",
+    "anthropic>=1.11.0",
+    "asyncpg>=0.32.0",
+    "fastapi>=0.142.2",
+    "httpx>=0.28.1",
     "numpy>=2.1",
+    "pydantic-settings>=2.15.0",
+    "pyjwt[crypto]>=2.15.1",
+    "sentry-sdk>=2.71.0",
+    "sqlalchemy[asyncio]>=2.1.4",
+    "stripe>=16.0.0",
+    "structlog>=26.1.0",
+    "svix>=2.7.0",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [dependency-groups]
@@ -15,6 +28,8 @@ dev = [
     "mypy>=1.13",
     "ruff>=0.8",
     "pytest-cov>=6.0",
+    "pytest-asyncio>=1.4.0",
+    "asgi-lifespan>=2.1.0",
 ]
 
 [build-system]
@@ -30,7 +45,7 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PL", "C4", "PT", "RET", "ARG"]
-ignore = ["PLR0913", "PLR2004"]
+ignore = ["PLR0913", "PLR2004", "N818"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["PLR0915"]
@@ -43,7 +58,12 @@ python_version = "3.13"
 testpaths = ["tests"]
 addopts = "-q"
 filterwarnings = ["error"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [tool.coverage.run]
 branch = true
 source = ["src/parcel"]
+concurrency = ["greenlet", "thread"]
+omit = ["src/parcel/db/migrations/*"]
