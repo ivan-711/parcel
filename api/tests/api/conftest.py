@@ -41,6 +41,8 @@ from parcel.app import create_app  # noqa: E402
 from parcel.db.session import db  # noqa: E402
 from parcel.settings import get_settings  # noqa: E402
 
+from ..writer import FakeWriter  # noqa: E402
+
 
 class Keys:
     """Stands in for Clerk: holds signing keys and serves them as a JWKS."""
@@ -123,8 +125,13 @@ def billing() -> FakeBilling:
 
 
 @pytest.fixture
+def writer() -> FakeWriter:
+    return FakeWriter()
+
+
+@pytest.fixture
 async def app(
-    keys: Keys, property_data: FixtureData, billing: FakeBilling
+    keys: Keys, property_data: FixtureData, billing: FakeBilling, writer: FakeWriter
 ) -> AsyncIterator[FastAPI]:
     get_settings.cache_clear()
 
@@ -135,7 +142,9 @@ async def app(
         return httpx.Response(404)
 
     outbound = httpx.AsyncClient(transport=httpx.MockTransport(clerk))
-    application = create_app(http=outbound, property_data=property_data, billing=billing)
+    application = create_app(
+        http=outbound, property_data=property_data, billing=billing, writer=writer
+    )
     async with LifespanManager(application):
         yield application
     await outbound.aclose()

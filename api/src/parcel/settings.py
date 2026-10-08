@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     memo_model: str = "claude-sonnet-5-5"
     memos_per_day_free: int = 3
     memos_per_day_pro: int = 30
+    memo_daily_budget: int = 150
+    """Memos written across all users per day, a ceiling on model spend."""
 
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")

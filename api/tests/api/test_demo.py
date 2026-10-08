@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from parcel.db.models import Deal, User
 from parcel.db.session import db
@@ -55,3 +55,13 @@ async def test_expired_sandboxes_are_cleaned_up(client: httpx.AsyncClient) -> No
         assert removed == 1
         assert await session.scalar(select(func.count()).select_from(User)) == 0
         assert await session.scalar(select(func.count()).select_from(Deal)) == 0
+
+
+async def test_starting_a_demo_clears_out_old_ones(client: httpx.AsyncClient) -> None:
+    await client.post("/v1/demo")
+    async with db.as_system() as session:
+        await session.execute(update(User).values(demo_expires_at=datetime.now(UTC)))
+    await client.post("/v1/demo")
+    async with db.as_system() as session:
+        assert await session.scalar(select(func.count()).select_from(User)) == 1
+        assert await session.scalar(select(func.count()).select_from(Deal)) == len(SAMPLES)

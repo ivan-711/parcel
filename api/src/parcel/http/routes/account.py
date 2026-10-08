@@ -76,6 +76,7 @@ async def start_demo(request: Request) -> DemoSession:
             raise Problem(
                 429, "demo_limit", "That's a lot of demos for one day. Try again tomorrow."
             )
+        await demo.remove_expired(session)
         user = await demo.create_sandbox(session, expires_at)
     return DemoSession(token=demo_token(user.id, expires_at), expires_at=expires_at)
 
