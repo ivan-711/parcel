@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -29,9 +29,6 @@ jobs:
           --health-interval 2s
           --health-timeout 3s
           --health-retries 20
-    defaults:
-      run:
-        working-directory: api
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
@@ -39,10 +36,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: api/uv.lock
       - run: uv sync --locked
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy src tests
-      - run: uv run pytest tests -p no:logging --cov --cov-report=term
+        working-directory: api
+      - run: make lint
+      - run: make pytest
 
   image:
     runs-on: ubuntu-latest

@@ -99,3 +99,12 @@ async def test_demo_tokens_for_missing_users_are_rejected(client: httpx.AsyncCli
     token = demo_token(uuid.uuid4(), datetime.now(UTC) + timedelta(hours=1))
     response = await client.get("/v1/me", headers={"authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+async def test_a_demo_token_cannot_stand_in_for_a_real_account(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    me = (await client.get("/v1/me", headers=login("owner"))).json()
+    token = demo_token(uuid.UUID(me["id"]), datetime.now(UTC) + timedelta(hours=1))
+    response = await client.get("/v1/me", headers={"authorization": f"Bearer {token}"})
+    assert response.status_code == 401

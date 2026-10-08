@@ -68,7 +68,7 @@ async def current_principal(request: Request) -> Principal:
     async with db.as_system() as session:
         if demo_id is not None:
             user = await users.get_active(session, demo_id)
-            if user is None:
+            if user is None or not user.is_demo:
                 raise Problem(401, "demo_expired", "This demo session has ended. Start a new one.")
         else:
             verifier: ClerkVerifier = request.app.state.clerk

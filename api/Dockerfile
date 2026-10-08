@@ -11,8 +11,10 @@ RUN uv sync --locked --no-dev --no-editable
 FROM python:3.13-slim
 RUN useradd --create-home --uid 1000 app
 WORKDIR /app
-COPY --from=build --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+# Owned by root so the server process can read its code but not change it.
+COPY --from=build /app /app
+# Only trust forwarded headers from Railway's edge, which strips any the client sent.
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 FORWARDED_ALLOW_IPS=100.0.0.0/8
 USER app
 EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn parcel.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*' --no-access-log"]
+CMD ["sh", "-c", "exec uvicorn parcel.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --no-access-log"]

@@ -62,6 +62,8 @@ async def portal(request: Request, principal: CurrentPrincipal) -> Redirect:
 async def stripe_webhook(request: Request) -> Response:
     payload = await request.body()
     secret = get_settings().stripe_webhook_secret.get_secret_value()
+    if not secret:
+        raise Problem(503, "webhooks_off", "Stripe webhooks aren't configured.")
     try:
         stripe.WebhookSignature.verify_header(
             payload.decode(), request.headers.get("stripe-signature", ""), secret, tolerance=300
@@ -79,10 +81,11 @@ async def stripe_webhook(request: Request) -> Response:
 @webhooks.post("/clerk")
 async def clerk_webhook(request: Request) -> Response:
     payload = await request.body()
+    secret = get_settings().clerk_webhook_secret.get_secret_value()
+    if not secret:
+        raise Problem(503, "webhooks_off", "Clerk webhooks aren't configured.")
     try:
-        Webhook(get_settings().clerk_webhook_secret.get_secret_value()).verify(
-            payload, dict(request.headers)
-        )
+        Webhook(secret).verify(payload, dict(request.headers))
     except WebhookVerificationError as e:
         raise Problem(400, "bad_signature", "Signature check failed.") from e
     event = json.loads(payload)

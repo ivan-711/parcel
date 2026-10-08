@@ -1,17 +1,19 @@
 from functools import lru_cache
-from typing import Self
+from typing import Literal, Self
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET = "dev-only-secret-change-me-in-every-real-environment"
+DEV_DATABASE = "postgresql+asyncpg://parcel:parcel@localhost:5433/parcel"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    environment: str = "development"
-    database_url: str = "postgresql+asyncpg://parcel:parcel@localhost:5433/parcel"
+    environment: Literal["production", "development", "test"] = "production"
+    """Production unless told otherwise, so a deploy that forgets to say gets the strict checks."""
+    database_url: str = DEV_DATABASE
     web_origins: list[str] = ["http://localhost:5173"]
     secret_key: SecretStr = SecretStr(DEV_SECRET)
     """Signs demo session tokens. Must be set to a long random value outside development."""
@@ -49,11 +51,38 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.environment == "production"
 
+    @field_validator("database_url")
+    @classmethod
+    def _async_driver(cls, url: str) -> str:
+        """Hosts hand out postgres:// URLs. SQLAlchemy needs to be told to use asyncpg."""
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+asyncpg://" + url.removeprefix(prefix)
+        return url
+
     @model_validator(mode="after")
-    def _real_secret_in_production(self) -> Self:
+    def _complete_in_production(self) -> Self:
+        if not self.is_production:
+            return self
         secret = self.secret_key.get_secret_value()
-        if self.is_production and (secret == DEV_SECRET or len(secret) < 32):
-            raise ValueError("SECRET_KEY must be a random value of 32+ characters in production")
+        missing = []
+        if secret == DEV_SECRET or len(secret) < 32:
+            missing.append("SECRET_KEY (a random value of 32+ characters)")
+        if self.database_url == DEV_DATABASE:
+            missing.append("DATABASE_URL")
+        if not self.clerk_issuer.startswith("https://"):
+            missing.append("CLERK_ISSUER")
+        if not self.clerk_webhook_secret.get_secret_value():
+            missing.append("CLERK_WEBHOOK_SECRET")
+        if self.stripe_secret_key.get_secret_value() and not (
+            self.stripe_webhook_secret.get_secret_value() and self.stripe_pro_price_id
+        ):
+            missing.append("STRIPE_WEBHOOK_SECRET and STRIPE_PRO_PRICE_ID")
+        if missing:
+            raise ValueError(
+                "Production needs " + ", ".join(missing) + ". "
+                "Set ENVIRONMENT=development to run locally."
+            )
         return self
 
 
