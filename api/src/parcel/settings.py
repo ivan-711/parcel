@@ -1,7 +1,10 @@
 from functools import lru_cache
+from typing import Self
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_SECRET = "dev-only-secret-change-me-in-every-real-environment"
 
 
 class Settings(BaseSettings):
@@ -10,7 +13,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     database_url: str = "postgresql+asyncpg://parcel:parcel@localhost:5433/parcel"
     web_origins: list[str] = ["http://localhost:5173"]
-    secret_key: SecretStr = SecretStr("dev-only-secret-change-me-in-every-real-environment")
+    secret_key: SecretStr = SecretStr(DEV_SECRET)
     """Signs demo session tokens. Must be set to a long random value outside development."""
 
     clerk_issuer: str = ""
@@ -45,6 +48,13 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    @model_validator(mode="after")
+    def _real_secret_in_production(self) -> Self:
+        secret = self.secret_key.get_secret_value()
+        if self.is_production and (secret == DEV_SECRET or len(secret) < 32):
+            raise ValueError("SECRET_KEY must be a random value of 32+ characters in production")
+        return self
 
 
 @lru_cache

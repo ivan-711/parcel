@@ -67,3 +67,8 @@ branch = true
 source = ["src/parcel"]
 concurrency = ["greenlet", "thread"]
 omit = ["src/parcel/db/migrations/*"]
+
+[tool.coverage.report]
+fail_under = 95
+skip_covered = true
+show_missing = true
