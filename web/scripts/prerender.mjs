@@ -46,7 +46,12 @@ try {
     await page
       .locator('svg[aria-hidden="true"][class*="layer"]')
       .evaluateAll((els) => els.forEach((el) => el.remove()))
-    const html = '<!doctype html>' + (await page.content()).replace(/^<!DOCTYPE html>/i, '')
+    // Preload links the app adds at runtime carry the preview server's origin.
+    const html =
+      '<!doctype html>' +
+      (await page.content())
+        .replace(/^<!DOCTYPE html>/i, '')
+        .replaceAll(`http://127.0.0.1:${PORT}`, '')
     const out = path === '/' ? `${DIR}/index.html` : `${DIR}${path}/index.html`
     await mkdir(out.slice(0, out.lastIndexOf('/')), { recursive: true })
     await writeFile(out, html)
