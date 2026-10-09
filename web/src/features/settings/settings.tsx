@@ -1,0 +1,184 @@
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+
+import { api, unwrap } from '../../lib/api/client'
+import { meQuery } from '../../lib/api/queries'
+import { session } from '../../lib/session'
+import { Button } from '../../ui/button'
+import { Card } from '../../ui/card'
+import styles from './settings.module.css'
+
+interface Default {
+  key: string
+  label: string
+  help: string
+}
+
+/** Rates a new deal starts from, as percentages in the form and decimals on the wire. */
+const DEFAULTS: Default[] = [
+  { key: 'interest_rate', label: 'Loan rate', help: 'Used when no market rate is available' },
+  { key: 'down_payment_rate', label: 'Down payment', help: 'For rentals' },
+  { key: 'closing_cost_rate', label: 'Closing costs', help: 'Share of price' },
+  { key: 'operations.vacancy_rate', label: 'Empty', help: 'Share of the year with no tenant' },
+  { key: 'operations.management_rate', label: 'Management', help: 'Share of rent' },
+  { key: 'operations.maintenance_rate', label: 'Repairs', help: 'Share of rent' },
+  { key: 'operations.capex_rate', label: 'Reserves', help: 'Share of rent' },
+  { key: 'appreciation', label: 'Value growth', help: 'A year' },
+  { key: 'operations.rent_growth', label: 'Rent growth', help: 'A year' },
+]
+
+export function Settings() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { data: me } = useSuspenseQuery(meQuery)
+  const [name, setName] = useState(me.name ?? '')
+  const [defaults, setDefaults] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      DEFAULTS.map((d) => {
+        const v = me.defaults[d.key]
+        return [d.key, typeof v === 'number' ? String(Number((v * 100).toFixed(3))) : '']
+      }),
+    ),
+  )
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const clean: Record<string, number> = {}
+      for (const d of DEFAULTS) {
+        const text = defaults[d.key]?.trim() ?? ''
+        const n = Number(text)
+        if (text && Number.isFinite(n)) clean[d.key] = n / 100
+      }
+      return unwrap(
+        await api.PATCH('/v1/me', { body: { name: name.trim() || null, defaults: clean } }),
+      )
+    },
+    onSuccess: (data) => queryClient.setQueryData(meQuery.queryKey, data),
+  })
+
+  const checkout = useMutation({
+    mutationFn: async () => unwrap(await api.POST('/v1/billing/checkout')),
+    onSuccess: (r) => window.location.assign(r.url),
+  })
+  const portal = useMutation({
+    mutationFn: async () => unwrap(await api.POST('/v1/billing/portal')),
+    onSuccess: (r) => window.location.assign(r.url),
+  })
+
+  const [hoursLeft] = useState(() =>
+    me.demo_expires_at
+      ? Math.max(0, Math.round((new Date(me.demo_expires_at).getTime() - Date.now()) / 3_600_000))
+      : null,
+  )
+
+  return (
+    <div className={styles.wrap}>
+      <h1>Settings</h1>
+      <p className={styles.lead}>
+        {me.is_demo ? 'A demo sandbox. Nothing here is saved past its expiry.' : me.email}
+      </p>
+
+      <section className={styles.section}>
+        <h2>Your name</h2>
+        <div className={styles.list}>
+          <div className={styles.row}>
+            <label htmlFor="name">Shown on shared reports</label>
+            <input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{ width: 220, textAlign: 'left' }}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Starting assumptions</h2>
+        <p>New deals start from these. Leave one blank to use Parcel&rsquo;s usual number.</p>
+        <div className={styles.list}>
+          {DEFAULTS.map((d) => (
+            <div key={d.key} className={styles.row}>
+              <label htmlFor={`d-${d.key}`}>
+                {d.label}
+                <small>{d.help}</small>
+              </label>
+              <input
+                id={`d-${d.key}`}
+                inputMode="decimal"
+                placeholder="%"
+                value={defaults[d.key] ?? ''}
+                onChange={(e) => setDefaults((cur) => ({ ...cur, [d.key]: e.target.value }))}
+              />
+            </div>
+          ))}
+        </div>
+        <div className={styles.actions}>
+          <Button look="primary" onClick={() => save.mutate()} disabled={save.isPending}>
+            Save
+          </Button>
+          <span className={styles.status} aria-live="polite">
+            {save.isSuccess ? 'Saved.' : save.isError ? "Couldn't save." : ''}
+          </span>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Plan</h2>
+        <Card className={styles.plan} padded={false}>
+          {me.is_demo ? (
+            <>
+              <b>Demo</b>
+              <p>
+                Everything is unlocked for{' '}
+                {hoursLeft === null ? 'a day' : `${hoursLeft} more hours`}. Create an account to
+                keep your deals.
+              </p>
+              <div className={styles.actions}>
+                <Button
+                  onClick={() => {
+                    session.endDemo()
+                    void navigate({ to: '/' })
+                  }}
+                >
+                  Leave the demo
+                </Button>
+              </div>
+            </>
+          ) : me.plan === 'pro' ? (
+            <>
+              <b>Pro</b>
+              <p>Ten thousand run what-ifs and more memos a day.</p>
+              <div className={styles.actions}>
+                <Button onClick={() => portal.mutate()} disabled={portal.isPending}>
+                  Manage billing
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <b>Free</b>
+              <p>
+                Pro adds the ten thousand run what-ifs and more memos a day. Billing runs in test
+                mode, so no card is ever charged.
+              </p>
+              <div className={styles.actions}>
+                <Button
+                  look="primary"
+                  onClick={() => checkout.mutate()}
+                  disabled={checkout.isPending}
+                >
+                  Try Pro
+                </Button>
+                {checkout.isError && (
+                  <span className={styles.status}>Billing isn&rsquo;t set up on this server.</span>
+                )}
+              </div>
+            </>
+          )}
+        </Card>
+      </section>
+    </div>
+  )
+}

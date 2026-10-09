@@ -1,3 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/_app/portfolio')({ component: () => <h1>Portfolio</h1> })
+import { Portfolio } from '../../features/portfolio/portfolio'
+import { portfolioQuery } from '../../lib/api/queries'
+
+export const Route = createFileRoute('/_app/portfolio')({
+  loader: ({ context }) => context.queryClient.query({ ...portfolioQuery, staleTime: 'static' }),
+  component: Portfolio,
+})

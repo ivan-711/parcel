@@ -3,8 +3,14 @@ import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 
 import { api, ApiError, unwrap } from '../../lib/api/client'
-import type { Inputs, LookupResult, Provenance, Strategy } from '../../lib/api/queries'
-import type { Field } from '../../lib/fields'
+import {
+  meQuery,
+  type Inputs,
+  type LookupResult,
+  type Provenance,
+  type Strategy,
+} from '../../lib/api/queries'
+import { fieldsFor, type Field } from '../../lib/fields'
 import { money, percent } from '../../lib/format'
 import { getPath, setPath } from '../../lib/paths'
 import { STRATEGIES, blank, infoFor, suggestionKey } from '../../lib/strategies'
@@ -170,6 +176,7 @@ export function NewDeal() {
   const [provenance, setProvenance] = useState<Provenance>({})
   const [name, setName] = useState('')
   const [manual, setManual] = useState(false)
+  const { data: me } = useQuery(meQuery)
 
   const lookup = useMutation({
     mutationFn: async (text: string) =>
@@ -222,6 +229,14 @@ export function NewDeal() {
             label: s.source.label,
             as_of: s.source.as_of ?? null,
           }
+        }
+      }
+      // The user's own starting assumptions, for fields they didn't set here.
+      const known = new Set(fieldsFor(strategy).map((f) => f.path))
+      for (const [key, v] of Object.entries(me?.defaults ?? {})) {
+        if (known.has(key) && typeof v === 'number' && !info.required.some((f) => f.path === key)) {
+          body = setPath(body, key, v)
+          prov[key] = { kind: 'user', label: 'Your usual number', as_of: null }
         }
       }
       const rate = result?.suggestions.interest_rate

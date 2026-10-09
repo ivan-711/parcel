@@ -1,3 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/_app/settings')({ component: () => <h1>Settings</h1> })
+import { Settings } from '../../features/settings/settings'
+import { meQuery } from '../../lib/api/queries'
+
+export const Route = createFileRoute('/_app/settings')({
+  loader: ({ context }) => context.queryClient.query({ ...meQuery, staleTime: 'static' }),
+  component: Settings,
+})

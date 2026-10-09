@@ -1,0 +1,121 @@
+.head h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.head p {
+  color: var(--sub);
+  margin-top: 4px;
+}
+.totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 22px;
+}
+.total {
+  padding: 14px 16px;
+}
+.total b {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.total span {
+  font-size: 13px;
+  color: var(--sub);
+}
+.property {
+  margin-top: 14px;
+}
+.property header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.property h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.property header p {
+  color: var(--sub);
+  font-size: 13px;
+}
+.vs {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--sub);
+}
+.vs b {
+  color: var(--text);
+  font-weight: 500;
+}
+.months {
+  margin-top: 12px;
+  display: grid;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.month {
+  display: grid;
+  grid-template-columns: 90px 110px 110px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--hair);
+}
+.month:first-child {
+  border-top: 0;
+  color: var(--mute);
+  font-size: 12px;
+}
+.month .n {
+  text-align: right;
+}
+.month .n.bad {
+  color: var(--risk);
+}
+.month .n.good {
+  color: var(--accent);
+}
+.entry {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.entry input {
+  width: 92px;
+  border: 1px solid var(--line);
+  background: var(--tile);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 13px;
+  text-align: right;
+}
+.entry button {
+  font-size: 13px;
+  color: var(--accent);
+  padding: 4px 8px;
+}
+.add {
+  font-size: 13px;
+  color: var(--accent);
+}
+.empty {
+  color: var(--sub);
+  margin-top: 24px;
+}
+@media (max-width: 760px) {
+  .totals {
+    grid-template-columns: 1fr;
+  }
+  .month {
+    grid-template-columns: 80px 1fr 1fr;
+  }
+  .month .entry {
+    grid-column: 1 / -1;
+  }
+}

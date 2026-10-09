@@ -1,0 +1,74 @@
+.head h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.head p {
+  color: var(--sub);
+  margin-top: 4px;
+}
+.picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.pick {
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 980px;
+  padding: 6px 12px;
+  background: var(--card);
+  color: var(--sub);
+}
+.pick[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.table {
+  margin-top: 22px;
+  display: grid;
+  overflow-x: auto;
+  font-variant-numeric: tabular-nums;
+}
+.row {
+  display: grid;
+  grid-template-columns: 180px repeat(var(--n), minmax(180px, 1fr));
+  border-top: 1px solid var(--hair);
+}
+.row:first-child {
+  border-top: 0;
+}
+.cell {
+  padding: 12px 14px;
+}
+.cell:first-child {
+  color: var(--sub);
+  font-size: 13px;
+}
+.th {
+  font-weight: 600;
+  font-size: 15px;
+}
+.th small {
+  display: block;
+  color: var(--sub);
+  font-weight: 400;
+  font-size: 12px;
+}
+.big {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.bad {
+  color: var(--risk);
+}
+.best {
+  color: var(--accent);
+}
+.hint {
+  color: var(--sub);
+  margin-top: 24px;
+}

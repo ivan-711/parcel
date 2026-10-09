@@ -1,0 +1,80 @@
+.head h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.head p {
+  color: var(--sub);
+  margin-top: 4px;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.column {
+  background: var(--control);
+  border-radius: var(--r-md);
+  padding: 10px;
+  min-height: 240px;
+  transition: background 120ms var(--ease);
+}
+.column.over {
+  background: var(--accent-soft);
+}
+.column h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sub);
+  padding: 2px 6px 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.card {
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: grab;
+  color: inherit;
+}
+.card:active {
+  cursor: grabbing;
+}
+.card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.card p {
+  font-size: 13px;
+  color: var(--sub);
+  margin-top: 2px;
+}
+.card .line {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 8px;
+}
+.card .line.bad {
+  color: var(--risk);
+}
+.move {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--sub);
+  border: 0;
+  background: transparent;
+  width: 100%;
+}
+.move:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.empty {
+  font-size: 13px;
+  color: var(--mute);
+  padding: 6px;
+}

@@ -1,3 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/_app/pipeline')({ component: () => <h1>Pipeline</h1> })
+import { Pipeline } from '../../features/pipeline/pipeline'
+import { dealsQuery } from '../../lib/api/queries'
+
+export const Route = createFileRoute('/_app/pipeline')({
+  loader: ({ context }) => context.queryClient.query({ ...dealsQuery, staleTime: 'static' }),
+  component: Pipeline,
+})
