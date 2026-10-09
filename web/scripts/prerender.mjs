@@ -6,6 +6,8 @@ import { chromium } from '@playwright/test'
 
 const PAGES = ['/', '/methodology']
 const PORT = 4173
+// `vercel build` writes the site to .vercel/output/static instead of dist.
+const DIR = process.env.PRERENDER_DIR ?? 'dist'
 
 const server = spawn(
   process.execPath,
@@ -17,6 +19,8 @@ const server = spawn(
     '--port',
     String(PORT),
     '--strictPort',
+    '--outDir',
+    DIR,
   ],
   { stdio: ['ignore', 'ignore', 'inherit'] },
 )
@@ -43,7 +47,7 @@ try {
       .locator('svg[aria-hidden="true"][class*="layer"]')
       .evaluateAll((els) => els.forEach((el) => el.remove()))
     const html = '<!doctype html>' + (await page.content()).replace(/^<!DOCTYPE html>/i, '')
-    const out = path === '/' ? 'dist/index.html' : `dist${path}/index.html`
+    const out = path === '/' ? `${DIR}/index.html` : `${DIR}${path}/index.html`
     await mkdir(out.slice(0, out.lastIndexOf('/')), { recursive: true })
     await writeFile(out, html)
     console.log(`prerendered ${path} -> ${out}`)
