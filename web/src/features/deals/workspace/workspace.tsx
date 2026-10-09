@@ -24,6 +24,7 @@ import { Memo } from './memo'
 import { Overview } from './overview'
 import { WhatIf } from './whatif'
 import { Explain, StatTiles } from './stats'
+import { ShareButton } from './share'
 import { VerdictCard } from './verdict'
 import styles from './workspace.module.css'
 
@@ -137,6 +138,7 @@ export function Workspace({ dealId }: { dealId: string }) {
             <LinkButton to="/compare" search={{ ids: [deal.id] }}>
               Compare
             </LinkButton>
+            <ShareButton dealId={deal.id} shared={deal.shared} />
             <Button
               look="primary"
               onClick={() => {

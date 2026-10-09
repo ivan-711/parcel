@@ -1,0 +1,37 @@
+.pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 340px;
+  padding: 14px 16px;
+  z-index: 6;
+  text-align: left;
+}
+.pop p {
+  font-size: 13px;
+  color: var(--sub);
+}
+.link {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.link input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--tile);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+.stop {
+  font-size: 13px;
+  color: var(--risk);
+}

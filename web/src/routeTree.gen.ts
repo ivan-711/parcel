@@ -19,6 +19,7 @@ import { Route as AppCompareRouteImport } from './routes/_app/compare'
 import { Route as AppPipelineRouteImport } from './routes/_app/pipeline'
 import { Route as AppPortfolioRouteImport } from './routes/_app/portfolio'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as RTokenRouteImport } from './routes/r.$token'
 import { Route as AppDealsIndexRouteImport } from './routes/_app/deals.index'
 import { Route as AppDealsDealIdRouteImport } from './routes/_app/deals.$dealId'
 import { Route as AppDealsNewRouteImport } from './routes/_app/deals.new'
@@ -72,6 +73,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const RTokenRoute = RTokenRouteImport.update({
+  id: '/r/$token',
+  path: '/r/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppDealsIndexRoute = AppDealsIndexRouteImport.update({
   id: '/deals/',
   path: '/deals/',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/pipeline': typeof AppPipelineRoute
   '/portfolio': typeof AppPortfolioRoute
   '/settings': typeof AppSettingsRoute
+  '/r/$token': typeof RTokenRoute
   '/deals/$dealId': typeof AppDealsDealIdRoute
   '/deals/new': typeof AppDealsNewRoute
   '/deals/': typeof AppDealsIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/pipeline': typeof AppPipelineRoute
   '/portfolio': typeof AppPortfolioRoute
   '/settings': typeof AppSettingsRoute
+  '/r/$token': typeof RTokenRoute
   '/deals/$dealId': typeof AppDealsDealIdRoute
   '/deals/new': typeof AppDealsNewRoute
   '/deals': typeof AppDealsIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_app/pipeline': typeof AppPipelineRoute
   '/_app/portfolio': typeof AppPortfolioRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/r/$token': typeof RTokenRoute
   '/_app/deals/$dealId': typeof AppDealsDealIdRoute
   '/_app/deals/new': typeof AppDealsNewRoute
   '/_app/deals/': typeof AppDealsIndexRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/portfolio'
     | '/settings'
+    | '/r/$token'
     | '/deals/$dealId'
     | '/deals/new'
     | '/deals/'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/pipeline'
     | '/portfolio'
     | '/settings'
+    | '/r/$token'
     | '/deals/$dealId'
     | '/deals/new'
     | '/deals'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_app/pipeline'
     | '/_app/portfolio'
     | '/_app/settings'
+    | '/r/$token'
     | '/_app/deals/$dealId'
     | '/_app/deals/new'
     | '/_app/deals/'
@@ -185,6 +197,7 @@ export interface RootRouteChildren {
   MethodologyRoute: typeof MethodologyRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  RTokenRoute: typeof RTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/r/$token': {
+      id: '/r/$token'
+      path: '/r/$token'
+      fullPath: '/r/$token'
+      preLoaderRoute: typeof RTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/deals/': {
       id: '/_app/deals/'
       path: '/deals'
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   MethodologyRoute: MethodologyRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  RTokenRoute: RTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
