@@ -11,7 +11,7 @@ interface Row {
   label: string
   /** Figures read large; names, verdicts and flags read at text size. */
   big?: boolean
-  cells: { text: string; bad?: boolean; score?: number }[]
+  cells: { text: string; bad?: boolean; muted?: boolean }[]
 }
 
 function rows(deals: DealDetail[]): Row[] {
@@ -34,7 +34,7 @@ function rows(deals: DealDetail[]): Row[] {
       big: true,
       cells: stats.map((list) => {
         const s = list.find((x) => x.key === key)
-        return s ? { text: s.value, bad: s.bad } : { text: '' }
+        return s ? { text: s.value } : { text: 'Not in this strategy', muted: true }
       }),
     })
   }
@@ -114,7 +114,7 @@ export function Compare({ ids }: { ids: string[] }) {
               {row.cells.map((cell, i) => (
                 <div
                   key={i}
-                  className={`${styles.cell} ${row.big ? styles.big : ''} ${cell.bad ? styles.bad : ''}`}
+                  className={`${styles.cell} ${row.big && !cell.muted ? styles.big : ''} ${cell.bad ? styles.bad : ''} ${cell.muted ? styles.muted : ''}`}
                 >
                   {cell.text}
                 </div>

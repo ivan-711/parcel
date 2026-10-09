@@ -63,7 +63,12 @@ export function StatTiles({
                 <Icon size={12} strokeWidth={2.2} />
               </i>
               {stat.name}
-              <ChevronRight size={12} strokeWidth={2.2} aria-hidden="true" />
+              <ChevronRight
+                size={12}
+                strokeWidth={2.2}
+                aria-hidden="true"
+                className={styles.hint}
+              />
             </div>
             <b>{stat.value}</b>
             <span>{stat.label}</span>

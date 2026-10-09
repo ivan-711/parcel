@@ -1,3 +1,6 @@
+.main {
+  overflow-x: clip;
+}
 .hero {
   text-align: center;
   padding: 96px 16px 0;
@@ -293,8 +296,9 @@
   border-radius: 7px;
   background: var(--tile);
   border: 1px solid var(--line);
-  min-width: 100px;
+  min-width: 0;
   text-align: right;
+  white-space: nowrap;
 }
 .inRow.lit::before {
   content: '';

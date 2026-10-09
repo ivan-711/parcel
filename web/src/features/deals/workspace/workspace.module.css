@@ -146,15 +146,15 @@
   font-weight: 500;
   color: var(--sub);
 }
-.stat .l svg {
+.stat .l .hint {
   color: var(--mute);
   opacity: 0;
   margin-left: auto;
   transition: opacity 120ms var(--ease);
 }
-.stat:hover .l svg,
-.stat:focus-visible .l svg,
-.stat[aria-expanded='true'] .l svg {
+.stat:hover .l .hint,
+.stat:focus-visible .l .hint,
+.stat[aria-expanded='true'] .l .hint {
   opacity: 1;
 }
 .icon {
@@ -198,6 +198,10 @@
 }
 .stat[aria-expanded='true'] {
   background: var(--accent-soft);
+}
+.stat[aria-expanded='true'] span,
+.stat[aria-expanded='true'] .l {
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
 }
 .stat[aria-expanded='true']::after {
   content: '';

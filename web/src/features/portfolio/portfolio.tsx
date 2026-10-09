@@ -132,9 +132,7 @@ function PropertyCard({ property }: { property: Property }) {
             <div key={m.month} className={styles.month}>
               <span>{monthName(m.month)}</span>
               <span className={styles.n}>{moneySigned(m.projected_cash_flow)}</span>
-              <span
-                className={`${styles.n} ${m.actual_cash_flow === null ? '' : m.actual_cash_flow < m.projected_cash_flow ? styles.bad : styles.good}`}
-              >
+              <span className={styles.n}>
                 {m.actual_cash_flow === null ? '' : moneySigned(m.actual_cash_flow)}
               </span>
               {editing === m.month ? (

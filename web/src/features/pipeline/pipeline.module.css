@@ -71,9 +71,6 @@
   margin-top: 8px;
   font-variant-numeric: tabular-nums;
 }
-.card .line.bad {
-  color: var(--risk);
-}
 .move {
   margin-top: 8px;
   font-size: var(--fs-small);

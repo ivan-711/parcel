@@ -11,10 +11,6 @@ import styles from './pipeline.module.css'
 const STAGES: Stage[] = ['lead', 'analyzing', 'offer', 'under_contract', 'owned', 'passed']
 
 function DealCard({ deal, onMove }: { deal: Deal; onMove: (stage: Stage) => void }) {
-  const bad =
-    deal.strategy === 'wholesale' || deal.strategy === 'flip'
-      ? deal.summary.total_profit <= 0
-      : (deal.summary.monthly_cash_flow ?? 0) < 0
   return (
     <Card
       as="article"
@@ -29,9 +25,7 @@ function DealCard({ deal, onMove }: { deal: Deal; onMove: (stage: Stage) => void
       <Link to="/deals/$dealId" params={{ dealId: deal.id }} style={{ color: 'inherit' }}>
         <h3>{deal.name}</h3>
         <p>{STRATEGY_NAMES[deal.strategy]}</p>
-        <p className={`${styles.line} ${bad ? styles.bad : ''}`}>
-          {oneLiner(deal.inputs, deal.summary)}
-        </p>
+        <p className={styles.line}>{oneLiner(deal.inputs, deal.summary)}</p>
       </Link>
       <select
         className={styles.move}

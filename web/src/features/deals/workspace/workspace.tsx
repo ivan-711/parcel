@@ -201,7 +201,6 @@ export function Workspace({ dealId }: { dealId: string }) {
               inputs={inputs}
               provenance={provenance}
               lit={lit}
-              showAll={wide}
               onChange={edit}
             />
           </Card>

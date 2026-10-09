@@ -168,7 +168,7 @@ export function Landing() {
     <>
       <Sea />
       <PublicNav />
-      <main>
+      <main className={styles.main}>
         <section className={styles.hero}>
           <h1 className={styles.h1}>Know if a property makes money.</h1>
           <p className={styles.sub}>

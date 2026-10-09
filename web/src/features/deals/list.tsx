@@ -18,10 +18,6 @@ function where(deal: Deal): string {
 
 function DealCard({ deal }: { deal: Deal }) {
   const s = deal.summary
-  const bad =
-    deal.strategy === 'wholesale' || deal.strategy === 'flip'
-      ? s.total_profit <= 0
-      : (s.monthly_cash_flow ?? 0) < 0
   return (
     <Link to="/deals/$dealId" params={{ dealId: deal.id }} className={styles.deal}>
       <Card as="article" padded={false} className={styles.deal}>
@@ -32,7 +28,7 @@ function DealCard({ deal }: { deal: Deal }) {
           </div>
           <span className={styles.stage}>{STAGE_NAMES[deal.stage]}</span>
         </div>
-        <p className={`${styles.line} ${bad ? styles.bad : ''}`}>{oneLiner(deal.inputs, s)}</p>
+        <p className={styles.line}>{oneLiner(deal.inputs, s)}</p>
         <div className={styles.meta}>
           <span>{STRATEGY_NAMES[deal.strategy]}</span>
           {s.flags > 0 && (

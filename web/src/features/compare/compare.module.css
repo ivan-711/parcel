@@ -75,6 +75,10 @@
 .bad {
   color: var(--risk);
 }
+.muted {
+  color: var(--mute);
+  font-size: var(--fs-small);
+}
 .best {
   color: var(--accent);
 }
