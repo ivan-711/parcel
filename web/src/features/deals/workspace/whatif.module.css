@@ -1,0 +1,156 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.solve {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 15px;
+}
+.select,
+.number {
+  border: 1px solid var(--line);
+  background: var(--tile);
+  border-radius: var(--r-sm);
+  padding: 6px 10px;
+  font-size: 15px;
+}
+.number {
+  width: 92px;
+  text-align: right;
+}
+.result {
+  margin-top: 14px;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.result em {
+  font-style: normal;
+  color: var(--accent);
+}
+.muted {
+  color: var(--sub);
+  font-size: 13px;
+  margin-top: 6px;
+}
+.swings {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.swing {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub);
+}
+.bar {
+  position: relative;
+  height: 18px;
+}
+.bar i {
+  position: absolute;
+  top: 5px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chart-mark);
+}
+.bar i.low {
+  background: var(--accent);
+  opacity: 0.45;
+}
+.bar i.high {
+  background: var(--accent);
+}
+.bar .base {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--text);
+  opacity: 0.4;
+}
+.bar small {
+  position: absolute;
+  top: -1px;
+  font-size: 11px;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.matrix {
+  margin-top: 12px;
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.matrix .c {
+  padding: 7px 4px;
+  text-align: center;
+  border-radius: 6px;
+}
+.matrix .h {
+  color: var(--mute);
+  font-weight: 500;
+}
+.matrix .base {
+  outline: 1px solid var(--accent);
+}
+.mc {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.mc b {
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.mc span {
+  font-size: 12px;
+  color: var(--sub);
+}
+.hist {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 90px;
+  margin-top: 14px;
+}
+.hist i {
+  flex: 1;
+  background: var(--accent);
+  opacity: 0.8;
+  border-radius: 2px 2px 0 0;
+  min-height: 1px;
+}
+.hist i.loss {
+  background: var(--risk);
+}
+.axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--mute);
+  margin-top: 4px;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mc {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

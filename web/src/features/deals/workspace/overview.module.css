@@ -1,0 +1,65 @@
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 12px;
+}
+.panel {
+  padding: 16px 20px;
+}
+.rows {
+  margin-top: 10px;
+  display: grid;
+  gap: 7px;
+}
+.r {
+  display: grid;
+  grid-template-columns: 110px 1fr 64px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--sub);
+}
+.r i {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chart-mark);
+}
+.r b {
+  text-align: right;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.r.on,
+.r.on b {
+  color: var(--text);
+  font-weight: 500;
+}
+.r.on i {
+  background: var(--accent);
+}
+.r.bad b,
+.r.bad {
+  color: var(--risk);
+}
+.timeline {
+  display: flex;
+  gap: 18px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair);
+  font-size: 13px;
+  color: var(--sub);
+  flex-wrap: wrap;
+}
+.timeline b {
+  display: block;
+  color: var(--text);
+  font-weight: 500;
+}
+@media (max-width: 1100px) {
+  .panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

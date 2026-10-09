@@ -1,0 +1,21 @@
+.group {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  background: var(--control);
+  font-size: 13px;
+}
+.item {
+  padding: 5px 14px;
+  border-radius: 8px;
+  color: var(--sub);
+  transition:
+    background 160ms var(--ease),
+    color 160ms var(--ease);
+}
+.item[aria-selected='true'] {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}

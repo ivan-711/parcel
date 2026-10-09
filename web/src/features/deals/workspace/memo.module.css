@@ -1,0 +1,66 @@
+.memo {
+  max-width: 720px;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.top p {
+  color: var(--sub);
+  font-size: 13px;
+  margin-right: auto;
+}
+.body {
+  margin-top: 16px;
+  line-height: 1.55;
+  font-size: 16px;
+}
+.body h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 18px 0 4px;
+}
+.body h3:first-child {
+  margin-top: 0;
+}
+.body p {
+  margin: 0 0 10px;
+}
+.cursor::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+}
+.note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  margin-top: 14px;
+}
+.good {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.warn {
+  background: var(--risk-soft);
+  color: var(--text);
+}
+.empty {
+  color: var(--sub);
+  margin-top: 8px;
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}

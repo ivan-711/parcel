@@ -1,4 +1,4 @@
-.PHONY: db dev lint pytest test fmt check image
+.PHONY: db dev lint pytest test fmt check image web types
 
 db:
 	docker compose up -d --wait db
@@ -23,3 +23,11 @@ check: lint test
 
 image:
 	docker build -t parcel-api api
+
+web:
+	cd web && pnpm dev
+
+# Regenerate the web client's types from the API's OpenAPI schema.
+types:
+	cd api && ENVIRONMENT=test uv run python -m parcel.openapi > ../web/node_modules/.tmp/openapi.json
+	cd web && pnpm exec openapi-typescript node_modules/.tmp/openapi.json --default-non-nullable=false -o src/lib/api/schema.d.ts

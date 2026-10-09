@@ -1,0 +1,60 @@
+.wrap {
+  position: relative;
+  width: 100%;
+}
+.svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.grid {
+  stroke: var(--hair);
+  stroke-width: 1;
+}
+.zero {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.tick {
+  font-size: 11px;
+  fill: var(--mute);
+}
+.line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.area {
+  fill: var(--accent);
+  opacity: 0.1;
+}
+.dot {
+  fill: var(--accent);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--text);
+}
+.hover {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.tip b {
+  font-weight: 600;
+}
