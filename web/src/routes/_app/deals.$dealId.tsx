@@ -6,6 +6,9 @@ import { dealQuery } from '../../lib/api/queries'
 export const Route = createFileRoute('/_app/deals/$dealId')({
   loader: ({ context, params }) =>
     context.queryClient.query({ ...dealQuery(params.dealId), staleTime: 'static' }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: loaderData?.name ?? 'Deal' }, { name: 'robots', content: 'noindex' }],
+  }),
   component: DealPage,
 })
 

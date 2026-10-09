@@ -11,6 +11,7 @@ export const Route = createFileRoute('/_app/deals/')({
   validateSearch: (search: Record<string, unknown>): Search =>
     typeof search.q === 'string' && search.q ? { q: search.q } : {},
   loader: ({ context }) => context.queryClient.query({ ...dealsQuery, staleTime: 'static' }),
+  head: () => ({ meta: [{ title: 'Deals' }, { name: 'robots', content: 'noindex' }] }),
   component: DealsPage,
 })
 

@@ -18,6 +18,7 @@ export const Route = createFileRoute('/_app/compare')({
     return ids.length ? { ids } : {}
   },
   loader: ({ context }) => context.queryClient.query({ ...dealsQuery, staleTime: 'static' }),
+  head: () => ({ meta: [{ title: 'Compare' }, { name: 'robots', content: 'noindex' }] }),
   component: ComparePage,
 })
 

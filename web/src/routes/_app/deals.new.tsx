@@ -2,4 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { NewDeal } from '../../features/deals/new'
 
-export const Route = createFileRoute('/_app/deals/new')({ component: NewDeal })
+export const Route = createFileRoute('/_app/deals/new')({
+  head: () => ({ meta: [{ title: 'New deal' }, { name: 'robots', content: 'noindex' }] }),
+  component: NewDeal,
+})

@@ -5,5 +5,6 @@ import { meQuery } from '../../lib/api/queries'
 
 export const Route = createFileRoute('/_app/settings')({
   loader: ({ context }) => context.queryClient.query({ ...meQuery, staleTime: 'static' }),
+  head: () => ({ meta: [{ title: 'Settings' }, { name: 'robots', content: 'noindex' }] }),
   component: Settings,
 })
