@@ -2,7 +2,7 @@ import { Navigate, Outlet, createFileRoute } from '@tanstack/react-router'
 import { lazy, Suspense, type ReactNode } from 'react'
 
 import { accountsEnabled } from '../features/auth/provider'
-import { AppNav } from '../features/shell/nav'
+import { Sidebar } from '../features/shell/nav'
 import styles from '../features/shell/shell.module.css'
 import { session } from '../lib/session'
 
@@ -23,10 +23,14 @@ function Gate({ children }: { children: ReactNode }) {
 function AppLayout() {
   return (
     <Gate>
-      <AppNav />
-      <main className={styles.page}>
-        <Outlet />
-      </main>
+      <div className={styles.app}>
+        <Sidebar />
+        <main className={styles.main}>
+          <div className={styles.page}>
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </Gate>
   )
 }

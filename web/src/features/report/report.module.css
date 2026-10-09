@@ -10,7 +10,7 @@
   flex-wrap: wrap;
 }
 .top h1 {
-  font-size: 30px;
+  font-size: var(--fs-title);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -20,8 +20,8 @@
 }
 .brand {
   margin-left: auto;
-  font-weight: 700;
-  font-size: 17px;
+  font-weight: 600;
+  font-size: 15px;
   letter-spacing: -0.02em;
 }
 .verdict {
@@ -51,6 +51,7 @@
 .answer em {
   font-style: normal;
   color: var(--accent);
+  font-weight: 600;
 }
 .watch {
   margin-top: 8px;
@@ -155,9 +156,19 @@
     width: 100%;
     padding: 0;
   }
-  body {
-    background: #fff;
-    color: #000;
+  :root {
+    color-scheme: light;
+    --bg: #fff;
+    --card: #fff;
+    --card2: #fff;
+    --text: #000;
+    --sub: #444;
+    --mute: #666;
+    --line: #ddd;
+    --hair: #e5e5e5;
+    --shadow: none;
+    --glow: none;
+    --accent: #0a4fd0;
   }
 }
 @media (max-width: 720px) {

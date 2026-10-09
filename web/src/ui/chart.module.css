@@ -12,36 +12,35 @@
   stroke-width: 1;
 }
 .zero {
-  stroke: var(--line);
+  stroke: var(--line2);
   stroke-width: 1;
 }
 .tick {
-  font-size: var(--fs-tick);
+  font-size: 11px;
   fill: var(--mute);
 }
 .line {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 .area {
-  fill: var(--accent);
-  opacity: 0.1;
+  fill: url(#money-fill);
 }
 .dot {
   fill: var(--accent);
   stroke: var(--card);
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
 .label {
-  font-size: var(--fs-secondary);
+  font-size: 12px;
   font-weight: 600;
   fill: var(--text);
 }
 .hover {
-  stroke: var(--line);
+  stroke: var(--line2);
   stroke-width: 1;
 }
 .tip {
@@ -51,8 +50,8 @@
   background: var(--text);
   color: var(--bg);
   font-size: 12px;
-  padding: 5px 9px;
-  border-radius: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
   white-space: nowrap;
   pointer-events: none;
 }

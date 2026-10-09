@@ -43,7 +43,7 @@ export function MoneyLine({
 }) {
   const [ref, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
-  const pad = { l: 52, r: 16, t: 28, b: 28 }
+  const pad = { l: 48, r: 12, t: 24, b: 26 }
   const first = points[0]
   const last = points[points.length - 1]
   if (!first || !last) return null
@@ -93,6 +93,12 @@ export function MoneyLine({
         onPointerMove={onMove}
         onPointerLeave={() => setHover(null)}
       >
+        <defs>
+          <linearGradient id="money-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.18" />
+            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
         {ticks.map((t) => (
           <g key={t}>
             <line
@@ -130,10 +136,10 @@ export function MoneyLine({
           />
         )}
         {[first, last].map((p) => (
-          <circle key={p.x} className={styles.dot} cx={x(p.x)} cy={y(p.value)} r="4" />
+          <circle key={p.x} className={styles.dot} cx={x(p.x)} cy={y(p.value)} r="3.5" />
         ))}
         {hovered && hovered !== first && hovered !== last && (
-          <circle className={styles.dot} cx={x(hovered.x)} cy={y(hovered.value)} r="4" />
+          <circle className={styles.dot} cx={x(hovered.x)} cy={y(hovered.value)} r="3.5" />
         )}
         <text className={styles.label} x={x(first.x) + 10} y={y(first.value) + 16}>
           {startLabel ?? moneySigned(first.value)}

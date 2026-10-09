@@ -1,33 +1,42 @@
 .head h1 {
-  font-size: var(--fs-page-title);
+  font-size: var(--fs-title);
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 .head p {
   color: var(--sub);
-  margin-top: 4px;
+  font-size: var(--fs-ui);
+  margin-top: 2px;
 }
 .picker {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: var(--sp-5);
+  margin-top: 20px;
 }
 .pick {
-  font-size: var(--fs-secondary);
-  border: 1px solid var(--line);
-  border-radius: 980px;
-  padding: 6px 12px;
-  background: var(--card);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: var(--tile);
   color: var(--sub);
+  transition:
+    background 120ms var(--ease),
+    color 120ms var(--ease),
+    border-color 120ms var(--ease);
+}
+.pick:hover {
+  color: var(--text);
 }
 .pick[aria-pressed='true'] {
-  border-color: var(--accent);
+  border-color: var(--accent-line);
   color: var(--accent);
   background: var(--accent-soft);
 }
 .table {
-  margin-top: var(--sp-5);
+  margin-top: 20px;
   display: grid;
   overflow-x: auto;
   font-variant-numeric: tabular-nums;
@@ -35,17 +44,18 @@
 .row {
   display: grid;
   grid-template-columns: 180px repeat(var(--n), minmax(180px, 1fr));
-  border-top: 1px solid var(--hair);
+  border-top: 1px solid var(--line);
 }
 .row:first-child {
   border-top: 0;
 }
 .cell {
   padding: 14px 16px;
+  font-size: var(--fs-ui);
 }
 .cell:first-child {
-  color: var(--sub);
-  font-size: var(--fs-secondary);
+  color: var(--mute);
+  font-size: var(--fs-small);
 }
 .th {
   font-weight: 600;
@@ -53,13 +63,13 @@
 }
 .th small {
   display: block;
-  color: var(--sub);
+  color: var(--mute);
   font-weight: 400;
-  font-size: 12px;
+  font-size: var(--fs-small);
 }
 .big {
-  font-size: var(--fs-answer);
-  font-weight: 500;
+  font-size: var(--fs-figure);
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 .bad {
@@ -70,6 +80,6 @@
 }
 .hint {
   color: var(--sub);
-  margin-top: var(--sp-4);
-  font-size: var(--fs-secondary);
+  margin-top: 16px;
+  font-size: var(--fs-ui);
 }

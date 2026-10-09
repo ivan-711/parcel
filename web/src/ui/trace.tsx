@@ -26,7 +26,7 @@ function marginRoute(
   const y = (v: number) => v - box.top
   const g = gutterX
   const fy = y(from.top + from.height * 0.55)
-  const gapY = y(to.top) - 16 + lane * 5
+  const gapY = y(to.top) - 16 + lane * 4
   const tx = x(to.left) + 40
   const ty = y(to.top) - 1
   const r = 8
@@ -61,7 +61,7 @@ function marginRoute(
 function route(from: DOMRect, to: DOMRect, gutterX: number, lane: number, box: DOMRect): Line {
   const x = (v: number) => v - box.left
   const y = (v: number) => v - box.top
-  const g = gutterX + lane * 5
+  const g = gutterX + lane * 0
   const fy = y(from.top + from.height / 2)
   const ty = y(to.top + to.height / 2)
   const dir = Math.sign(ty - fy) || 1
@@ -84,8 +84,8 @@ function route(from: DOMRect, to: DOMRect, gutterX: number, lane: number, box: D
  * Thin accent lines from one element to others, drawn in an overlay.
  *
  * Elements are found by id inside `container`. Lines leave the right edge of
- * `from`, travel down a shared gutter and enter the left edge of `to`, so they
- * cross whitespace, never text. Re-measured on resize.
+ * `from`, share one trunk down the gutter and branch into the left edge of each
+ * `to`, so they cross whitespace, never text. Re-measured on resize.
  */
 export function Trace({
   container,
@@ -112,7 +112,7 @@ export function Trace({
         typeof gutter === 'number'
           ? gutter
           : anchor
-            ? anchor.getBoundingClientRect().left - box.left - 24
+            ? anchor.getBoundingClientRect().left - box.left - 10
             : 0
       const next: Line[] = []
       links.forEach((link, i) => {

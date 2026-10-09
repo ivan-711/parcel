@@ -1,14 +1,17 @@
-import { Card } from '../../../ui/card'
+import type { ReactNode } from 'react'
+
 import { Check, Warn } from '../../../ui/check'
 import type { Verdict } from '../../../lib/words'
 import styles from './workspace.module.css'
 
-export function VerdictCard({ verdict }: { verdict: Verdict }) {
+/** The status band at the top of the answer card: pill, sentence, watch line. */
+export function VerdictBand({ verdict, children }: { verdict: Verdict; children?: ReactNode }) {
+  const tone = verdict.answer !== 'yes' ? styles[verdict.answer] : ''
   return (
-    <Card className={styles.verdict} padded={false} aria-live="polite">
-      <div className={`${styles.ok} ${verdict.answer !== 'yes' ? styles[verdict.answer] : ''}`}>
+    <div className={`${styles.band} ${tone}`} aria-live="polite">
+      <span className={`${styles.status} ${tone}`}>
         {verdict.answer === 'yes' ? <Check /> : <Warn />} {verdict.headline}
-      </div>
+      </span>
       <p className={styles.answer}>
         {verdict.parts.map((part, i) =>
           part.lit ? (
@@ -22,9 +25,13 @@ export function VerdictCard({ verdict }: { verdict: Verdict }) {
       </p>
       {verdict.watch && (
         <p className={styles.watch}>
-          <b>Watch out:</b> {verdict.watch}
+          <Warn />
+          <span>
+            <b>Watch out.</b> {verdict.watch.charAt(0).toUpperCase() + verdict.watch.slice(1)}
+          </span>
         </p>
       )}
-    </Card>
+      {children}
+    </div>
   )
 }

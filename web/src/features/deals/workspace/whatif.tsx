@@ -244,7 +244,7 @@ function Grid({ inputs }: { inputs: HoldingInputs }) {
                     key={c}
                     className={`${styles.c} ${i === mid && j === midCol ? styles.base : ''}`}
                     style={{
-                      background: `color-mix(in srgb, var(--accent) ${Math.round(6 + tone(v) * 34)}%, var(--card))`,
+                      background: `color-mix(in srgb, var(--accent) ${Math.round(5 + tone(v) * 40)}%, var(--card))`,
                     }}
                   >
                     {v === null ? '' : percent(v, 0)}

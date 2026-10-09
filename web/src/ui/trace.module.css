@@ -8,14 +8,13 @@
 .path {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 1.3;
+  stroke-width: 1.2;
   stroke-linejoin: round;
   stroke-linecap: round;
-  opacity: 0.8;
-  filter: drop-shadow(var(--glow));
+  opacity: 0.9;
   stroke-dasharray: var(--length);
   stroke-dashoffset: var(--length);
-  animation: draw 420ms var(--ease) forwards;
+  animation: draw 360ms var(--ease) forwards;
 }
 .dot {
   fill: var(--accent);

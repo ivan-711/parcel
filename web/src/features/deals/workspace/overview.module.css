@@ -1,30 +1,29 @@
 .panels {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-4);
+  gap: 16px;
 }
 .panel {
-  padding: var(--card-pad);
+  padding: 20px 24px 18px;
 }
 .rows {
-  margin-top: var(--sp-4);
+  margin-top: 14px;
   display: grid;
-  gap: 10px;
+  gap: 9px;
 }
 .r {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 90px;
+  grid-template-columns: 140px minmax(0, 1fr) 76px;
   align-items: center;
-  gap: 14px;
-  font-size: var(--fs-body);
+  gap: 12px;
+  font-size: var(--fs-ui);
   color: var(--sub);
 }
 .r i {
   display: block;
-  height: 10px;
-  border-radius: 5px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--chart-mark);
-  transition: width 300ms var(--ease);
 }
 .r b {
   text-align: right;
@@ -39,7 +38,7 @@
 }
 .r.on i {
   background: var(--accent);
-  box-shadow: var(--glow);
+  box-shadow: var(--glow-sm);
 }
 .r.bad b,
 .r.bad {
@@ -50,27 +49,23 @@
 }
 .timeline {
   display: flex;
-  gap: var(--sp-5);
-  margin-top: var(--sp-4);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--hair);
-  font-size: var(--fs-secondary);
-  color: var(--sub);
+  gap: 26px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-small);
+  color: var(--mute);
   flex-wrap: wrap;
 }
 .timeline b {
   display: block;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 600;
   font-size: var(--fs-body);
 }
 @media (max-width: 720px) {
   .r {
-    grid-template-columns: 110px minmax(0, 1fr) 72px;
+    grid-template-columns: 110px minmax(0, 1fr) 70px;
     gap: 10px;
-    font-size: var(--fs-secondary);
-  }
-  .r i {
-    height: 8px;
   }
 }

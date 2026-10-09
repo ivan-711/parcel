@@ -17,6 +17,7 @@ import { statsFor } from '../../../lib/stats'
 import { STAGE_NAMES, STRATEGY_NAMES, verdict } from '../../../lib/words'
 import { Button, LinkButton } from '../../../ui/button'
 import { Chevron } from '../../../ui/check'
+import { Card } from '../../../ui/card'
 import { useMedia } from '../../../lib/use-media'
 import { Segmented } from '../../../ui/segmented'
 import { Trace } from '../../../ui/trace'
@@ -27,7 +28,7 @@ import { Overview } from './overview'
 import { WhatIf } from './whatif'
 import { Explain, StatTiles } from './stats'
 import { ShareButton } from './share'
-import { VerdictCard } from './verdict'
+import { VerdictBand } from './verdict'
 import styles from './workspace.module.css'
 
 type Tab = 'overview' | 'ledger' | 'whatif' | 'memo'
@@ -122,78 +123,91 @@ export function Workspace({ dealId }: { dealId: string }) {
   const tabs = inputs.strategy === 'wholesale' ? TABS.filter((t) => t.value !== 'whatif') : TABS
 
   return (
-    <div className={styles.layout} ref={layoutRef}>
-      <div>
-        <Link to="/deals" className={styles.crumb}>
-          <Chevron direction="left" /> Deals
-        </Link>
-        <header className={styles.title}>
-          <div>
-            <h1>{deal.name}</h1>
-            <p>
-              {STRATEGY_NAMES[deal.strategy]} · {STAGE_NAMES[deal.stage]}
-              {address ? ` · ${address}` : ''}
-            </p>
-          </div>
-          <div className={styles.actions}>
-            <LinkButton to="/compare" search={{ ids: [deal.id] }}>
-              Compare
-            </LinkButton>
-            <ShareButton dealId={deal.id} shared={deal.shared} />
-            <Button
-              look="primary"
-              onClick={() => {
-                setTab('memo')
-                setMemoRequest((n) => n + 1)
-              }}
-            >
-              Write the memo
-            </Button>
-          </div>
-        </header>
-
-        <VerdictCard verdict={words} />
-        <StatTiles stats={stats} picked={picked} onPick={setPicked} />
-        {stat && <Explain stat={stat} labels={labels} onJump={jump} />}
-
-        {!wide && (
-          <a href="#inspector" className={styles.toInspector}>
-            Your assumptions <Chevron />
-          </a>
-        )}
-        <div className={styles.tabs}>
-          <Segmented options={tabs} value={tab} onChange={setTab} label="Deal views" />
-        </div>
-        <div className={styles.panel} role="tabpanel">
-          {tab === 'overview' && <Overview inputs={inputs} analysis={hold} />}
-          {tab === 'ledger' && <Ledger analysis={hold} />}
-          {tab === 'whatif' && inputs.strategy !== 'wholesale' && <WhatIf inputs={inputs} />}
-          {tab === 'memo' && <Memo dealId={dealId} request={memoRequest} />}
-        </div>
+    <>
+      <div className={styles.crumb}>
+        <Link to="/deals">Deals</Link>
+        <span>/</span>
+        <b>{deal.name}</b>
       </div>
+      <header className={styles.title}>
+        <h1>{deal.name}</h1>
+        <span className={styles.chip}>{STRATEGY_NAMES[deal.strategy]}</span>
+        <span className={styles.chip}>{STAGE_NAMES[deal.stage]}</span>
+        {deal.address?.line1 && (
+          <span className={styles.addr}>
+            {[deal.address.line1, address].filter(Boolean).join(', ')}
+          </span>
+        )}
+        <div className={styles.actions}>
+          <LinkButton to="/compare" search={{ ids: [deal.id] }}>
+            Compare
+          </LinkButton>
+          <ShareButton dealId={deal.id} shared={deal.shared} />
+          <Button
+            look="primary"
+            onClick={() => {
+              setTab('memo')
+              setMemoRequest((n) => n + 1)
+            }}
+          >
+            Write memo
+          </Button>
+        </div>
+      </header>
 
-      <aside className={styles.side} id="inspector">
-        <h2>Your assumptions</h2>
-        <p>Change any of these and the answer updates.</p>
-        <Inspector
-          strategy={inputs.strategy}
-          inputs={inputs}
-          provenance={provenance}
-          lit={lit}
-          showAll={wide}
-          onChange={edit}
-        />
-        <p className={styles.saving} aria-live="polite">
-          {save.isPending
-            ? 'Saving'
-            : save.isError
-              ? "Couldn't save your change."
-              : dirty && live.isFetching
-                ? 'Updating'
-                : ''}
-        </p>
-      </aside>
-      {wide && stat && <Trace container={layoutRef} links={links} gutter="inspector" />}
-    </div>
+      <div className={styles.layout} ref={layoutRef}>
+        <div>
+          <Card className={styles.verdict} padded={false}>
+            <VerdictBand verdict={words} />
+            <StatTiles stats={stats} picked={picked} onPick={setPicked} />
+            {stat && <Explain stat={stat} labels={labels} onJump={jump} />}
+          </Card>
+
+          {!wide && (
+            <a href="#inspector" className={styles.toInspector}>
+              Your assumptions <Chevron />
+            </a>
+          )}
+          <div className={styles.tabs}>
+            <Segmented options={tabs} value={tab} onChange={setTab} label="Deal views" />
+          </div>
+          <div className={styles.panel} role="tabpanel">
+            {tab === 'overview' && <Overview inputs={inputs} analysis={hold} />}
+            {tab === 'ledger' && <Ledger analysis={hold} />}
+            {tab === 'whatif' && inputs.strategy !== 'wholesale' && <WhatIf inputs={inputs} />}
+            {tab === 'memo' && <Memo dealId={dealId} request={memoRequest} />}
+          </div>
+        </div>
+
+        <aside className={styles.side} id="inspector">
+          <Card padded={false}>
+            <div className={styles.sideHead}>
+              <h2>Assumptions</h2>
+              <span
+                className={`${styles.saving} ${save.isError ? styles.failed : save.isPending || (dirty && live.isFetching) ? styles.busy : ''}`}
+                aria-live="polite"
+              >
+                {save.isPending
+                  ? 'Saving'
+                  : save.isError
+                    ? "Couldn't save"
+                    : dirty && live.isFetching
+                      ? 'Updating'
+                      : 'Saved'}
+              </span>
+            </div>
+            <Inspector
+              strategy={inputs.strategy}
+              inputs={inputs}
+              provenance={provenance}
+              lit={lit}
+              showAll={wide}
+              onChange={edit}
+            />
+          </Card>
+        </aside>
+        {wide && stat && <Trace container={layoutRef} links={links} gutter="inspector" />}
+      </div>
+    </>
   )
 }

@@ -1,44 +1,59 @@
+/* Dark is the default; light is a choice saved on the html element. */
 :root {
-  color-scheme: light dark;
-  --bg: #f5f5f7;
-  --card: #ffffff;
-  --tile: #f5f7fa;
-  --line: rgba(0, 0, 0, 0.08);
-  --hair: rgba(0, 0, 0, 0.06);
-  --text: #1d1d1f;
-  --sub: #5e6470;
-  --mute: #616773;
-  --accent: #0062d6;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(0, 98, 214, 0.1);
-  --risk: #c4314b;
-  --risk-soft: rgba(196, 49, 75, 0.1);
-  --caution: #9a5b00;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.08);
-  --glow: none;
-  --chart-mark: #93accf;
-  --nav: rgba(255, 255, 255, 0.72);
-  --control: rgba(0, 0, 0, 0.05);
-  --font:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 20px;
-  --r-xl: 28px;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
-  --nums: 'tnum';
-
-  /* Type and spacing step up once at desk width; phones keep these. */
-  --fs-caption: 12px;
-  --fs-secondary: 13px;
-  --fs-body: 15px;
-  --fs-title: 17px;
-  --fs-card-title: 15px;
+  color-scheme: dark;
+  --bg: #0b0c0f;
+  --rail: #0e0f13;
+  --card: #141519;
+  --card2: #17181d;
+  --well: rgba(255, 255, 255, 0.02);
+  --tile: rgba(255, 255, 255, 0.04);
+  --tile2: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.07);
+  --line2: rgba(255, 255, 255, 0.11);
+  --hair: rgba(255, 255, 255, 0.06);
+  --text: #ededf0;
+  --sub: #a0a4ad;
+  --mute: #878c97;
+  --accent: #7c9cff;
+  --accent-2: #5b7cff;
+  --accent-ink: #0b0c0f;
+  --accent-soft: rgba(124, 156, 255, 0.14);
+  --accent-line: rgba(124, 156, 255, 0.3);
+  --glow: 0 0 24px rgba(124, 156, 255, 0.35);
+  --glow-sm: 0 0 8px rgba(124, 156, 255, 0.6);
+  --good: #35d07f;
+  --good-soft: rgba(53, 208, 127, 0.14);
+  --good-line: rgba(53, 208, 127, 0.28);
+  --caution: #f5b74f;
+  --caution-soft: rgba(245, 183, 79, 0.14);
+  --caution-line: rgba(245, 183, 79, 0.3);
+  --risk: #ff6b6b;
+  --risk-soft: rgba(255, 107, 107, 0.14);
+  --risk-line: rgba(255, 107, 107, 0.3);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.55);
+  --primary-bg: linear-gradient(180deg, #86a3ff, #5b7cff);
+  --primary-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 18px rgba(91, 124, 255, 0.3);
+  --atmosphere: radial-gradient(900px 520px at 30% -10%, rgba(124, 156, 255, 0.1), transparent 60%);
+  --chart-mark: rgba(255, 255, 255, 0.1);
+  --font: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --fs-caption: 11.5px;
+  --fs-small: 12px;
+  --fs-ui: 13px;
+  --fs-body: 14px;
+  --fs-lead: 15px;
+  --fs-title: 22px;
+  --fs-answer: 25px;
   --fs-figure: 24px;
-  --fs-answer: 22px;
-  --fs-page-title: 28px;
-  --fs-tick: 11px;
+  --fs-display: 48px;
+  --rail-w: 232px;
+  --content-w: 1120px;
+  --panel-w: 316px;
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -48,53 +63,51 @@
   --sp-7: 48px;
   --sp-8: 64px;
   --sp-9: 96px;
-  --card-pad: 18px 22px;
-  --verdict-pad: 22px 26px;
-  --row-pad: 8px 14px 8px 27px;
-  --inspector-w: 376px;
-  --gutter: 40px;
+  --fs-page-title: var(--fs-title);
+  --fs-secondary: var(--fs-ui);
+  --fs-card-title: var(--fs-body);
+  --fs-tick: 11px;
+  --card-pad: 20px 24px;
+  --verdict-pad: 22px 24px;
 }
 
-@media (min-width: 1101px) {
-  :root {
-    --fs-caption: 13px;
-    --fs-secondary: 14px;
-    --fs-body: 16px;
-    --fs-title: 18px;
-    --fs-card-title: 17px;
-    --fs-figure: 30px;
-    --fs-answer: 30px;
-    --fs-page-title: 28px;
-    --fs-tick: 12px;
-    --card-pad: 22px 26px;
-    --verdict-pad: 28px 32px;
-    --row-pad: 11px 16px 11px 30px;
-    --inspector-w: 400px;
-    --gutter: 44px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #05080f;
-    --card: #0b111c;
-    --tile: #101826;
-    --line: rgba(255, 255, 255, 0.09);
-    --hair: rgba(255, 255, 255, 0.07);
-    --text: #f5f5f7;
-    --sub: #98a2b3;
-    --mute: #8591a3;
-    --accent: #8af4ff;
-    --accent-ink: #04121a;
-    --accent-soft: rgba(138, 244, 255, 0.12);
-    --risk: #ff6b86;
-    --risk-soft: rgba(255, 107, 134, 0.12);
-    --caution: #f0b35a;
-    --shadow: none;
-    --shadow-lg: none;
-    --glow: 0 0 20px rgba(138, 244, 255, 0.5);
-    --chart-mark: #2f4a73;
-    --nav: rgba(10, 14, 22, 0.6);
-    --control: rgba(255, 255, 255, 0.08);
-  }
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f6fa;
+  --rail: rgba(255, 255, 255, 0.55);
+  --card: #ffffff;
+  --card2: #ffffff;
+  --well: #f6f7fa;
+  --tile: #f3f5f8;
+  --tile2: #e9ecf1;
+  --line: rgba(0, 0, 0, 0.06);
+  --line2: rgba(0, 0, 0, 0.1);
+  --hair: rgba(0, 0, 0, 0.06);
+  --text: #1c1c1e;
+  --sub: #5c5c61;
+  --mute: #6e6e73;
+  --accent: #0a6cff;
+  --accent-2: #0a56e6;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8f0ff;
+  --accent-line: rgba(10, 108, 255, 0.35);
+  --glow: none;
+  --glow-sm: none;
+  --good: #1f9a52;
+  --good-soft: #e5f6ec;
+  --good-line: rgba(31, 154, 82, 0.3);
+  --caution: #c77800;
+  --caution-soft: #fff4e0;
+  --caution-line: rgba(199, 120, 0, 0.3);
+  --risk: #d93a3a;
+  --risk-soft: #fdeaea;
+  --risk-line: rgba(217, 58, 58, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px rgba(20, 30, 50, 0.06);
+  --shadow-pop: 0 12px 40px rgba(20, 30, 50, 0.16);
+  --primary-bg: linear-gradient(180deg, #2a7fff, #0a56e6);
+  --primary-shadow: 0 1px 2px rgba(10, 108, 255, 0.3);
+  --atmosphere:
+    radial-gradient(900px 500px at 15% -10%, rgba(10, 108, 255, 0.1), transparent 60%),
+    radial-gradient(700px 400px at 95% 10%, rgba(90, 200, 250, 0.1), transparent 60%);
+  --chart-mark: #dfe4ec;
 }

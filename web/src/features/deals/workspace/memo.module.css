@@ -1,5 +1,5 @@
 .memo {
-  padding: var(--card-pad);
+  padding: 20px 24px 22px;
 }
 .top {
   display: flex;
@@ -9,18 +9,18 @@
 }
 .top p {
   color: var(--sub);
-  font-size: var(--fs-secondary);
+  font-size: var(--fs-ui);
   margin-right: auto;
   max-width: 60ch;
 }
 .body {
-  margin-top: var(--sp-4);
-  line-height: 1.55;
-  font-size: var(--fs-body);
+  margin-top: 18px;
+  line-height: 1.6;
+  font-size: var(--fs-lead);
   max-width: 68ch;
 }
 .body h3 {
-  font-size: var(--fs-card-title);
+  font-size: var(--fs-body);
   font-weight: 600;
   margin: 22px 0 6px;
 }
@@ -44,31 +44,43 @@
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  font-size: var(--fs-secondary);
+  font-size: var(--fs-ui);
   padding: 10px 12px;
-  border-radius: var(--r-sm);
-  margin-top: var(--sp-4);
+  border-radius: var(--r-md);
+  margin-top: 16px;
   max-width: 68ch;
+  border: 1px solid transparent;
 }
 .good {
-  background: var(--accent-soft);
+  background: var(--good-soft);
+  border-color: var(--good-line);
   color: var(--text);
+}
+.good svg {
+  color: var(--good);
+  flex: none;
+  margin-top: 3px;
 }
 .warn {
   background: var(--risk-soft);
+  border-color: var(--risk-line);
   color: var(--text);
+}
+.warn svg {
+  color: var(--risk);
+  flex: none;
+  margin-top: 3px;
 }
 .empty {
   color: var(--sub);
-  margin-top: var(--sp-2);
+  margin-top: 8px;
 }
-/* What the memo will hold, shown as its outline until it is written. */
 .outline {
-  margin: var(--sp-4) 0 0;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 10px;
+  gap: 0;
   max-width: 68ch;
 }
 .outline li {
@@ -76,9 +88,9 @@
   grid-template-columns: 120px 1fr;
   gap: 14px;
   align-items: baseline;
-  padding-top: 10px;
-  border-top: 1px solid var(--hair);
-  font-size: var(--fs-secondary);
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-ui);
   color: var(--sub);
 }
 .outline li b {

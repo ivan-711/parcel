@@ -18,6 +18,8 @@ import { money, moneySigned, months, multiple, percent } from './format'
 
 export interface Stat {
   key: string
+  /** Short name for the figure's cell: Cash flow, Return, Fee. */
+  name: string
   value: string
   label: string
   bad?: boolean
@@ -57,6 +59,7 @@ function cashToClose(inputs: Inputs, a: Hold): Stat {
   }
   return {
     key: 'cash_to_close',
+    name: 'Cash to close',
     value: money(a.metrics.cash_to_close),
     label: 'cash to close',
     title: `Where ${money(a.metrics.cash_to_close)} comes from`,
@@ -82,6 +85,7 @@ function irr(inputs: Inputs, a: Hold): Stat {
         : 'interest_rate'
   return {
     key: 'irr',
+    name: 'Return',
     value,
     label: 'a year on your money',
     bad: (m.irr ?? 0) <= 0,
@@ -98,6 +102,7 @@ function cashFlow(inputs: Inputs, a: Hold): Stat {
   const loan = inputs.strategy === 'creative' ? 'both loan payments' : 'the mortgage'
   return {
     key: 'cash_flow',
+    name: 'Cash flow',
     value: moneySigned(monthly),
     label: monthly < 0 ? 'a month out of pocket' : 'a month in your pocket',
     bad: monthly < 0,
@@ -123,6 +128,7 @@ function dscr(inputs: Inputs, a: Hold): Stat {
         : 'interest_rate'
   return {
     key: 'dscr',
+    name: 'Loan coverage',
     value,
     label: 'rent covers the loan',
     bad: (d ?? 0) < 1,
@@ -145,6 +151,7 @@ function brrrrRefi(a: Hold): Stat[] {
   return [
     {
       key: 'refi_cash_out',
+      name: 'Cash out',
       value: money(Math.max(m.refi_cash_out, 0)),
       label: 'back at the refinance',
       bad: m.refi_cash_out < 0,
@@ -157,6 +164,7 @@ function brrrrRefi(a: Hold): Stat[] {
     },
     {
       key: 'cash_left_in_deal',
+      name: 'Left in',
       value: money(Math.max(m.cash_left_in_deal, 0)),
       label: 'still in the deal after',
       title: `Where ${money(Math.max(m.cash_left_in_deal, 0))} comes from`,
@@ -171,6 +179,7 @@ function flipStats(inputs: Inputs & { strategy: 'flip' }, a: Hold): Stat[] {
   return [
     {
       key: 'total_profit',
+      name: 'Profit',
       value: moneySigned(m.total_profit),
       label: 'profit',
       bad: m.total_profit <= 0,
@@ -180,6 +189,7 @@ function flipStats(inputs: Inputs & { strategy: 'flip' }, a: Hold): Stat[] {
     },
     {
       key: 'roi',
+      name: 'Return',
       value: m.roi === null ? 'n/a' : percent(m.roi, 0),
       label: 'return on your cash',
       bad: (m.roi ?? 0) <= 0,
@@ -190,6 +200,7 @@ function flipStats(inputs: Inputs & { strategy: 'flip' }, a: Hold): Stat[] {
     cashToClose(inputs, a),
     {
       key: 'horizon',
+      name: 'Timeline',
       value: months(a.horizon_months),
       label: 'start to finish',
       title: `Why ${months(a.horizon_months)}`,
@@ -204,6 +215,7 @@ function wholesaleStats(inputs: Inputs & { strategy: 'wholesale' }, w: Wholesale
   return [
     {
       key: 'assignment_fee',
+      name: 'Your fee',
       value: moneySigned(fee),
       label: 'your fee',
       bad: fee <= 0,
@@ -213,6 +225,7 @@ function wholesaleStats(inputs: Inputs & { strategy: 'wholesale' }, w: Wholesale
     },
     {
       key: 'buyer_max_price',
+      name: "Buyer's ceiling",
       value: w.buyer_max_price === null ? 'n/a' : money(w.buyer_max_price),
       label: 'most a buyer can pay',
       title: 'How the buyer’s number is found',
@@ -221,6 +234,7 @@ function wholesaleStats(inputs: Inputs & { strategy: 'wholesale' }, w: Wholesale
     },
     {
       key: 'seventy',
+      name: '70% rule',
       value: money(w.seventy_percent_rule),
       label: 'the 70% rule says',
       title: 'The rule of thumb',
@@ -229,6 +243,7 @@ function wholesaleStats(inputs: Inputs & { strategy: 'wholesale' }, w: Wholesale
     },
     {
       key: 'earnest',
+      name: 'At risk',
       value: money(w.earnest_money),
       label: 'at risk if you walk',
       title: 'Your downside',

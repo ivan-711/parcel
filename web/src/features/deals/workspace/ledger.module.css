@@ -6,20 +6,20 @@
 }
 .head p {
   color: var(--sub);
-  font-size: var(--fs-secondary);
+  font-size: var(--fs-ui);
   margin-right: auto;
 }
 .scroll {
-  margin-top: var(--sp-4);
-  max-height: 560px;
+  margin-top: 14px;
+  max-height: 520px;
   overflow: auto;
-  border-top: 1px solid var(--hair);
+  border-top: 1px solid var(--line);
   position: relative;
 }
 .table {
   display: grid;
   grid-template-columns: 84px repeat(8, minmax(84px, 1fr));
-  font-size: var(--fs-secondary);
+  font-size: var(--fs-ui);
   font-variant-numeric: tabular-nums;
   min-width: 760px;
 }
@@ -41,7 +41,7 @@
   font-weight: 500;
   font-size: var(--fs-caption);
   z-index: 1;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line2);
 }
 .neg {
   color: var(--risk);

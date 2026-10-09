@@ -9,6 +9,8 @@ import styles from './compare.module.css'
 
 interface Row {
   label: string
+  /** Figures read large; names, verdicts and flags read at text size. */
+  big?: boolean
   cells: { text: string; bad?: boolean; score?: number }[]
 }
 
@@ -29,6 +31,7 @@ function rows(deals: DealDetail[]): Row[] {
   for (const [key, label] of keys) {
     out.push({
       label,
+      big: true,
       cells: stats.map((list) => {
         const s = list.find((x) => x.key === key)
         return s ? { text: s.value, bad: s.bad } : { text: '' }
@@ -111,7 +114,7 @@ export function Compare({ ids }: { ids: string[] }) {
               {row.cells.map((cell, i) => (
                 <div
                   key={i}
-                  className={`${styles.cell} ${row.label.length < 20 && cell.text.length < 16 ? styles.big : ''} ${cell.bad ? styles.bad : ''}`}
+                  className={`${styles.cell} ${row.big ? styles.big : ''} ${cell.bad ? styles.bad : ''}`}
                 >
                   {cell.text}
                 </div>

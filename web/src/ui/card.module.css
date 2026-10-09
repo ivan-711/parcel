@@ -1,19 +1,18 @@
 .card {
-  background: var(--card);
+  background: linear-gradient(180deg, var(--card2), var(--card));
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow);
 }
 .padded {
-  padding: var(--card-pad);
+  padding: 20px 24px;
 }
 .title {
-  font-size: var(--fs-card-title);
+  font-size: var(--fs-body);
   font-weight: 600;
-  letter-spacing: -0.01em;
 }
 .subtitle {
-  font-size: var(--fs-secondary);
-  color: var(--sub);
-  margin-top: 3px;
+  font-size: var(--fs-small);
+  color: var(--mute);
+  margin-top: 2px;
 }

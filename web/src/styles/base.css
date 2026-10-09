@@ -16,14 +16,16 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: var(--fs-body);
-  line-height: 1.45;
-  letter-spacing: -0.01em;
+  line-height: 1.5;
+  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 h1,
 h2,
 h3,
+h4,
 p {
   margin: 0;
 }
@@ -54,6 +56,11 @@ button {
   color: var(--text);
 }
 
+::placeholder {
+  color: var(--mute);
+  opacity: 1;
+}
+
 html {
   accent-color: var(--accent);
 }
@@ -62,6 +69,10 @@ html {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 6px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
 }
 
 .sr-only {

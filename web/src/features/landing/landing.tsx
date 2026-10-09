@@ -30,7 +30,7 @@ const PROMISES = [
 /** A sparse field of dim particles behind the answer card, only in the dark appearance. */
 function Sea() {
   const ref = useRef<HTMLCanvasElement>(null)
-  const dark = useMedia('(prefers-color-scheme: dark)')
+  const dark = document.documentElement.dataset.theme !== 'light'
   const still = useMedia('(prefers-reduced-motion: reduce)')
   useEffect(() => {
     const canvas = ref.current
@@ -57,7 +57,7 @@ function Sea() {
       ctx.clearRect(0, 0, w, h)
       for (const d of dots) {
         const y = (((d.y - t * d.v) % 1) + 1) % 1
-        ctx.fillStyle = `rgba(61, 139, 255, ${d.a})`
+        ctx.fillStyle = `rgba(124, 156, 255, ${d.a * 0.6})`
         ctx.beginPath()
         ctx.arc(d.x * w, y * h, d.r, 0, 7)
         ctx.fill()

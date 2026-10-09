@@ -2,19 +2,20 @@
   max-width: 720px;
 }
 .wrap h1 {
-  font-size: var(--fs-page-title);
+  font-size: var(--fs-title);
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 }
 .lead {
   color: var(--sub);
-  margin-top: 4px;
+  font-size: var(--fs-ui);
+  margin-top: 2px;
 }
 .step {
-  margin-top: 22px;
+  margin-top: 26px;
 }
 .step h2 {
-  font-size: 17px;
+  font-size: var(--fs-body);
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -23,12 +24,18 @@
 }
 .input {
   width: 100%;
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: 14px;
-  padding: 12px 16px;
-  font-size: 17px;
-  box-shadow: var(--shadow);
+  height: 44px;
+  border: 1px solid var(--line2);
+  background: var(--tile);
+  border-radius: var(--r-lg);
+  padding: 0 16px;
+  font-size: var(--fs-lead);
+  color: var(--text);
+}
+.input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
 }
 .menu {
   position: absolute;
@@ -36,9 +43,9 @@
   right: 0;
   top: calc(100% + 6px);
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop);
   overflow: hidden;
   z-index: 5;
   list-style: none;
@@ -49,19 +56,20 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: var(--fs-ui);
 }
 .menu button:hover,
 .menu button:focus-visible {
-  background: var(--control);
+  background: var(--tile2);
 }
 .facts {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
   color: var(--sub);
-  font-size: 13px;
+  font-size: var(--fs-ui);
   margin-top: 10px;
 }
 .facts b {
@@ -69,12 +77,12 @@
   font-weight: 500;
 }
 .note {
-  font-size: 13px;
+  font-size: var(--fs-ui);
   color: var(--sub);
   margin-top: 8px;
 }
 .skip {
-  font-size: 13px;
+  font-size: var(--fs-ui);
   margin-top: 8px;
 }
 .strategies {
@@ -85,21 +93,28 @@
 .strategy {
   text-align: left;
   padding: 14px 16px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   border: 1px solid var(--line);
-  background: var(--card);
-  box-shadow: var(--shadow);
+  background: var(--tile);
+  transition:
+    border-color 120ms var(--ease),
+    background 120ms var(--ease);
+}
+.strategy:hover {
+  background: var(--tile2);
 }
 .strategy[aria-checked='true'] {
   border-color: var(--accent);
+  background: var(--accent-soft);
   box-shadow: 0 0 0 1px var(--accent);
 }
 .strategy b {
   display: block;
   font-weight: 600;
+  font-size: var(--fs-ui);
 }
 .strategy span {
-  font-size: 13px;
+  font-size: var(--fs-small);
   color: var(--sub);
 }
 .fields {
@@ -112,22 +127,29 @@
 }
 .field span {
   display: block;
-  font-size: 13px;
-  color: var(--sub);
-  margin-bottom: 4px;
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  margin-bottom: 5px;
 }
 .field input {
   width: 100%;
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 17px;
+  height: 38px;
+  border: 1px solid var(--line2);
+  background: var(--tile);
+  border-radius: var(--r-md);
+  padding: 0 12px;
+  font-size: var(--fs-lead);
   font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
 }
 .field small {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--mute);
   margin-top: 4px;
 }
@@ -145,7 +167,7 @@
 }
 .error {
   color: var(--risk);
-  font-size: 13px;
+  font-size: var(--fs-ui);
 }
 @media (max-width: 640px) {
   .fields {

@@ -14,7 +14,7 @@ function show(kind: Kind, value: unknown): string {
     case 'money':
       return money(n)
     case 'monthly':
-      return `${money(n)} a month`
+      return `${money(n)}/mo`
     case 'rate':
       return percent(n, 2)
     case 'months':

@@ -96,7 +96,7 @@ export function Overview({ inputs, analysis }: { inputs: Inputs; analysis: Analy
         </CardTitle>
         <MoneyLine
           points={points}
-          height={wide ? 280 : 200}
+          height={wide ? 230 : 190}
           startLabel={`${money(-(points[0]?.value ?? 0))} in`}
           endLabel={ahead}
         />
