@@ -1,4 +1,5 @@
 from dataclasses import replace
+from functools import lru_cache
 from typing import Any, Literal
 
 import numpy as np
@@ -29,6 +30,16 @@ _MONEY = {
 
 
 def analyze(spec: inputs.Inputs, *, monthly: bool = False) -> out.Analysis | out.WholesaleAnalysis:
+    return _analyze(spec, monthly)
+
+
+@lru_cache(maxsize=1024)
+def _analyze(spec: inputs.Inputs, monthly: bool) -> out.Analysis | out.WholesaleAnalysis:
+    """Inputs are frozen and the result is never mutated, so repeats are free.
+
+    The deal list runs every deal's analysis on each request, and a workspace
+    sends the same inputs more than once, so this is the cache that matters.
+    """
     if isinstance(spec, inputs.Wholesale):
         return _wholesale(spec, monthly=monthly)
     ledger, metrics = run(spec.to_engine())
