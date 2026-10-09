@@ -6,6 +6,9 @@ export default defineConfig({
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
+  // The dev server transforms modules on first visit, which is slow on a CI runner.
+  timeout: process.env.CI ? 60_000 : 30_000,
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'retain-on-failure',

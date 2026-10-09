@@ -24,6 +24,7 @@ test('the demo opens without an account and the workspace explains itself', asyn
   await expect(page.getByRole('article')).toHaveCount(5)
 
   await page.getByRole('heading', { name: 'Duplex on N 14th' }).click()
+  await page.waitForURL(/\/deals\/[0-9a-f-]+$/)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Duplex on N 14th')
   await expect(page.getByText('Yes, it works')).toBeVisible()
   await expect(page.getByText('$308 a month')).toBeVisible()
@@ -50,6 +51,7 @@ test('the demo opens without an account and the workspace explains itself', asyn
 test('a shared deal reads without an account', async ({ page, browser }) => {
   await page.goto('/demo')
   await page.getByRole('heading', { name: 'Cape Cod flip' }).click()
+  await page.waitForURL(/\/deals\/[0-9a-f-]+$/)
   await page.getByRole('button', { name: /^Share/ }).click()
   const url = await page.getByLabel('Share link').inputValue()
 
