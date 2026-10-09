@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "prerender": "node scripts/prerender.mjs"
   },
   "dependencies": {
     "@clerk/react": "6.17.7",
