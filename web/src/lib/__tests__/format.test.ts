@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { compact, money, moneySigned, months, multiple, percent } from '../format'
+import { compact, date, dateLong, money, moneySigned, months, multiple, percent } from '../format'
 
 describe('format', () => {
   it('writes money without cents by default', () => {
@@ -34,5 +34,11 @@ describe('format', () => {
     expect(compact(-61_040)).toBe('-$61K')
     expect(compact(1_250_000)).toBe('$1.3M')
     expect(compact(420)).toBe('$420')
+  })
+
+  it('keeps a calendar day on the day it says', () => {
+    expect(dateLong('2026-10-08')).toBe('Oct 8, 2026')
+    expect(date('2026-10-08')).toBe('Oct 8')
+    expect(dateLong('2026-10-08T23:30:00Z')).toMatch(/Oct [89], 2026/)
   })
 })

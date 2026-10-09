@@ -41,12 +41,17 @@ export function compact(value: number): string {
   return `${sign}$${Math.round(abs)}`
 }
 
+/** A date only string is a calendar day, not midnight UTC, so it must not shift by timezone. */
+function parse(iso: string): Date {
+  return new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00` : iso)
+}
+
 export function date(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return parse(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 export function dateLong(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+  return parse(iso).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
