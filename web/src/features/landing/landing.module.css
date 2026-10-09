@@ -3,17 +3,19 @@
   padding: 64px 16px 0;
 }
 .h1 {
-  font-size: clamp(38px, 5.2vw, 64px);
+  font-size: clamp(38px, 5.2vw, 72px);
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 .sub {
-  font-size: clamp(17px, 1.6vw, 21px);
+  font-size: clamp(17px, 1.6vw, 22px);
   line-height: 1.4;
   color: var(--sub);
   margin: 16px auto 0;
   max-width: 640px;
+  text-wrap: pretty;
 }
 .ctas {
   display: flex;
@@ -24,6 +26,9 @@
   flex-wrap: wrap;
 }
 .more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 17px;
 }
 .cardWrap {
@@ -70,14 +75,17 @@
   font-weight: 500;
   letter-spacing: -0.02em;
   max-width: 900px;
+  text-wrap: pretty;
 }
 .lit {
   color: var(--accent);
+  font-style: normal;
   text-shadow: var(--glow);
 }
 .watch {
   margin-top: 14px;
   color: var(--sub);
+  max-width: 64ch;
 }
 .watch b {
   color: var(--risk);
@@ -113,6 +121,7 @@
 .tile.on {
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
+
 .section {
   width: min(1040px, calc(100% - 32px));
   margin: 96px auto 0;
@@ -121,71 +130,251 @@
   font-size: clamp(28px, 3vw, 40px);
   font-weight: 600;
   letter-spacing: -0.025em;
-  text-align: center;
+  line-height: 1.1;
+  text-wrap: balance;
+  max-width: 20em;
 }
-.section > p {
-  text-align: center;
+.lead {
   color: var(--sub);
   font-size: 17px;
-  margin: 10px auto 0;
-  max-width: 600px;
+  margin-top: 10px;
+  max-width: 60ch;
 }
-.steps {
+
+/* How it works: a sentence beside the control it describes, no cards. */
+.moves {
+  margin-top: 40px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 36px;
+  gap: 56px;
 }
-.step {
-  padding: 22px 24px;
+.move {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 48px;
+  align-items: center;
 }
-.step .n {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
+.moveText h3 {
+  font-size: 24px;
   font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 12px;
+  letter-spacing: -0.02em;
 }
-.step h3 {
-  font-size: 17px;
-  font-weight: 600;
-}
-.step p {
+.moveText p {
   color: var(--sub);
-  margin-top: 6px;
+  font-size: 17px;
+  line-height: 1.5;
+  margin-top: 8px;
+  max-width: 46ch;
+  text-wrap: pretty;
 }
-.list,
-.promises {
-  margin-top: 36px;
-  padding: 6px 28px;
+.figure {
+  pointer-events: none;
+  user-select: none;
 }
-.item {
+.field {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 17px;
+  box-shadow: var(--shadow);
+}
+.suggest {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 4px 6px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.suggest li {
   display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 16px;
-  padding: 16px 0;
+  grid-template-columns: 110px 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 9px 10px;
+  color: var(--sub);
+  font-size: 15px;
+}
+.suggest li + li {
   border-top: 1px solid var(--hair);
+}
+.suggest b {
+  color: var(--text);
+  font-weight: 500;
+}
+.suggest small {
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 980px;
+  padding: 2px 9px;
+}
+.picker {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.option {
+  padding: 13px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  color: var(--sub);
+}
+.option b {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.option.checked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.rows {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.inRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px 11px 30px;
+  font-size: 15px;
+}
+.inRow + .inRow {
+  border-top: 1px solid var(--hair);
+}
+.inRow > div {
+  flex: 1;
+}
+.inRow small {
+  display: block;
+  font-size: 12px;
+  color: var(--mute);
+}
+.inRow b {
+  font-weight: 400;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+}
+.inRow.lit::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.inRow.lit b {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Five strategies as five real answers, on the ground with hairlines. */
+.answers {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+}
+.deal {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+}
+.deal:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.dealName b {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.dealName span {
+  display: block;
+  color: var(--sub);
+  font-size: 14px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.verdict.catch {
+  color: var(--caution);
+}
+.sentence {
+  margin-top: 6px;
+  font-size: clamp(20px, 1.8vw, 24px);
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  max-width: 30em;
+  text-wrap: pretty;
+}
+.deal .watch {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.promises {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+}
+.promises li {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 32px;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
   align-items: baseline;
 }
-.item:first-child {
-  border-top: 0;
+.promises li:last-child {
+  border-bottom: 1px solid var(--line);
 }
-.item h3 {
-  font-size: 17px;
+.promises h3 {
+  font-size: 20px;
   font-weight: 600;
+  letter-spacing: -0.015em;
 }
-.item p {
+.promises p {
   color: var(--sub);
+  font-size: 17px;
+  line-height: 1.5;
+  max-width: 60ch;
 }
-.promises .item {
-  grid-template-columns: 1fr;
-  gap: 4px;
+
+.closing {
+  text-align: center;
+  margin: 112px auto 0;
+  padding: 0 16px;
 }
+.closing p {
+  color: var(--sub);
+  font-size: 19px;
+  margin-bottom: 18px;
+}
+
 .footer {
   margin: 96px auto 48px;
   width: min(1040px, calc(100% - 32px));
@@ -200,9 +389,15 @@
 .footer a {
   color: var(--sub);
 }
+.footer a:hover {
+  color: var(--text);
+}
 .footer span:first-child {
   color: var(--text);
   font-weight: 600;
+}
+.footNote {
+  margin-left: auto;
 }
 .sea {
   position: fixed;
@@ -212,22 +407,68 @@
   z-index: -1;
   pointer-events: none;
 }
+
+@media (min-width: 900px) {
+  .hero {
+    padding-top: 104px;
+  }
+  .ctas {
+    margin-top: 32px;
+  }
+  .cardWrap {
+    margin-top: 56px;
+  }
+  .card {
+    padding: 48px 56px 52px;
+  }
+  .tiles {
+    margin-top: 44px;
+  }
+  .tile {
+    font-size: 14px;
+    padding: 16px 18px;
+  }
+  .tile b {
+    font-size: 18px;
+  }
+  .section {
+    margin-top: 128px;
+  }
+  .moves {
+    margin-top: 48px;
+    gap: 72px;
+  }
+  .answers,
+  .promises {
+    margin-top: 48px;
+  }
+  .closing {
+    margin-top: 128px;
+  }
+}
 @media (max-width: 900px) {
   .tiles {
     grid-template-columns: repeat(2, 1fr);
   }
-  .steps {
-    grid-template-columns: 1fr;
-  }
-  .item {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-  .list,
-  .promises {
-    padding: 6px 20px;
-  }
   .card {
     padding: 24px 22px 28px;
+  }
+  .move {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .deal,
+  .promises li {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .section {
+    margin-top: 72px;
+  }
+  .closing {
+    margin-top: 80px;
+  }
+  .footNote {
+    margin-left: 0;
   }
 }

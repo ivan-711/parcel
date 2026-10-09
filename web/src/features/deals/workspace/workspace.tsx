@@ -16,6 +16,7 @@ import { setPath } from '../../../lib/paths'
 import { statsFor } from '../../../lib/stats'
 import { STAGE_NAMES, STRATEGY_NAMES, verdict } from '../../../lib/words'
 import { Button, LinkButton } from '../../../ui/button'
+import { Chevron } from '../../../ui/check'
 import { useMedia } from '../../../lib/use-media'
 import { Segmented } from '../../../ui/segmented'
 import { Trace } from '../../../ui/trace'
@@ -86,10 +87,11 @@ export function Workspace({ dealId }: { dealId: string }) {
   const stats = statsFor(inputs, analysis)
   const stat = stats.find((s) => s.key === picked) ?? null
   const lit = useMemo(() => new Set(stat?.depends ?? []), [stat])
+  // One origin, the "Depends on" row, fanning out through the gutter to each input.
   const links = useMemo(
     () =>
       (stat?.depends ?? []).map((p) => ({
-        from: `dep-${p.replace(/\./g, '-')}`,
+        from: 'depends',
         to: `in-${p.replace(/\./g, '-')}`,
       })),
     [stat],
@@ -97,7 +99,7 @@ export function Workspace({ dealId }: { dealId: string }) {
   const words = verdict(inputs, analysis)
   const hold = ledgerOf(analysis)
 
-  // On narrow screens the inspector sits below everything, so a chip scrolls to its row.
+  // A chip scrolls to its row and flashes it; on a phone that is the whole trace.
   const jump = (path: string) => {
     const row = document.getElementById(`in-${path.replace(/\./g, '-')}`)
     if (!row) return
@@ -123,7 +125,7 @@ export function Workspace({ dealId }: { dealId: string }) {
     <div className={styles.layout} ref={layoutRef}>
       <div>
         <Link to="/deals" className={styles.crumb}>
-          ‹ Deals
+          <Chevron direction="left" /> Deals
         </Link>
         <header className={styles.title}>
           <div>
@@ -152,11 +154,11 @@ export function Workspace({ dealId }: { dealId: string }) {
 
         <VerdictCard verdict={words} />
         <StatTiles stats={stats} picked={picked} onPick={setPicked} />
-        {stat && <Explain stat={stat} labels={labels} onJump={wide ? undefined : jump} />}
+        {stat && <Explain stat={stat} labels={labels} onJump={jump} />}
 
         {!wide && (
           <a href="#inspector" className={styles.toInspector}>
-            Your assumptions ›
+            Your assumptions <Chevron />
           </a>
         )}
         <div className={styles.tabs}>
@@ -178,6 +180,7 @@ export function Workspace({ dealId }: { dealId: string }) {
           inputs={inputs}
           provenance={provenance}
           lit={lit}
+          showAll={wide}
           onChange={edit}
         />
         <p className={styles.saving} aria-live="polite">

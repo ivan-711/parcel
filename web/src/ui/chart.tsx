@@ -43,7 +43,7 @@ export function MoneyLine({
 }) {
   const [ref, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
-  const pad = { l: 46, r: 16, t: 26, b: 26 }
+  const pad = { l: 52, r: 16, t: 28, b: 28 }
   const first = points[0]
   const last = points[points.length - 1]
   if (!first || !last) return null
@@ -61,8 +61,13 @@ export function MoneyLine({
     .map((p, i) => `${i ? 'L' : 'M'}${x(p.x).toFixed(1)} ${y(p.value).toFixed(1)}`)
     .join(' ')
   const area = `${path} L${x(last.x).toFixed(1)} ${y(0).toFixed(1)} L${x(first.x).toFixed(1)} ${y(0).toFixed(1)} Z`
+  // Enough x labels to read the span, never so many that neighbors touch.
+  const every = Math.max(1, Math.ceil(points.length / Math.max(2, Math.floor(width / 110))))
   const xTicks = points.filter(
-    (_, i) => i === 0 || i === points.length - 1 || i % Math.ceil(points.length / 6) === 0,
+    (p, i) =>
+      i === 0 ||
+      i === points.length - 1 ||
+      (i % every === 0 && i < points.length - every / 2 && p !== last),
   )
 
   const onMove = (event: PointerEvent<SVGSVGElement>) => {

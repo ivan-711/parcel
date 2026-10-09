@@ -16,7 +16,7 @@
   stroke-width: 1;
 }
 .tick {
-  font-size: 11px;
+  font-size: var(--fs-tick);
   fill: var(--mute);
 }
 .line {
@@ -36,7 +36,7 @@
   stroke-width: 2;
 }
 .label {
-  font-size: 12px;
+  font-size: var(--fs-secondary);
   font-weight: 600;
   fill: var(--text);
 }
@@ -46,6 +46,7 @@
 }
 .tip {
   position: absolute;
+  z-index: 2;
   transform: translate(-50%, calc(-100% - 10px));
   background: var(--text);
   color: var(--bg);

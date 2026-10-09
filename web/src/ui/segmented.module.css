@@ -3,7 +3,7 @@
   padding: 3px;
   border-radius: var(--r-sm);
   background: var(--control);
-  font-size: 13px;
+  font-size: var(--fs-secondary);
 }
 .item {
   padding: 5px 14px;
@@ -13,9 +13,22 @@
     background 160ms var(--ease),
     color 160ms var(--ease);
 }
+.item:hover {
+  color: var(--text);
+}
 .item[aria-selected='true'] {
   background: var(--card);
   color: var(--text);
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+@media (min-width: 1101px) {
+  .group {
+    padding: 4px;
+    border-radius: 12px;
+  }
+  .item {
+    padding: 7px 18px;
+    border-radius: 9px;
+  }
 }

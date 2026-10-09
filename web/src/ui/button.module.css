@@ -6,7 +6,7 @@
   min-height: 36px;
   padding: 7px 16px;
   border-radius: 980px;
-  font-size: 15px;
+  font-size: var(--fs-body);
   font-weight: 500;
   line-height: 1.2;
   border: 1px solid var(--line);
@@ -15,8 +15,13 @@
   transition:
     transform 120ms var(--ease),
     background 120ms var(--ease),
+    border-color 120ms var(--ease),
     opacity 120ms var(--ease);
   white-space: nowrap;
+}
+.button:hover {
+  background: color-mix(in srgb, var(--card), var(--text) 4%);
+  border-color: color-mix(in srgb, var(--line), var(--text) 8%);
 }
 .button:active {
   transform: scale(0.97);
@@ -30,19 +35,37 @@
   color: var(--accent-ink);
   border-color: transparent;
 }
+.primary:hover {
+  background: color-mix(in srgb, var(--accent), black 8%);
+  border-color: transparent;
+}
 .plain {
   border-color: transparent;
   background: transparent;
   color: var(--accent);
   padding-inline: 8px;
 }
+.plain:hover {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
 .large {
-  min-height: 44px;
-  padding: 11px 24px;
+  min-height: 46px;
+  padding: 12px 26px;
   font-size: 17px;
 }
 .small {
   min-height: 30px;
   padding: 4px 12px;
-  font-size: 13px;
+  font-size: var(--fs-secondary);
+}
+@media (min-width: 1101px) {
+  .button {
+    min-height: 38px;
+    padding: 8px 18px;
+  }
+  .small {
+    min-height: 32px;
+    padding: 5px 14px;
+  }
 }

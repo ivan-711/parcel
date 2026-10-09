@@ -4,6 +4,7 @@ import type { Inputs, Provenance, Strategy } from '../../../lib/api/queries'
 import { GROUPS, type Field, type Kind } from '../../../lib/fields'
 import { dateLong, money, months, percent } from '../../../lib/format'
 import { getPath } from '../../../lib/paths'
+import { Chevron } from '../../../ui/check'
 import styles from './inspector.module.css'
 
 function show(kind: Kind, value: unknown): string {
@@ -109,20 +110,24 @@ export function Inspector({
   inputs,
   provenance,
   lit,
+  showAll = false,
   onChange,
 }: {
   strategy: Strategy
   inputs: Inputs
   provenance: Provenance
   lit: Set<string>
+  /** A desk has room for every input; a phone folds the rarely touched ones. */
+  showAll?: boolean
   onChange: (path: string, value: number | null) => void
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({})
   return (
     <>
       {GROUPS[strategy].map((group) => {
-        const folded = group.fields.filter((f) => f.more)
-        const shown = open[group.title] ? group.fields : group.fields.filter((f) => !f.more)
+        const folded = showAll ? [] : group.fields.filter((f) => f.more)
+        const shown =
+          showAll || open[group.title] ? group.fields : group.fields.filter((f) => !f.more)
         return (
           <section key={group.title} className={styles.group}>
             <h3>{group.title}</h3>
@@ -144,6 +149,7 @@ export function Inspector({
                   onClick={() => setOpen((o) => ({ ...o, [group.title]: !o[group.title] }))}
                 >
                   {open[group.title] ? 'Show less' : `${folded.length} more`}
+                  <Chevron direction={open[group.title] ? 'down' : 'right'} />
                 </button>
               )}
             </div>

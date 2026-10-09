@@ -1,7 +1,7 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
 }
 .wide {
   grid-column: 1 / -1;
@@ -11,8 +11,8 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 12px;
-  font-size: 15px;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-body);
 }
 .select,
 .number {
@@ -20,15 +20,15 @@
   background: var(--tile);
   border-radius: var(--r-sm);
   padding: 6px 10px;
-  font-size: 15px;
+  font-size: var(--fs-body);
 }
 .number {
   width: 92px;
   text-align: right;
 }
 .result {
-  margin-top: 14px;
-  font-size: 20px;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-figure);
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -38,7 +38,7 @@
 }
 .muted {
   color: var(--sub);
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   margin-top: 6px;
 }
 .swings {
@@ -48,10 +48,10 @@
 }
 .swing {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 150px 1fr;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   color: var(--sub);
 }
 .bar {
@@ -83,19 +83,24 @@
 .bar small {
   position: absolute;
   top: -1px;
-  font-size: 11px;
+  font-size: var(--fs-caption);
   color: var(--mute);
   white-space: nowrap;
 }
-.matrix {
+.scroller {
   margin-top: 12px;
+  overflow-x: auto;
+  min-width: 0;
+}
+.matrix {
   display: grid;
   gap: 2px;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-variant-numeric: tabular-nums;
+  min-width: 420px;
 }
 .matrix .c {
-  padding: 7px 4px;
+  padding: 9px 6px;
   text-align: center;
   border-radius: 6px;
 }
@@ -114,12 +119,12 @@
 }
 .mc b {
   display: block;
-  font-size: 22px;
+  font-size: var(--fs-figure);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 .mc span {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--sub);
 }
 .hist {
@@ -147,9 +152,6 @@
   margin-top: 4px;
 }
 @media (max-width: 900px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .mc {
     grid-template-columns: repeat(2, 1fr);
   }

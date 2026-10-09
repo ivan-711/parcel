@@ -1,5 +1,5 @@
 .memo {
-  max-width: 720px;
+  padding: var(--card-pad);
 }
 .top {
   display: flex;
@@ -9,18 +9,20 @@
 }
 .top p {
   color: var(--sub);
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   margin-right: auto;
+  max-width: 60ch;
 }
 .body {
-  margin-top: 16px;
+  margin-top: var(--sp-4);
   line-height: 1.55;
-  font-size: 16px;
+  font-size: var(--fs-body);
+  max-width: 68ch;
 }
 .body h3 {
-  font-size: 15px;
+  font-size: var(--fs-card-title);
   font-weight: 600;
-  margin: 18px 0 4px;
+  margin: 22px 0 6px;
 }
 .body h3:first-child {
   margin-top: 0;
@@ -42,10 +44,11 @@
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   padding: 10px 12px;
   border-radius: var(--r-sm);
-  margin-top: 14px;
+  margin-top: var(--sp-4);
+  max-width: 68ch;
 }
 .good {
   background: var(--accent-soft);
@@ -57,10 +60,40 @@
 }
 .empty {
   color: var(--sub);
-  margin-top: 8px;
+  margin-top: var(--sp-2);
+}
+/* What the memo will hold, shown as its outline until it is written. */
+.outline {
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  max-width: 68ch;
+}
+.outline li {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+  font-size: var(--fs-secondary);
+  color: var(--sub);
+}
+.outline li b {
+  color: var(--text);
+  font-weight: 500;
+  font-size: var(--fs-body);
 }
 @keyframes blink {
   to {
     visibility: hidden;
+  }
+}
+@media (max-width: 720px) {
+  .outline li {
+    grid-template-columns: 1fr;
+    gap: 2px;
   }
 }

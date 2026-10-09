@@ -80,8 +80,12 @@
   border-top: 0;
 }
 .table td:first-child {
-  white-space: nowrap;
   font-weight: 500;
+}
+@media (min-width: 760px) {
+  .table td:first-child {
+    white-space: nowrap;
+  }
 }
 .aside {
   margin-top: 12px;

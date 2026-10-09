@@ -13,19 +13,31 @@ interface Default {
   key: string
   label: string
   help: string
+  /** Parcel's usual number, shown so a blank field says what it means. */
+  usual: string
 }
 
 /** Rates a new deal starts from, as percentages in the form and decimals on the wire. */
 const DEFAULTS: Default[] = [
-  { key: 'interest_rate', label: 'Loan rate', help: 'Used when no market rate is available' },
-  { key: 'down_payment_rate', label: 'Down payment', help: 'For rentals' },
-  { key: 'closing_cost_rate', label: 'Closing costs', help: 'Share of price' },
-  { key: 'operations.vacancy_rate', label: 'Empty', help: 'Share of the year with no tenant' },
-  { key: 'operations.management_rate', label: 'Management', help: 'Share of rent' },
-  { key: 'operations.maintenance_rate', label: 'Repairs', help: 'Share of rent' },
-  { key: 'operations.capex_rate', label: 'Reserves', help: 'Share of rent' },
-  { key: 'appreciation', label: 'Value growth', help: 'A year' },
-  { key: 'operations.rent_growth', label: 'Rent growth', help: 'A year' },
+  {
+    key: 'interest_rate',
+    label: 'Loan rate',
+    help: 'Used when no market rate is available',
+    usual: '7',
+  },
+  { key: 'down_payment_rate', label: 'Down payment', help: 'For rentals', usual: '25' },
+  { key: 'closing_cost_rate', label: 'Closing costs', help: 'Share of price', usual: '3' },
+  {
+    key: 'operations.vacancy_rate',
+    label: 'Empty',
+    help: 'Share of the year with no tenant',
+    usual: '5',
+  },
+  { key: 'operations.management_rate', label: 'Management', help: 'Share of rent', usual: '8' },
+  { key: 'operations.maintenance_rate', label: 'Repairs', help: 'Share of rent', usual: '5' },
+  { key: 'operations.capex_rate', label: 'Reserves', help: 'Share of rent', usual: '5' },
+  { key: 'appreciation', label: 'Value growth', help: 'A year', usual: '3' },
+  { key: 'operations.rent_growth', label: 'Rent growth', help: 'A year', usual: '3' },
 ]
 
 export function Settings() {
@@ -107,7 +119,7 @@ export function Settings() {
               <input
                 id={`d-${d.key}`}
                 inputMode="decimal"
-                placeholder="%"
+                placeholder={`${d.usual}%`}
                 value={defaults[d.key] ?? ''}
                 onChange={(e) => setDefaults((cur) => ({ ...cur, [d.key]: e.target.value }))}
               />

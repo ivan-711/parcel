@@ -1,5 +1,5 @@
 .head h1 {
-  font-size: 30px;
+  font-size: var(--fs-page-title);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -11,10 +11,10 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 18px;
+  margin-top: var(--sp-5);
 }
 .pick {
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   border: 1px solid var(--line);
   border-radius: 980px;
   padding: 6px 12px;
@@ -27,7 +27,7 @@
   background: var(--accent-soft);
 }
 .table {
-  margin-top: 22px;
+  margin-top: var(--sp-5);
   display: grid;
   overflow-x: auto;
   font-variant-numeric: tabular-nums;
@@ -41,15 +41,15 @@
   border-top: 0;
 }
 .cell {
-  padding: 12px 14px;
+  padding: 14px 16px;
 }
 .cell:first-child {
   color: var(--sub);
-  font-size: 13px;
+  font-size: var(--fs-secondary);
 }
 .th {
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--fs-body);
 }
 .th small {
   display: block;
@@ -58,7 +58,7 @@
   font-size: 12px;
 }
 .big {
-  font-size: 20px;
+  font-size: var(--fs-answer);
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -70,5 +70,6 @@
 }
 .hint {
   color: var(--sub);
-  margin-top: 24px;
+  margin-top: var(--sp-4);
+  font-size: var(--fs-secondary);
 }

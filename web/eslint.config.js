@@ -8,7 +8,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'src/routeTree.gen.ts', 'src/lib/api/schema.d.ts'] },
+  { ignores: ['dist', 'node_modules', 'src/routeTree.gen.ts', 'src/lib/api/schema.d.ts', '.vercel'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,

@@ -120,7 +120,7 @@ function Solve({ inputs }: { inputs: HoldingInputs }) {
           ))}
         </select>
         <span>need to be?</span>
-        <Button type="submit" look="primary" size="small" disabled={solve.isPending}>
+        <Button type="submit" size="small" disabled={solve.isPending}>
           Work it out
         </Button>
       </form>
@@ -221,37 +221,39 @@ function Grid({ inputs }: { inputs: HoldingInputs }) {
       >
         Two things at once
       </CardTitle>
-      <div
-        className={styles.matrix}
-        style={{ gridTemplateColumns: `auto repeat(${g.col_values.length}, 1fr)` }}
-      >
-        <div />
-        {g.col_values.map((c) => (
-          <div key={c} className={`${styles.c} ${styles.h}`}>
-            {fmt(g.col_field, c)}
-          </div>
-        ))}
-        {g.row_values.map((r, i) => (
-          <div key={r} style={{ display: 'contents' }}>
-            <div className={`${styles.c} ${styles.h}`} style={{ textAlign: 'right' }}>
-              {fmt(g.row_field, r)}
+      <div className={styles.scroller}>
+        <div
+          className={styles.matrix}
+          style={{ gridTemplateColumns: `auto repeat(${g.col_values.length}, 1fr)` }}
+        >
+          <div />
+          {g.col_values.map((c) => (
+            <div key={c} className={`${styles.c} ${styles.h}`}>
+              {fmt(g.col_field, c)}
             </div>
-            {g.col_values.map((c, j) => {
-              const v = g.values[i]?.[j] ?? null
-              return (
-                <div
-                  key={c}
-                  className={`${styles.c} ${i === mid && j === midCol ? styles.base : ''}`}
-                  style={{
-                    background: `color-mix(in srgb, var(--accent) ${Math.round(6 + tone(v) * 34)}%, var(--card))`,
-                  }}
-                >
-                  {v === null ? '' : percent(v, 0)}
-                </div>
-              )
-            })}
-          </div>
-        ))}
+          ))}
+          {g.row_values.map((r, i) => (
+            <div key={r} style={{ display: 'contents' }}>
+              <div className={`${styles.c} ${styles.h}`} style={{ textAlign: 'right' }}>
+                {fmt(g.row_field, r)}
+              </div>
+              {g.col_values.map((c, j) => {
+                const v = g.values[i]?.[j] ?? null
+                return (
+                  <div
+                    key={c}
+                    className={`${styles.c} ${i === mid && j === midCol ? styles.base : ''}`}
+                    style={{
+                      background: `color-mix(in srgb, var(--accent) ${Math.round(6 + tone(v) * 34)}%, var(--card))`,
+                    }}
+                  >
+                    {v === null ? '' : percent(v, 0)}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </Card>
   )
@@ -268,7 +270,7 @@ function MonteCarlo({ inputs }: { inputs: HoldingInputs }) {
       </CardTitle>
       {!data && (
         <p className={styles.muted}>
-          <Button look="primary" size="small" onClick={() => setArmed(true)} disabled={isFetching}>
+          <Button size="small" onClick={() => setArmed(true)} disabled={isFetching}>
             {isFetching ? 'Running' : 'Run 10,000 versions'}
           </Button>
           {error ? '  This needs Pro, or the demo.' : ''}

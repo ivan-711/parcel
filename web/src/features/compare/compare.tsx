@@ -51,7 +51,9 @@ function rows(deals: DealDetail[]): Row[] {
 export function Compare({ ids }: { ids: string[] }) {
   const navigate = useNavigate()
   const { data: deals } = useSuspenseQuery(dealsQuery)
-  const picked = ids.filter((id) => deals.some((d) => d.id === id))
+  const chosen = ids.filter((id) => deals.some((d) => d.id === id))
+  // Two deals are needed to compare, so the page opens on the two most recent.
+  const picked = chosen.length >= 2 ? chosen : deals.slice(0, 2).map((d) => d.id)
   const { data: details, isPending } = useQuery(compareQuery(picked.length >= 2 ? picked : []))
 
   const toggle = (id: string) => {
@@ -63,7 +65,11 @@ export function Compare({ ids }: { ids: string[] }) {
     <>
       <header className={styles.head}>
         <h1>Compare</h1>
-        <p>Pick two to four deals and read them side by side.</p>
+        <p>
+          {chosen.length >= 2
+            ? 'Side by side, the same numbers for each.'
+            : 'Your two most recent deals, side by side. Pick up to four.'}
+        </p>
       </header>
       <div className={styles.picker} role="group" aria-label="Deals to compare">
         {deals.map((d) => (

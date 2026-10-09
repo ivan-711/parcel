@@ -11,6 +11,12 @@ import styles from './portfolio.module.css'
 
 type Property = PortfolioData['properties'][number]
 
+/** Shortfall as a share of plan; a small miss is a fact, not a warning. */
+function gap(data: PortfolioData): number {
+  if (!data.projected_to_date) return 0
+  return (data.actual_to_date - data.projected_to_date) / Math.abs(data.projected_to_date)
+}
+
 function monthName(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
     month: 'short',
@@ -161,26 +167,23 @@ export function Portfolio() {
         </p>
       ) : (
         <>
-          <div className={styles.totals}>
-            <Card className={styles.total} padded={false}>
-              <b>{moneySigned(data.monthly_projected_now)}</b>
-              <span>a month, planned, across everything</span>
-            </Card>
-            <Card className={styles.total} padded={false}>
-              <b>{moneySigned(data.projected_to_date)}</b>
-              <span>planned so far, for the months you've recorded</span>
-            </Card>
-            <Card className={styles.total} padded={false}>
-              <b
-                style={{
-                  color: data.actual_to_date < data.projected_to_date ? 'var(--risk)' : undefined,
-                }}
-              >
-                {moneySigned(data.actual_to_date)}
-              </b>
-              <span>what actually came in</span>
-            </Card>
-          </div>
+          <Card className={styles.summary} padded={false} aria-live="polite">
+            <p className={styles.sentence}>
+              <em>{moneySigned(data.monthly_projected_now)} a month</em> planned across everything
+              you own.{' '}
+              {data.projected_to_date !== 0 && (
+                <>
+                  So far <em>{moneySigned(data.actual_to_date)}</em> came in against{' '}
+                  {moneySigned(data.projected_to_date)} planned,{' '}
+                  <em className={gap(data) < -0.05 ? styles.bad : ''}>
+                    {moneySigned(Math.abs(data.actual_to_date - data.projected_to_date))}{' '}
+                    {data.actual_to_date < data.projected_to_date ? 'behind' : 'ahead'}
+                  </em>
+                  .
+                </>
+              )}
+            </p>
+          </Card>
           {data.properties.map((p) => (
             <PropertyCard key={p.deal.id} property={p} />
           ))}

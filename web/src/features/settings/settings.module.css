@@ -2,7 +2,7 @@
   max-width: 640px;
 }
 .wrap h1 {
-  font-size: 30px;
+  font-size: var(--fs-page-title);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
@@ -11,16 +11,16 @@
   margin-top: 4px;
 }
 .section {
-  margin-top: 22px;
+  margin-top: var(--sp-6);
 }
 .section h2 {
-  font-size: 17px;
+  font-size: var(--fs-title);
   font-weight: 600;
   margin-bottom: 4px;
 }
 .section > p {
   color: var(--sub);
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   margin-bottom: 10px;
 }
 .list {
@@ -34,7 +34,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 11px 16px;
   border-top: 1px solid var(--hair);
 }
 .row:first-child {
@@ -45,7 +45,7 @@
 }
 .row label small {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-caption);
   color: var(--mute);
 }
 .row input {

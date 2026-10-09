@@ -4,36 +4,13 @@ import { money, percent } from '../../lib/format'
 import { useMedia } from '../../lib/use-media'
 import { LinkButton } from '../../ui/button'
 import { Card } from '../../ui/card'
-import { Check } from '../../ui/check'
+import { Check, Chevron, Warn } from '../../ui/check'
 import { Trace } from '../../ui/trace'
 import { PublicNav } from '../shell/nav'
 import styles from './landing.module.css'
-import { sample } from './sample'
+import { deals, sample } from './sample'
 
 const TRACE = sample.sources.slice(0, 3).map((s) => ({ from: 'sample-cash', to: `src-${s.id}` }))
-
-const STEPS = [
-  {
-    title: 'Paste an address',
-    body: 'Parcel looks up the property and suggests rent, taxes and a loan rate, each with its source attached.',
-  },
-  {
-    title: 'Say what you would do',
-    body: 'Rent it, fix it and flip it, refinance it, assign the contract, or take over the loan. One model handles all five.',
-  },
-  {
-    title: 'Get a plain answer',
-    body: 'A sentence, not a spreadsheet. Tap any number to see where it came from and what would change it.',
-  },
-]
-
-const STRATEGIES = [
-  ['Rental', 'Buy it, rent it, hold it.'],
-  ['BRRRR', 'Fix it, rent it, refinance your cash back out.'],
-  ['Flip', 'Fix it and sell it inside a year.'],
-  ['Wholesale', 'Put it under contract and assign it for a fee.'],
-  ['Creative finance', 'Take over the seller’s loan, with a note for the rest.'],
-]
 
 const PROMISES = [
   [
@@ -97,6 +74,93 @@ function Sea() {
   return <canvas ref={ref} className={styles.sea} aria-hidden="true" />
 }
 
+/* The three figures below are the product's own controls, drawn still. */
+
+function AddressFigure() {
+  return (
+    <div className={styles.figure} aria-hidden="true">
+      <div className={styles.field}>1420 N 14th St, Sheboygan, WI</div>
+      <ul className={styles.suggest}>
+        <li>
+          <span>Rent</span>
+          <b>$2,350 a month</b>
+          <small>RentCast</small>
+        </li>
+        <li>
+          <span>Property tax</span>
+          <b>$3,900 a year</b>
+          <small>Census ACS</small>
+        </li>
+        <li>
+          <span>Loan rate</span>
+          <b>6.75%</b>
+          <small>Freddie Mac</small>
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+function StrategyFigure() {
+  const options = [
+    ['Rental', 'Buy it, rent it, hold it.'],
+    ['BRRRR', 'Fix it, rent it, refinance your cash back out.'],
+    ['Flip', 'Fix it and sell it inside a year.'],
+    ['Wholesale', 'Assign the contract for a fee.'],
+    ['Creative finance', 'Take over the seller’s loan.'],
+  ]
+  return (
+    <div className={`${styles.figure} ${styles.picker}`} aria-hidden="true">
+      {options.map(([name, line], i) => (
+        <div key={name} className={`${styles.option} ${i === 0 ? styles.checked : ''}`}>
+          <b>{name}</b>
+          <span>{line}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function InspectorFigure() {
+  const rows = [
+    ['Rent', 'RentCast rent estimate', '$2,350 a month', true],
+    ['Down payment', 'Typical for a rental', '25%', false],
+    ['Loan rate', 'Freddie Mac average plus 0.5%', '6.75%', true],
+    ['Empty', 'Share of the year with no tenant', '5%', false],
+  ] as const
+  return (
+    <div className={`${styles.figure} ${styles.rows}`} aria-hidden="true">
+      {rows.map(([label, source, value, lit]) => (
+        <div key={label} className={`${styles.inRow} ${lit ? styles.lit : ''}`}>
+          <div>
+            {label}
+            <small>{source}</small>
+          </div>
+          <b>{value}</b>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const MOVES: { title: string; body: string; figure: () => React.JSX.Element }[] = [
+  {
+    title: 'Paste an address.',
+    body: 'Parcel looks up the property and suggests the rent, the taxes and a loan rate, each with its source attached. Nothing is quietly set to zero.',
+    figure: AddressFigure,
+  },
+  {
+    title: 'Say what you would do.',
+    body: 'Rent it, fix it and flip it, refinance it, assign the contract, or take over the loan. One month by month model handles all five, so they compare fairly.',
+    figure: StrategyFigure,
+  },
+  {
+    title: 'Change anything.',
+    body: 'Tap a number in the answer and Parcel draws a line to the inputs it depends on. Edit one and the whole page moves with it, as you type.',
+    figure: InspectorFigure,
+  },
+]
+
 export function Landing() {
   const cardRef = useRef<HTMLDivElement>(null)
   const wide = useMedia('(min-width: 900px)')
@@ -115,7 +179,7 @@ export function Landing() {
               Open the demo
             </LinkButton>
             <a href="#how" className={styles.more}>
-              See how it works ›
+              See how it works <Chevron />
             </a>
           </div>
         </section>
@@ -130,7 +194,7 @@ export function Landing() {
               <Check /> Yes, it works
             </div>
             <p className={styles.answer}>
-              <em id="sample-cash" className={styles.lit} style={{ fontStyle: 'normal' }}>
+              <em id="sample-cash" className={styles.lit}>
                 {money(sample.cashFlowMonthly)} a month
               </em>{' '}
               in your pocket from a {money(sample.price)} duplex. Your money grows{' '}
@@ -159,53 +223,88 @@ export function Landing() {
         </div>
 
         <section className={styles.section} id="how">
-          <h2>Three steps, a few minutes.</h2>
-          <p>Built for people with a handful of properties, not a spreadsheet habit.</p>
-          <div className={styles.steps}>
-            {STEPS.map((step, i) => (
-              <Card key={step.title} className={styles.step}>
-                <span className={styles.n}>{i + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </Card>
+          <h2>Three moves, a few minutes.</h2>
+          <div className={styles.moves}>
+            {MOVES.map(({ title, body, figure: Figure }) => (
+              <div key={title} className={styles.move}>
+                <div className={styles.moveText}>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </div>
+                <Figure />
+              </div>
             ))}
           </div>
         </section>
 
         <section className={styles.section} id="strategies">
-          <h2>Five ways to do a deal.</h2>
-          <p>
-            Each one runs through the same month by month model, so they read the same way and
-            compare fairly.
+          <h2>Five ways to do a deal, five real answers.</h2>
+          <p className={styles.lead}>
+            The demo&rsquo;s sample deals, one per strategy, each run through the same model.
           </p>
-          <Card className={styles.list} as="div">
-            {STRATEGIES.map(([name, line]) => (
-              <div key={name} className={styles.item}>
-                <h3>{name}</h3>
-                <p>{line}</p>
-              </div>
+          <ul className={styles.answers}>
+            {deals.map((deal) => (
+              <li key={deal.name} className={styles.deal}>
+                <div className={styles.dealName}>
+                  <b>{deal.strategy}</b>
+                  <span>
+                    {deal.name}
+                    <br />
+                    {deal.where}, Sheboygan
+                  </span>
+                </div>
+                <div>
+                  <div
+                    className={`${styles.verdict} ${deal.answer === 'catch' ? styles.catch : ''}`}
+                  >
+                    {deal.answer === 'yes' ? <Check /> : <Warn />}
+                    {deal.answer === 'yes' ? 'Yes, it works' : 'It works, with a catch'}
+                  </div>
+                  <p className={styles.sentence}>
+                    {deal.parts.map((part, i) =>
+                      part.lit ? (
+                        <em key={i} className={styles.lit}>
+                          {part.text}
+                        </em>
+                      ) : (
+                        <span key={i}>{part.text}</span>
+                      ),
+                    )}
+                  </p>
+                  <p className={styles.watch}>
+                    <b>Watch out:</b> {deal.watch}
+                  </p>
+                </div>
+              </li>
             ))}
-          </Card>
+          </ul>
         </section>
 
         <section className={styles.section}>
           <h2>Honest by design.</h2>
-          <Card className={styles.promises} as="div">
+          <ul className={styles.promises}>
             {PROMISES.map(([title, body]) => (
-              <div key={title} className={styles.item}>
+              <li key={title}>
                 <h3>{title}</h3>
                 <p>{body}</p>
-              </div>
+              </li>
             ))}
-          </Card>
+          </ul>
+        </section>
+
+        <section className={styles.closing}>
+          <p>Five sample deals, no account, nothing to install.</p>
+          <LinkButton to="/demo" look="primary" size="large">
+            Open the demo
+          </LinkButton>
         </section>
       </main>
       <footer className={styles.footer}>
         <span>Parcel</span>
         <a href="/methodology">Methodology</a>
         <a href="https://github.com/ivan-711/parcel">Source</a>
-        <span style={{ marginLeft: 'auto' }}>
-          Sample figures come from the demo deal. Nothing here is advice.
+        <span className={styles.footNote}>
+          Sample figures come from the demo deals. Nothing here is advice.
         </span>
       </footer>
     </>

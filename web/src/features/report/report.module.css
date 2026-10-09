@@ -43,7 +43,7 @@
 }
 .answer {
   margin-top: 6px;
-  font-size: 24px;
+  font-size: var(--fs-answer);
   line-height: 1.3;
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -70,7 +70,7 @@
 }
 .stat b {
   display: block;
-  font-size: 24px;
+  font-size: var(--fs-figure);
   font-weight: 600;
   letter-spacing: -0.02em;
 }

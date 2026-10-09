@@ -16,7 +16,7 @@ function DemoBadge() {
   return (
     <>
       <span className={styles.demoPill}>Demo</span>
-      <button type="button" onClick={leave} style={{ color: 'var(--accent)' }}>
+      <button type="button" onClick={leave}>
         Leave
       </button>
     </>
@@ -32,7 +32,9 @@ export function AppNav() {
       </Link>
       <Link to="/deals">Deals</Link>
       <Link to="/pipeline">Pipeline</Link>
-      <Link to="/portfolio">Portfolio</Link>
+      <Link to="/portfolio" className={styles.hideNarrow}>
+        Portfolio
+      </Link>
       <Link to="/compare" className={styles.hideMobile}>
         Compare
       </Link>

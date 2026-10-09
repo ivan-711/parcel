@@ -49,6 +49,14 @@ function Grounding({ memo, stale }: { memo: MemoOut; stale: boolean }) {
 
 type Phase = 'idle' | 'writing' | 'retrying'
 
+const OUTLINE: [string, string][] = [
+  ['Summary', 'The property, the plan and the answer in a paragraph.'],
+  ['Returns', 'What you put in, what comes back, and when.'],
+  ['Financing', 'The loan, its payment and how well the rent covers it.'],
+  ['Risks', 'Every flag on this page, in plain words.'],
+  ['Bottom line', 'Whether to proceed, and at what price.'],
+]
+
 export function Memo({ dealId, request }: { dealId: string; request: number }) {
   const queryClient = useQueryClient()
   const { data: memo, isPending } = useQuery(memoQuery(dealId))
@@ -105,14 +113,14 @@ export function Memo({ dealId, request }: { dealId: string; request: number }) {
 
   const writing = phase !== 'idle'
   return (
-    <Card className={styles.memo}>
+    <Card className={styles.memo} padded={false}>
       <div className={styles.top}>
         <p>
           {memo
             ? `Written ${dateLong(memo.created_at)}${memo.stale ? ', before your latest changes' : ''}.`
-            : 'A one page summary a lender would recognize, written from the numbers on this page.'}
+            : 'A one page summary a lender would recognize, written from the figures on this page and checked against them before you see it.'}
         </p>
-        <Button look={memo ? 'default' : 'primary'} onClick={() => void start()} disabled={writing}>
+        <Button onClick={() => void start()} disabled={writing}>
           {writing ? 'Writing' : memo ? 'Rewrite' : 'Write the memo'}
         </Button>
       </div>
@@ -135,7 +143,14 @@ export function Memo({ dealId, request }: { dealId: string; request: number }) {
           <Body text={memo.body} />
         </>
       ) : isPending ? null : (
-        <p className={styles.empty}>No memo yet.</p>
+        <ul className={styles.outline} aria-label="What the memo will cover">
+          {OUTLINE.map(([title, line]) => (
+            <li key={title}>
+              <b>{title}</b>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </Card>
   )

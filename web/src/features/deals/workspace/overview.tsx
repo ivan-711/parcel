@@ -1,6 +1,7 @@
 import type { Analysis, Inputs } from '../../../lib/api/queries'
 import { money, moneySigned, months } from '../../../lib/format'
 import { getPath } from '../../../lib/paths'
+import { useMedia } from '../../../lib/use-media'
 import { MoneyLine, type ChartPoint } from '../../../ui/chart'
 import { Card, CardTitle } from '../../../ui/card'
 import styles from './overview.module.css'
@@ -72,6 +73,7 @@ function RentBreakdown({ inputs, analysis }: { inputs: Inputs; analysis: Analysi
 }
 
 export function Overview({ inputs, analysis }: { inputs: Inputs; analysis: Analysis }) {
+  const wide = useMedia('(min-width: 1101px)')
   const byMonth = analysis.horizon_months <= 36
   const rows = byMonth ? (analysis.months ?? analysis.years) : analysis.years
   const points: ChartPoint[] = rows.map((p) => ({
@@ -94,6 +96,7 @@ export function Overview({ inputs, analysis }: { inputs: Inputs; analysis: Analy
         </CardTitle>
         <MoneyLine
           points={points}
+          height={wide ? 280 : 200}
           startLabel={`${money(-(points[0]?.value ?? 0))} in`}
           endLabel={ahead}
         />

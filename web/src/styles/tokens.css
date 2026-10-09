@@ -7,7 +7,7 @@
   --hair: rgba(0, 0, 0, 0.06);
   --text: #1d1d1f;
   --sub: #5e6470;
-  --mute: #6b717d;
+  --mute: #616773;
   --accent: #0062d6;
   --accent-ink: #ffffff;
   --accent-soft: rgba(0, 98, 214, 0.1);
@@ -17,7 +17,7 @@
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.08);
   --glow: none;
-  --chart-mark: #c9d6ea;
+  --chart-mark: #93accf;
   --nav: rgba(255, 255, 255, 0.72);
   --control: rgba(0, 0, 0, 0.05);
   --font:
@@ -28,6 +28,50 @@
   --r-xl: 28px;
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --nums: 'tnum';
+
+  /* Type and spacing step up once at desk width; phones keep these. */
+  --fs-caption: 12px;
+  --fs-secondary: 13px;
+  --fs-body: 15px;
+  --fs-title: 17px;
+  --fs-card-title: 15px;
+  --fs-figure: 24px;
+  --fs-answer: 22px;
+  --fs-page-title: 28px;
+  --fs-tick: 11px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+  --card-pad: 18px 22px;
+  --verdict-pad: 22px 26px;
+  --row-pad: 8px 14px 8px 27px;
+  --inspector-w: 376px;
+  --gutter: 40px;
+}
+
+@media (min-width: 1101px) {
+  :root {
+    --fs-caption: 13px;
+    --fs-secondary: 14px;
+    --fs-body: 16px;
+    --fs-title: 18px;
+    --fs-card-title: 17px;
+    --fs-figure: 30px;
+    --fs-answer: 30px;
+    --fs-page-title: 28px;
+    --fs-tick: 12px;
+    --card-pad: 22px 26px;
+    --verdict-pad: 28px 32px;
+    --row-pad: 11px 16px 11px 30px;
+    --inspector-w: 400px;
+    --gutter: 44px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,7 +93,7 @@
     --shadow: none;
     --shadow-lg: none;
     --glow: 0 0 20px rgba(138, 244, 255, 0.5);
-    --chart-mark: #2a3c5c;
+    --chart-mark: #2f4a73;
     --nav: rgba(10, 14, 22, 0.6);
     --control: rgba(255, 255, 255, 0.08);
   }

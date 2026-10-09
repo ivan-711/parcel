@@ -5,14 +5,15 @@
   box-shadow: var(--shadow);
 }
 .padded {
-  padding: 18px 22px;
+  padding: var(--card-pad);
 }
 .title {
-  font-size: 15px;
+  font-size: var(--fs-card-title);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .subtitle {
-  font-size: 13px;
+  font-size: var(--fs-secondary);
   color: var(--sub);
-  margin-top: 2px;
+  margin-top: 3px;
 }

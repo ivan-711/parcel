@@ -13,13 +13,13 @@ test('the landing page answers with a real deal and passes an accessibility chec
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Know if a property makes money.',
   )
-  await expect(page.getByText('$308 a month')).toBeVisible()
+  await expect(page.getByText('$308 a month').first()).toBeVisible()
   await accessible(page)
 })
 
 test('the demo opens without an account and the workspace explains itself', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('link', { name: 'Open the demo' }).click()
+  await page.getByRole('link', { name: 'Open the demo' }).first().click()
   await expect(page).toHaveURL(/\/deals$/)
   await expect(page.getByRole('article')).toHaveCount(5)
 
@@ -27,7 +27,7 @@ test('the demo opens without an account and the workspace explains itself', asyn
   await page.waitForURL(/\/deals\/[0-9a-f-]+$/)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Duplex on N 14th')
   await expect(page.getByText('Yes, it works')).toBeVisible()
-  await expect(page.getByText('$308 a month')).toBeVisible()
+  await expect(page.getByText('$308 a month').first()).toBeVisible()
 
   await page.getByRole('button', { name: '15.5% a year on your money' }).click()
   await expect(page.getByRole('heading', { name: 'Where 15.5% a year comes from' })).toBeVisible()
