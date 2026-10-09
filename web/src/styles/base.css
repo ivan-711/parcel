@@ -19,7 +19,7 @@ body {
   line-height: 1.5;
   letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'cv11', 'ss01';
+  font-feature-settings: 'cv01', 'ss03';
 }
 
 h1,
