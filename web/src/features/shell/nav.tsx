@@ -1,24 +1,11 @@
-import { SignOutButton, useUser } from '@clerk/react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
 
 import { accountsEnabled } from '../auth/provider'
 import { session } from '../../lib/session'
 import styles from './shell.module.css'
 
-function Account() {
-  const { user } = useUser()
-  const initial = user?.firstName?.[0] ?? user?.primaryEmailAddress?.emailAddress[0] ?? '?'
-  return (
-    <>
-      <Link to="/settings">Settings</Link>
-      <SignOutButton>
-        <button type="button" className={styles.avatar} aria-label="Sign out">
-          {initial.toUpperCase()}
-        </button>
-      </SignOutButton>
-    </>
-  )
-}
+const Account = lazy(() => import('../auth/clerk').then((m) => ({ default: m.Account })))
 
 function DemoBadge() {
   const navigate = useNavigate()
@@ -49,7 +36,15 @@ export function AppNav() {
       <Link to="/compare" className={styles.hideMobile}>
         Compare
       </Link>
-      <div className={styles.right}>{demo || !accountsEnabled ? <DemoBadge /> : <Account />}</div>
+      <div className={styles.right}>
+        {demo || !accountsEnabled ? (
+          <DemoBadge />
+        ) : (
+          <Suspense fallback={null}>
+            <Account />
+          </Suspense>
+        )}
+      </div>
     </nav>
   )
 }

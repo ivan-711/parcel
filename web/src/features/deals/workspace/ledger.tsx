@@ -20,7 +20,11 @@ const COLUMNS: { label: string; pick: (p: Period) => number; sum?: boolean }[] =
 
 function Cell({ value, sum }: { value: number; sum?: boolean }) {
   const cls = [styles.cell, value < -0.5 && styles.neg, sum && styles.sum].filter(Boolean).join(' ')
-  return <div className={cls}>{Math.abs(value) < 0.5 ? '' : moneySigned(value)}</div>
+  return (
+    <div className={cls} role="cell">
+      {Math.abs(value) < 0.5 ? '' : moneySigned(value)}
+    </div>
+  )
 }
 
 /** Every period of the ledger, virtualized so forty years of months stays smooth. */
@@ -54,8 +58,8 @@ export function Ledger({ analysis }: { analysis: Analysis }) {
           label="Ledger detail"
         />
       </div>
-      <div className={styles.scroll} ref={scrollRef}>
-        <div className={styles.table} role="table" aria-label="Ledger">
+      <div className={styles.scroll} ref={scrollRef} role="table" aria-label="Ledger">
+        <div className={styles.table} role="row">
           <div className={`${styles.cell} ${styles.th}`} role="columnheader" />
           {COLUMNS.map((c) => (
             <div key={c.label} className={`${styles.cell} ${styles.th}`} role="columnheader">

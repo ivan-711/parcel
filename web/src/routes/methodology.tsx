@@ -1,12 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { PublicNav } from '../features/shell/nav'
+import { Methodology } from '../features/methodology/methodology'
 
-export const Route = createFileRoute('/methodology')({
-  component: () => (
-    <>
-      <PublicNav />
-      <h1>Methodology</h1>
-    </>
-  ),
-})
+export const Route = createFileRoute('/methodology')({ component: Methodology })

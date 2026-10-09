@@ -224,7 +224,6 @@ function Grid({ inputs }: { inputs: HoldingInputs }) {
       <div
         className={styles.matrix}
         style={{ gridTemplateColumns: `auto repeat(${g.col_values.length}, 1fr)` }}
-        role="table"
       >
         <div />
         {g.col_values.map((c) => (
@@ -244,8 +243,7 @@ function Grid({ inputs }: { inputs: HoldingInputs }) {
                   key={c}
                   className={`${styles.c} ${i === mid && j === midCol ? styles.base : ''}`}
                   style={{
-                    background: `color-mix(in srgb, var(--accent) ${Math.round(8 + tone(v) * 52)}%, var(--card))`,
-                    color: tone(v) > 0.6 ? 'var(--accent-ink)' : 'var(--text)',
+                    background: `color-mix(in srgb, var(--accent) ${Math.round(6 + tone(v) * 34)}%, var(--card))`,
                   }}
                 >
                   {v === null ? '' : percent(v, 0)}

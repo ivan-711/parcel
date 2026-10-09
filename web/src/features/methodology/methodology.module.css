@@ -1,0 +1,92 @@
+.page {
+  width: min(760px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 80px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.page h1 {
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.lead {
+  color: var(--sub);
+  font-size: 19px;
+  margin-top: 12px;
+}
+.toc {
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 15px;
+}
+.page h2 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 56px;
+  scroll-margin-top: 72px;
+}
+.page h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 26px;
+}
+.page p {
+  margin-top: 12px;
+}
+.page ul {
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
+.page li {
+  margin-top: 6px;
+}
+.formula {
+  display: block;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--tile);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 15px;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 8px 10px 8px 0;
+  border-top: 1px solid var(--hair);
+  vertical-align: top;
+}
+.table th {
+  color: var(--mute);
+  font-weight: 500;
+  font-size: 13px;
+  border-top: 0;
+}
+.table td:first-child {
+  white-space: nowrap;
+  font-weight: 500;
+}
+.aside {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-left: 2px solid var(--accent);
+  color: var(--sub);
+  font-size: 15px;
+}

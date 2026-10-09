@@ -1,27 +1,18 @@
-import { ClerkProvider, useAuth } from '@clerk/react'
-import { useEffect, type ReactNode } from 'react'
-
-import { session } from '../../lib/session'
+import { lazy, Suspense, type ReactNode } from 'react'
 
 const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 /** True when a Clerk instance is configured; otherwise the app is demo only. */
 export const accountsEnabled = Boolean(key)
 
-function Bridge({ children }: { children: ReactNode }) {
-  const { getToken, isSignedIn } = useAuth()
-  useEffect(() => {
-    session.useClerk(isSignedIn ? () => getToken() : null)
-    return () => session.useClerk(null)
-  }, [getToken, isSignedIn])
-  return children
-}
+// Clerk is a large dependency, so it only loads when accounts are turned on.
+const Clerk = lazy(() => import('./clerk').then((m) => ({ default: m.ClerkShell })))
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   if (!key) return children
   return (
-    <ClerkProvider publishableKey={key} afterSignOutUrl="/">
-      <Bridge>{children}</Bridge>
-    </ClerkProvider>
+    <Suspense fallback={null}>
+      <Clerk publishableKey={key}>{children}</Clerk>
+    </Suspense>
   )
 }
