@@ -16,6 +16,7 @@ import { setPath } from '../../../lib/paths'
 import { statsFor } from '../../../lib/stats'
 import { STAGE_NAMES, STRATEGY_NAMES, verdict } from '../../../lib/words'
 import { Button, LinkButton } from '../../../ui/button'
+import { useMedia } from '../../../lib/use-media'
 import { Segmented } from '../../../ui/segmented'
 import { Trace } from '../../../ui/trace'
 import { Inspector } from './inspector'
@@ -46,17 +47,6 @@ function useDebounced<T>(value: T, ms: number): T {
   return debounced
 }
 
-function useWide(): boolean {
-  const [wide, setWide] = useState(() => window.matchMedia('(min-width: 1101px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1101px)')
-    const onChange = () => setWide(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-  return wide
-}
-
 export function Workspace({ dealId }: { dealId: string }) {
   const queryClient = useQueryClient()
   const { data: deal } = useSuspenseQuery(dealQuery(dealId))
@@ -66,7 +56,7 @@ export function Workspace({ dealId }: { dealId: string }) {
   const [picked, setPicked] = useState<string | null>(null)
   const [memoRequest, setMemoRequest] = useState(0)
   const layoutRef = useRef<HTMLDivElement>(null)
-  const wide = useWide()
+  const wide = useMedia('(min-width: 1101px)')
 
   const debounced = useDebounced(inputs, 250)
   const dirty = JSON.stringify(debounced) !== JSON.stringify(deal.inputs)
@@ -106,6 +96,15 @@ export function Workspace({ dealId }: { dealId: string }) {
   )
   const words = verdict(inputs, analysis)
   const hold = ledgerOf(analysis)
+
+  // On narrow screens the inspector sits below everything, so a chip scrolls to its row.
+  const jump = (path: string) => {
+    const row = document.getElementById(`in-${path.replace(/\./g, '-')}`)
+    if (!row) return
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    row.classList.add('flash')
+    setTimeout(() => row.classList.remove('flash'), 1200)
+  }
 
   const edit = (path: string, value: number | null) => {
     setInputs((cur) => setPath(cur, path, value))
@@ -153,8 +152,13 @@ export function Workspace({ dealId }: { dealId: string }) {
 
         <VerdictCard verdict={words} />
         <StatTiles stats={stats} picked={picked} onPick={setPicked} />
-        {stat && <Explain stat={stat} labels={labels} />}
+        {stat && <Explain stat={stat} labels={labels} onJump={wide ? undefined : jump} />}
 
+        {!wide && (
+          <a href="#inspector" className={styles.toInspector}>
+            Your assumptions ›
+          </a>
+        )}
         <div className={styles.tabs}>
           <Segmented options={tabs} value={tab} onChange={setTab} label="Deal views" />
         </div>

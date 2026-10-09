@@ -9,15 +9,24 @@ const PORT = 4173
 
 const server = spawn(
   process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'],
+  [
+    'node_modules/vite/bin/vite.js',
+    'preview',
+    '--host',
+    '127.0.0.1',
+    '--port',
+    String(PORT),
+    '--strictPort',
+  ],
   { stdio: ['ignore', 'ignore', 'inherit'] },
 )
 const wait = async () => {
   for (let i = 0; i < 50; i++) {
-    try {
-      const r = await fetch(`http://127.0.0.1:${PORT}/`)
-      if (r.ok) return
-    } catch {}
+    const up = await fetch(`http://127.0.0.1:${PORT}/`).then(
+      (r) => r.ok,
+      () => false,
+    )
+    if (up) return
     await new Promise((r) => setTimeout(r, 200))
   }
   throw new Error('preview server did not start')
@@ -29,11 +38,11 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   for (const path of PAGES) {
     await page.goto(`http://127.0.0.1:${PORT}${path}`, { waitUntil: 'networkidle' })
-    const html = await page.evaluate(() => {
-      // Drawn after measuring, so it must not be in the markup React hydrates.
-      document.querySelectorAll('svg[aria-hidden="true"][class*="layer"]').forEach((el) => el.remove())
-      return '<!doctype html>' + document.documentElement.outerHTML
-    })
+    // The trace overlay is measured at runtime, so it stays out of the static markup.
+    await page
+      .locator('svg[aria-hidden="true"][class*="layer"]')
+      .evaluateAll((els) => els.forEach((el) => el.remove()))
+    const html = '<!doctype html>' + (await page.content()).replace(/^<!DOCTYPE html>/i, '')
     const out = path === '/' ? 'dist/index.html' : `dist${path}/index.html`
     await mkdir(out.slice(0, out.lastIndexOf('/')), { recursive: true })
     await writeFile(out, html)

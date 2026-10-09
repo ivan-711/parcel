@@ -121,7 +121,7 @@ export function verdict(inputs: Inputs, analysis: AnyAnalysis): Verdict {
 
   const result = answer(ok, a.flags, (m.cash_flow ?? 0) < 0)
   let watch = flag?.message ?? null
-  if (!watch && m.break_even_occupancy !== null && m.break_even_occupancy > 0.8) {
+  if (!watch && m.break_even_occupancy !== null && m.break_even_occupancy > 0.75) {
     watch = `it needs to be rented ${percent(m.break_even_occupancy, 0)} of the time to cover its costs.`
   }
   return { answer: result, headline: HEADLINES[result], parts, watch }

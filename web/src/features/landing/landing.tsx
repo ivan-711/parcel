@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { money, percent } from '../../lib/format'
+import { useMedia } from '../../lib/use-media'
 import { LinkButton } from '../../ui/button'
 import { Card } from '../../ui/card'
 import { Check } from '../../ui/check'
@@ -49,10 +50,59 @@ const PROMISES = [
   ],
 ]
 
+/** A sparse field of dim particles behind the answer card, only in the dark appearance. */
+function Sea() {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const dark = useMedia('(prefers-color-scheme: dark)')
+  const still = useMedia('(prefers-reduced-motion: reduce)')
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas || !dark) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    let seed = 7
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+    const dots = Array.from({ length: 220 }, () => ({
+      x: rnd(),
+      y: rnd(),
+      r: rnd() * 1.2 + 0.3,
+      a: rnd() * 0.5 + 0.1,
+      v: rnd() * 0.00004 + 0.00001,
+    }))
+    let frame = 0
+    let t = 0
+    const draw = () => {
+      const { clientWidth: w, clientHeight: h } = canvas
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w
+        canvas.height = h
+      }
+      ctx.clearRect(0, 0, w, h)
+      for (const d of dots) {
+        const y = (((d.y - t * d.v) % 1) + 1) % 1
+        ctx.fillStyle = `rgba(61, 139, 255, ${d.a})`
+        ctx.beginPath()
+        ctx.arc(d.x * w, y * h, d.r, 0, 7)
+        ctx.fill()
+      }
+      if (!still) {
+        t += 1
+        frame = requestAnimationFrame(draw)
+      }
+    }
+    draw()
+    return () => cancelAnimationFrame(frame)
+  }, [dark, still])
+  if (!dark) return null
+  return <canvas ref={ref} className={styles.sea} aria-hidden="true" />
+}
+
 export function Landing() {
   const cardRef = useRef<HTMLDivElement>(null)
+  const wide = useMedia('(min-width: 900px)')
   return (
     <>
+      <Sea />
       <PublicNav />
       <main>
         <section className={styles.hero}>
@@ -105,7 +155,7 @@ export function Landing() {
               ))}
             </div>
           </Card>
-          <Trace container={cardRef} links={TRACE} gutter={28} mode="margin" />
+          {wide && <Trace container={cardRef} links={TRACE} gutter={28} mode="margin" />}
         </div>
 
         <section className={styles.section} id="how">
@@ -128,26 +178,26 @@ export function Landing() {
             Each one runs through the same month by month model, so they read the same way and
             compare fairly.
           </p>
-          <div className={styles.strategies}>
+          <Card className={styles.list} as="div">
             {STRATEGIES.map(([name, line]) => (
-              <Card key={name} className={styles.strategy}>
+              <div key={name} className={styles.item}>
                 <h3>{name}</h3>
                 <p>{line}</p>
-              </Card>
+              </div>
             ))}
-          </div>
+          </Card>
         </section>
 
         <section className={styles.section}>
           <h2>Honest by design.</h2>
-          <div className={styles.promises}>
+          <Card className={styles.promises} as="div">
             {PROMISES.map(([title, body]) => (
-              <Card key={title} className={styles.step}>
+              <div key={title} className={styles.item}>
                 <h3>{title}</h3>
                 <p>{body}</p>
-              </Card>
+              </div>
             ))}
-          </div>
+          </Card>
         </section>
       </main>
       <footer className={styles.footer}>

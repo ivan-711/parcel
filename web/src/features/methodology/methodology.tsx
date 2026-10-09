@@ -317,7 +317,10 @@ payback             = first month the running total is back above zero`}</F>
             </tr>
             <tr>
               <td>Borrowing lowers your return</td>
-              <td>The cap rate is below the loan rate, so borrowing costs more than the property earns.</td>
+              <td>
+                The cap rate is below the loan rate, so borrowing costs more than the property
+                earns.
+              </td>
             </tr>
             <tr>
               <td>Optimistic vacancy</td>

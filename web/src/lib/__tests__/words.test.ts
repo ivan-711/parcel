@@ -19,7 +19,7 @@ describe('verdict', () => {
       '$308 a month',
       '15.5% a year',
     ])
-    expect(v.watch).toBeNull()
+    expect(v.watch).toBe('it needs to be rented 79% of the time to cover its costs.')
   })
 
   it('warns when the deal is only barely rented enough', () => {
@@ -70,6 +70,18 @@ describe('verdict', () => {
     }
     expect(oneLiner(flip, { monthly_cash_flow: null, irr: null, total_profit: 21_729 })).toBe(
       '$21,729 profit',
+    )
+  })
+})
+
+describe('the landing sample', () => {
+  it('says what the workspace says for the same deal', async () => {
+    const { sample } = await import('../../features/landing/sample')
+    const v = verdict(duplex, analysis)
+    expect(v.parts[0]?.text).toBe(`$${sample.cashFlowMonthly} a month`)
+    expect(v.parts.some((p) => p.text === `${(sample.irr * 100).toFixed(1)}% a year`)).toBe(true)
+    expect(v.watch).toBe(
+      `it needs to be rented ${Math.round(sample.breakEven * 100)}% of the time to cover its costs.`,
     )
   })
 })

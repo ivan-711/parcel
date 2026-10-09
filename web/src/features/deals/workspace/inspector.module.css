@@ -71,6 +71,15 @@
   color: var(--accent);
   font-weight: 500;
 }
+.row:global(.flash) {
+  animation: flash 1.2s var(--ease);
+}
+@keyframes flash {
+  0%,
+  60% {
+    background: var(--accent-soft);
+  }
+}
 .more {
   display: block;
   width: 100%;

@@ -159,29 +159,32 @@
   color: var(--sub);
   margin-top: 6px;
 }
-.strategies {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+.list,
+.promises {
   margin-top: 36px;
+  padding: 6px 28px;
 }
-.strategy {
-  padding: 18px 18px 20px;
+.item {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hair);
+  align-items: baseline;
 }
-.strategy h3 {
-  font-size: 15px;
+.item:first-child {
+  border-top: 0;
+}
+.item h3 {
+  font-size: 17px;
   font-weight: 600;
 }
-.strategy p {
+.item p {
   color: var(--sub);
-  font-size: 13px;
-  margin-top: 4px;
 }
-.promises {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 36px;
+.promises .item {
+  grid-template-columns: 1fr;
+  gap: 4px;
 }
 .footer {
   margin: 96px auto 48px;
@@ -204,6 +207,8 @@
 .sea {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: -1;
   pointer-events: none;
 }
@@ -211,12 +216,16 @@
   .tiles {
     grid-template-columns: repeat(2, 1fr);
   }
-  .steps,
-  .promises {
+  .steps {
     grid-template-columns: 1fr;
   }
-  .strategies {
-    grid-template-columns: repeat(2, 1fr);
+  .item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .list,
+  .promises {
+    padding: 6px 20px;
   }
   .card {
     padding: 24px 22px 28px;

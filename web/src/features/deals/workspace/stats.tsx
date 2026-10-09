@@ -34,7 +34,15 @@ export function StatTiles({
   )
 }
 
-export function Explain({ stat, labels }: { stat: Stat; labels: Record<string, string> }) {
+export function Explain({
+  stat,
+  labels,
+  onJump,
+}: {
+  stat: Stat
+  labels: Record<string, string>
+  onJump?: (path: string) => void
+}) {
   return (
     <Card className={styles.why} padded={false} id="explain">
       <div>
@@ -43,11 +51,23 @@ export function Explain({ stat, labels }: { stat: Stat; labels: Record<string, s
       </div>
       <div className={styles.deps}>
         <small>Depends on</small>
-        {stat.depends.map((path) => (
-          <span key={path} id={`dep-${path.replace(/\./g, '-')}`} className={styles.chip}>
-            {labelFor(path, labels)}
-          </span>
-        ))}
+        {stat.depends.map((path) =>
+          onJump ? (
+            <button
+              key={path}
+              type="button"
+              id={`dep-${path.replace(/\./g, '-')}`}
+              className={styles.chip}
+              onClick={() => onJump(path)}
+            >
+              {labelFor(path, labels)}
+            </button>
+          ) : (
+            <span key={path} id={`dep-${path.replace(/\./g, '-')}`} className={styles.chip}>
+              {labelFor(path, labels)}
+            </span>
+          ),
+        )}
       </div>
     </Card>
   )

@@ -8,7 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from parcel.db.models import Actual, Deal, Stage, Strategy, User
 from parcel.schemas import inputs as i
 
-_SOURCE_NOTE = {"kind": "estimate", "label": "Sample figure for the demo"}
+_RENT = {"kind": "rentcast", "label": "RentCast rent estimate", "as_of": "2026-10-08"}
+_VALUE = {"kind": "rentcast", "label": "RentCast value estimate", "as_of": "2026-10-08"}
+_TAX = {"kind": "census", "label": "County median tax rate of 1.74% (Census ACS 2023) times value"}
+_INSURANCE = {"kind": "user", "label": "Your quote"}
+_RATE = {
+    "kind": "fred",
+    "label": "Freddie Mac 30-year average of 6.25% plus 0.5% for an investment loan",
+    "as_of": "2026-10-02",
+}
 
 
 def _ops(rent: float, tax: float, insurance: float, lease_up_months: int = 0) -> i.Operations:
@@ -90,6 +98,28 @@ SAMPLES: list[Sample] = [
 ]
 
 
+def _sources(spec: i.Inputs) -> dict[str, dict[str, str]]:
+    """The provenance a lookup would have attached, so the demo reads like a real deal."""
+    if isinstance(spec, i.Wholesale):
+        return {
+            "after_repair_value": _VALUE,
+            "property_tax_annual": _TAX,
+            "insurance_annual": _INSURANCE,
+        }
+    if isinstance(spec, i.Flip):
+        return {"property_tax_annual": _TAX, "insurance_annual": _INSURANCE}
+    sources = {
+        "operations.monthly_rent": _RENT,
+        "operations.property_tax_annual": _TAX,
+        "operations.insurance_annual": _INSURANCE,
+    }
+    if isinstance(spec, i.BuyAndHold):
+        sources["interest_rate"] = _RATE
+    if isinstance(spec, i.Brrrr):
+        sources["refi_rate"] = _RATE
+    return sources
+
+
 async def create_sandbox(session: AsyncSession, expires_at: datetime) -> User:
     user = User(name="Demo investor", demo_expires_at=expires_at)
     session.add(user)
@@ -104,7 +134,7 @@ async def create_sandbox(session: AsyncSession, expires_at: datetime) -> User:
             position=positions.get(stage, 0),
             address=address,
             inputs=spec.model_dump(mode="json"),
-            provenance={"operations.monthly_rent": _SOURCE_NOTE},
+            provenance=_sources(spec),
             acquired_on=_months_ago(14) if stage is Stage.owned else None,
         )
         positions[stage] = deal.position + 1

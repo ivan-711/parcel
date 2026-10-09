@@ -15,10 +15,15 @@ export const sample = {
       id: 'rent',
       label: 'Rent',
       value: '$2,350 a month',
-      from: 'RentCast estimate, $2,150 to $2,560',
+      from: 'RentCast rent estimate, $2,150 to $2,560',
     },
-    { id: 'tax', label: 'Property tax', value: '$3,900 a year', from: 'Census county rate, 1.74%' },
-    { id: 'rate', label: 'Loan rate', value: '6.75%', from: 'Freddie Mac average + 0.5%' },
+    {
+      id: 'tax',
+      label: 'Property tax',
+      value: '$3,900 a year',
+      from: 'County tax rate of 1.74%, Census ACS',
+    },
+    { id: 'rate', label: 'Loan rate', value: '6.75%', from: 'Freddie Mac average plus 0.5%' },
     { id: 'insurance', label: 'Insurance', value: '$1,650 a year', from: 'Your quote' },
   ],
 } as const

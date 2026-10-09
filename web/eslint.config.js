@@ -32,6 +32,10 @@ export default tseslint.config(
     },
   },
   { files: ['*.config.ts', 'e2e/**'], languageOptions: { globals: globals.node } },
-  { files: ['**/*.js'], ...tseslint.configs.disableTypeChecked },
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: { globals: globals.node },
+  },
   prettier,
 )
