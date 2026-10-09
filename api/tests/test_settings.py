@@ -33,7 +33,7 @@ def test_production_is_the_default_and_refuses_an_empty_config() -> None:
     with pytest.raises(ValidationError) as e:
         make()
     message = str(e.value)
-    for name in ("SECRET_KEY", "DATABASE_URL", "CLERK_ISSUER", "CLERK_WEBHOOK_SECRET"):
+    for name in ("SECRET_KEY", "DATABASE_URL"):
         assert name in message
     assert "ENVIRONMENT=development" in message
 
@@ -50,6 +50,15 @@ def test_the_environment_variable_turns_the_checks_on(monkeypatch: pytest.Monkey
     monkeypatch.setenv("ENVIRONMENT", "production")
     with pytest.raises(ValidationError):
         make()
+
+
+def test_accounts_are_optional_but_clerk_needs_its_webhook_secret_once_set() -> None:
+    demo_only = {k: v for k, v in PRODUCTION.items() if not k.startswith("clerk")}
+    assert make(**demo_only).clerk_issuer == ""
+    with pytest.raises(ValidationError, match="CLERK_WEBHOOK_SECRET"):
+        make(**demo_only, clerk_issuer="https://clerk.parceldesk.io")
+    with pytest.raises(ValidationError, match="CLERK_ISSUER"):
+        make(**{**PRODUCTION, "clerk_issuer": "clerk.parceldesk.io"})
 
 
 def test_stripe_needs_its_webhook_secret_once_it_has_a_key() -> None:

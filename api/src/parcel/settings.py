@@ -19,7 +19,10 @@ class Settings(BaseSettings):
     """Signs demo session tokens. Must be set to a long random value outside development."""
 
     clerk_issuer: str = ""
-    """Your Clerk frontend API URL, e.g. https://clerk.parceldesk.io."""
+    """Your Clerk frontend API URL, e.g. https://clerk.parceldesk.io.
+
+    Empty means accounts are off and only demo sessions can sign in.
+    """
     clerk_webhook_secret: SecretStr = SecretStr("")
 
     rentcast_api_key: SecretStr = SecretStr("")
@@ -70,9 +73,9 @@ class Settings(BaseSettings):
             missing.append("SECRET_KEY (a random value of 32+ characters)")
         if self.database_url == DEV_DATABASE:
             missing.append("DATABASE_URL")
-        if not self.clerk_issuer.startswith("https://"):
-            missing.append("CLERK_ISSUER")
-        if not self.clerk_webhook_secret.get_secret_value():
+        if self.clerk_issuer and not self.clerk_issuer.startswith("https://"):
+            missing.append("CLERK_ISSUER (an https URL)")
+        if self.clerk_issuer and not self.clerk_webhook_secret.get_secret_value():
             missing.append("CLERK_WEBHOOK_SECRET")
         if self.stripe_secret_key.get_secret_value() and not (
             self.stripe_webhook_secret.get_secret_value() and self.stripe_pro_price_id
