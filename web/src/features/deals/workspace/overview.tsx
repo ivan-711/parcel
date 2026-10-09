@@ -42,14 +42,11 @@ function RentBreakdown({ inputs, analysis }: { inputs: Inputs; analysis: Analysi
   const rent = Number(getPath(inputs, 'operations.monthly_rent') ?? 0)
   if (!month || month.gross_rent <= 0) return null
   const loan = month.interest + month.principal
-  const fixed =
-    (Number(getPath(inputs, 'operations.property_tax_annual') ?? 0) +
-      Number(getPath(inputs, 'operations.insurance_annual') ?? 0)) /
-    12
+  const fixed = month.taxes + month.insurance
   const rows: [string, number, 'on' | 'bad' | ''][] = [
     [inputs.strategy === 'creative' ? 'Loan payments' : 'Mortgage', loan, ''],
-    ['Taxes, insurance', Math.min(fixed, month.opex), ''],
-    ['Upkeep', Math.max(month.opex - fixed, 0), ''],
+    ['Taxes, insurance', fixed, ''],
+    ['Upkeep', month.opex - fixed, ''],
     ['Reserves', month.capex, ''],
     ['Empty months', month.vacancy, ''],
     ['Left over', month.cash_flow, month.cash_flow < 0 ? 'bad' : 'on'],

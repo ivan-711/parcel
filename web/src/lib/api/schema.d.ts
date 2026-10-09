@@ -1147,6 +1147,10 @@ export interface components {
             other_income: number;
             /** Egi */
             egi: number;
+            /** Taxes */
+            taxes: number;
+            /** Insurance */
+            insurance: number;
             /** Opex */
             opex: number;
             /** Noi */

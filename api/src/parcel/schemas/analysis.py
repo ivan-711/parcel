@@ -40,6 +40,8 @@ class Period(BaseModel):
     vacancy: float
     other_income: float
     egi: float
+    taxes: float
+    insurance: float
     opex: float
     noi: float
     capex: float

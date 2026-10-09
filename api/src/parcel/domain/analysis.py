@@ -129,6 +129,8 @@ def _lines(ledger: Ledger) -> dict[str, np.ndarray]:
         "vacancy": ledger.vacancy[0],
         "other_income": ledger.other_income[0],
         "egi": ledger.egi[0],
+        "taxes": ledger.taxes[0],
+        "insurance": ledger.insurance[0],
         "opex": ledger.opex[0],
         "noi": ledger.noi[0],
         "capex": ledger.capex[0],

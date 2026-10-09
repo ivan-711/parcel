@@ -16,6 +16,8 @@ const period = (over: Partial<Period>): Period => ({
   vacancy: 0,
   other_income: 0,
   egi: 0,
+  taxes: 0,
+  insurance: 0,
   opex: 0,
   noi: 0,
   capex: 0,
