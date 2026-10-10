@@ -17,7 +17,10 @@ type TokenSource = () => Promise<string | null>
 
 let clerkTokens: TokenSource | null = null
 
-const { promise: clerkReady, resolve: clerkLoaded } = Promise.withResolvers<void>()
+let clerkLoaded: () => void = () => undefined
+const clerkReady = new Promise<void>((resolve) => {
+  clerkLoaded = resolve
+})
 
 function readDemo(): DemoSession | null {
   try {
