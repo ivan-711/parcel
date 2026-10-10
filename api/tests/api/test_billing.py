@@ -32,6 +32,35 @@ async def _me(client: httpx.AsyncClient, headers: dict[str, str]) -> dict[str, A
     return body
 
 
+CHECKOUT = {"customer": "cus_123", "payment_status": "paid"}
+
+
+async def _send(
+    client: httpx.AsyncClient, event_id: str, event_type: str, created: int, **obj: Any
+) -> None:
+    event = {
+        "id": event_id,
+        "type": event_type,
+        "created": created,
+        "data": {"object": {"customer": "cus_123", **obj}},
+    }
+    payload, sig = stripe_signed(event)
+    assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
+
+
+async def _subscribe(client: httpx.AsyncClient, headers: dict[str, str]) -> None:
+    me = await _me(client, headers)
+    completed = {
+        "id": "evt_1",
+        "type": "checkout.session.completed",
+        "created": 1_000,
+        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
+    }
+    payload, sig = stripe_signed(completed)
+    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    assert (await _me(client, headers))["plan"] == "pro"
+
+
 async def test_checkout_hands_back_a_stripe_url(
     client: httpx.AsyncClient, login: Login, billing: FakeBilling
 ) -> None:
@@ -63,7 +92,8 @@ async def test_checkout_then_cancel_moves_the_plan(client: httpx.AsyncClient, lo
     completed = {
         "id": "evt_1",
         "type": "checkout.session.completed",
-        "data": {"object": {"client_reference_id": me["id"], "customer": "cus_123"}},
+        "created": 1_000,
+        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
     }
     payload, sig = stripe_signed(completed)
     assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
@@ -72,13 +102,7 @@ async def test_checkout_then_cancel_moves_the_plan(client: httpx.AsyncClient, lo
     portal = await client.post("/v1/billing/portal", headers=headers)
     assert portal.json()["url"].startswith("https://billing.stripe.test/cus_123")
 
-    deleted = {
-        "id": "evt_2",
-        "type": "customer.subscription.deleted",
-        "data": {"object": {"customer": "cus_123", "status": "canceled"}},
-    }
-    payload, sig = stripe_signed(deleted)
-    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    await _send(client, "evt_2", "customer.subscription.deleted", 2_000, status="canceled")
     assert (await _me(client, headers))["plan"] == "free"
 
 
@@ -88,17 +112,51 @@ async def test_replayed_events_are_applied_once(client: httpx.AsyncClient, login
     completed = {
         "id": "evt_1",
         "type": "checkout.session.completed",
-        "data": {"object": {"client_reference_id": me["id"], "customer": "cus_123"}},
+        "created": 1_000,
+        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
     }
     payload, sig = stripe_signed(completed)
     await client.post("/webhooks/stripe", content=payload, headers=sig)
-    lapsed = {
-        "id": "evt_2",
-        "type": "customer.subscription.updated",
-        "data": {"object": {"customer": "cus_123", "status": "unpaid"}},
+    await _send(client, "evt_2", "customer.subscription.updated", 2_000, status="unpaid")
+    assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
+    assert (await _me(client, headers))["plan"] == "free"
+
+
+async def test_a_late_retry_cannot_undo_a_cancellation(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    await _subscribe(client, headers)
+    await _send(client, "evt_3", "customer.subscription.deleted", 3_000, status="canceled")
+    await _send(client, "evt_2", "customer.subscription.updated", 2_000, status="active")
+    assert (await _me(client, headers))["plan"] == "free"
+
+
+async def test_a_late_retry_cannot_drop_a_paying_user(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    await _subscribe(client, headers)
+    await _send(client, "evt_3", "customer.subscription.updated", 3_000, status="active")
+    await _send(client, "evt_2", "customer.subscription.updated", 2_000, status="past_due")
+    await _send(client, "evt_1b", "customer.subscription.updated", 1_500, status="unpaid")
+    assert (await _me(client, headers))["plan"] == "pro"
+
+
+async def test_checkout_grants_nothing_until_it_is_paid(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    me = await _me(client, headers)
+    pending = {
+        "id": "evt_1",
+        "type": "checkout.session.completed",
+        "created": 1_000,
+        "data": {
+            "object": {**CHECKOUT, "client_reference_id": me["id"], "payment_status": "unpaid"}
+        },
     }
-    payload2, sig2 = stripe_signed(lapsed)
-    await client.post("/webhooks/stripe", content=payload2, headers=sig2)
+    payload, sig = stripe_signed(pending)
     assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
     assert (await _me(client, headers))["plan"] == "free"
 
@@ -151,6 +209,27 @@ async def test_deleting_the_clerk_account_deletes_the_user(
     await client.post("/webhooks/clerk", content=payload, headers=headers)
     async with db.as_system() as session:
         assert await session.scalar(select(func.count()).select_from(User)) == 0
+
+
+async def test_a_clerk_profile_change_keeps_the_name_chosen_here(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    me = login("renamed")
+    await client.patch("/v1/me", json={"name": "Chosen"}, headers=me)
+    updated = {
+        "type": "user.updated",
+        "data": {
+            "id": "renamed",
+            "first_name": "Clerk",
+            "last_name": "Name",
+            "primary_email_address_id": "e1",
+            "email_addresses": [{"id": "e1", "email_address": "new@example.com"}],
+        },
+    }
+    payload, headers = clerk_signed(updated)
+    await client.post("/webhooks/clerk", content=payload, headers=headers)
+    profile = (await client.get("/v1/me", headers=me)).json()
+    assert (profile["name"], profile["email"]) == ("Chosen", "new@example.com")
 
 
 async def test_unsigned_clerk_events_are_rejected(client: httpx.AsyncClient) -> None:

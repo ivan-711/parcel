@@ -4,7 +4,7 @@ import stripe
 import structlog
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel
-from sqlalchemy import delete, update
+from sqlalchemy import delete, func, update
 from svix.webhooks import Webhook, WebhookVerificationError
 
 from parcel.adapters.billing import Billing
@@ -72,7 +72,7 @@ async def stripe_webhook(request: Request) -> Response:
         raise Problem(400, "bad_signature", "Signature check failed.") from e
     event = json.loads(payload)
     async with db.as_system() as session:
-        if await billing.first_delivery(session, event["id"], event["type"]):
+        if await billing.first_delivery(session, event):
             await billing.apply(session, event["type"], event["data"]["object"])
             log.info("stripe_event", type=event["type"], id=event["id"])
     return Response(status_code=204)
@@ -99,6 +99,9 @@ async def clerk_webhook(request: Request) -> Response:
             await session.execute(
                 update(User)
                 .where(User.clerk_id == data.get("id"))
-                .values(email=emails.get(data.get("primary_email_address_id")), name=name)
+                .values(
+                    email=emails.get(data.get("primary_email_address_id")),
+                    name=func.coalesce(User.name, name),
+                )
             )
     return Response(status_code=204)

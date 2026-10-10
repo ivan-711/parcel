@@ -186,4 +186,7 @@ class StripeEvent(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     type: Mapped[str] = mapped_column(String(100))
+    customer: Mapped[str | None] = mapped_column(String(64), index=True)
+    created: Mapped[int] = mapped_column(BigInteger, server_default="0")
+    """Stripe's own timestamp for the event, which orders retries correctly."""
     received_at: Mapped[datetime] = _now()
