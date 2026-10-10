@@ -30,16 +30,27 @@ _MONEY = {
 
 
 def analyze(spec: inputs.Inputs, *, monthly: bool = False) -> out.Analysis | out.WholesaleAnalysis:
-    return _analyze(spec, monthly)
-
-
-@lru_cache(maxsize=1024)
-def _analyze(spec: inputs.Inputs, monthly: bool) -> out.Analysis | out.WholesaleAnalysis:
     """Inputs are frozen and the result is never mutated, so repeats are free.
 
     The deal list runs every deal's analysis on each request, and a workspace
     sends the same inputs more than once, so this is the cache that matters.
+    A monthly ledger is a hundred times the size of a summary, so those are
+    kept to the few a workspace flips between.
     """
+    return _monthly(spec) if monthly else _summary(spec)
+
+
+@lru_cache(maxsize=1024)
+def _summary(spec: inputs.Inputs) -> out.Analysis | out.WholesaleAnalysis:
+    return _analyze(spec, False)
+
+
+@lru_cache(maxsize=8)
+def _monthly(spec: inputs.Inputs) -> out.Analysis | out.WholesaleAnalysis:
+    return _analyze(spec, True)
+
+
+def _analyze(spec: inputs.Inputs, monthly: bool) -> out.Analysis | out.WholesaleAnalysis:
     if isinstance(spec, inputs.Wholesale):
         return _wholesale(spec, monthly=monthly)
     ledger, metrics = run(spec.to_engine())
