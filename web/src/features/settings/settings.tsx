@@ -62,9 +62,7 @@ export function Settings() {
         const n = Number(text)
         if (text && Number.isFinite(n)) clean[d.key] = n / 100
       }
-      return unwrap(
-        await api.PATCH('/v1/me', { body: { name: name.trim(), defaults: clean } }),
-      )
+      return unwrap(await api.PATCH('/v1/me', { body: { name: name.trim(), defaults: clean } }))
     },
     onSuccess: (data) => queryClient.setQueryData(meQuery.queryKey, data),
   })
