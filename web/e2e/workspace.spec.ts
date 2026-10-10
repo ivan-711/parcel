@@ -36,7 +36,7 @@ async function setInput(page: Page, id: string, value: string) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await signIn(page, process.env.E2E_EMAIL_2 ?? '')
+  await signIn(page, 'workspace')
 })
 
 test('a rental opens with a verdict and stats that explain themselves', async ({ page }) => {

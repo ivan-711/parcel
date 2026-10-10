@@ -55,7 +55,7 @@ function card(page: Page, stage: string, name: string) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await signIn(page, process.env.E2E_EMAIL_3 ?? '')
+  await signIn(page, 'pipeline')
 })
 
 test('two deals start in analyzing and can be moved by keyboard and by drag', async ({ page }) => {
