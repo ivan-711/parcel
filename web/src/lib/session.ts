@@ -57,15 +57,20 @@ export const session = {
   /**
    * Resolves once token() can be trusted. Route loaders run before anything
    * renders, so without this they'd ask for a token Clerk hasn't produced yet.
+   * A demo visitor only waits a moment, in case Clerk can't load at all.
    */
   async ready(): Promise<void> {
-    if (readDemo()) return
-    await clerkReady
+    if (!readDemo()) return clerkReady
+    await Promise.race([clerkReady, new Promise((resolve) => setTimeout(resolve, 2000))])
   },
+  /** A signed in user wins over any demo token left in this browser. */
   async token(): Promise<string | null> {
-    const demo = readDemo()
-    if (demo) return demo.token
-    return clerkTokens ? clerkTokens() : null
+    const signedIn = clerkTokens ? await clerkTokens() : null
+    if (signedIn) {
+      localStorage.removeItem(KEY)
+      return signedIn
+    }
+    return readDemo()?.token ?? null
   },
   async isActive(): Promise<boolean> {
     return (await this.token()) !== null

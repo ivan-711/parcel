@@ -24,3 +24,9 @@ async def test_health_checks(client: httpx.AsyncClient) -> None:
     ready = await client.get("/readyz")
     assert ready.json()["status"] == "ready"
     assert "x-request-id" in ready.headers
+
+
+async def test_clearing_the_name(client: httpx.AsyncClient, login: Login) -> None:
+    me = login("landlord")
+    await client.patch("/v1/me", json={"name": "Dana"}, headers=me)
+    assert (await client.patch("/v1/me", json={"name": "  "}, headers=me)).json()["name"] is None

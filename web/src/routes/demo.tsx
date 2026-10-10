@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
+import { accountsEnabled } from '../features/auth/provider'
 import { api, unwrap } from '../lib/api/client'
 import { session } from '../lib/session'
 
@@ -20,6 +21,11 @@ async function startDemo() {
 export const Route = createFileRoute('/demo')({
   beforeLoad: async ({ preload }) => {
     if (preload) return
+    if (accountsEnabled) {
+      await session.ready()
+      // Someone already signed in has no use for a sandbox.
+      if (await session.isActive()) throw redirect({ to: '/deals' })
+    }
     if (!session.demo()) await startDemo()
     throw redirect({ to: '/deals' })
   },

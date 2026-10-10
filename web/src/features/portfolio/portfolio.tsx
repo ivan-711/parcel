@@ -94,6 +94,34 @@ function Entry({ dealId, month, onDone }: { dealId: string; month: string; onDon
   )
 }
 
+function BoughtOn({ dealId, value }: { dealId: string; value: string | null }) {
+  const queryClient = useQueryClient()
+  const save = useMutation({
+    mutationFn: async (acquired_on: string) =>
+      unwrap(
+        await api.PATCH('/v1/deals/{deal_id}', {
+          params: { path: { deal_id: dealId } },
+          body: { acquired_on },
+        }),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['portfolio'] })
+      void queryClient.invalidateQueries({ queryKey: ['deals'] })
+    },
+  })
+  return (
+    <label className={styles.bought}>
+      Bought on
+      <input
+        type="date"
+        value={value ?? ''}
+        max={new Date().toLocaleDateString('en-CA')}
+        onChange={(e) => e.target.value && save.mutate(e.target.value)}
+      />
+    </label>
+  )
+}
+
 function PropertyCard({ property }: { property: Property }) {
   const [editing, setEditing] = useState<string | null>(null)
   const { deal } = property
@@ -109,6 +137,7 @@ function PropertyCard({ property }: { property: Property }) {
         <p>
           {deal.address ? [deal.address.line1, deal.address.city].filter(Boolean).join(', ') : ''}
         </p>
+        <BoughtOn dealId={deal.id} value={deal.acquired_on} />
         {property.months.some((m) => m.actual_cash_flow !== null) && (
           <p className={styles.vs}>
             Running <b className={diff < 0 ? styles.bad : ''}>{moneySigned(diff)}</b>{' '}
@@ -118,7 +147,8 @@ function PropertyCard({ property }: { property: Property }) {
       </header>
       {property.months.length === 0 ? (
         <p className={styles.empty} style={{ marginTop: 8, fontSize: 13 }}>
-          Nothing to record yet. Set the purchase date on the deal so months start counting.
+          Nothing to record yet. The first month shows up once it's over, or set an earlier purchase
+          date above.
         </p>
       ) : (
         <div className={styles.months}>

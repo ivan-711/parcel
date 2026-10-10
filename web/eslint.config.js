@@ -27,7 +27,12 @@ export default tseslint.config(
       '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
       '@typescript-eslint/only-throw-error': [
         'error',
-        { allow: [{ from: 'package', name: 'Redirect', package: '@tanstack/router-core' }] },
+        {
+          allow: [
+            { from: 'package', name: 'Redirect', package: '@tanstack/router-core' },
+            { from: 'package', name: 'NotFoundError', package: '@tanstack/router-core' },
+          ],
+        },
       ],
     },
   },

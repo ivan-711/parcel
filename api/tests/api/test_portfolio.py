@@ -55,3 +55,15 @@ async def test_removing_a_month(client: httpx.AsyncClient, login: Login) -> None
     assert (
         await client.delete(f"/v1/deals/{deal['id']}/actuals/{month}", headers=me)
     ).status_code == 404
+
+
+async def test_a_property_bought_this_month_still_quotes_its_plan(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    me = login("landlord")
+    await client.post("/v1/deals", json={**deal_body(), "stage": "owned"}, headers=me)
+
+    portfolio = (await client.get("/v1/portfolio", headers=me)).json()
+    [prop] = portfolio["properties"]
+    assert prop["months"] == []
+    assert portfolio["monthly_projected_now"] != 0

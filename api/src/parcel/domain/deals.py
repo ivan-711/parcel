@@ -234,6 +234,7 @@ async def portfolio(session: AsyncSession, today: date | None = None) -> schema.
         .order_by(Deal.acquired_on, Deal.name)
     )
     properties = []
+    current = []
     for deal in owned:
         result = analysis_of(deal, monthly=True)
         if isinstance(result, WholesaleAnalysis) or result.months is None:
@@ -260,6 +261,8 @@ async def portfolio(session: AsyncSession, today: date | None = None) -> schema.
                     ),
                 )
             )
+        # Bought this month: no month has closed yet, so quote the plan's first.
+        current.append(months[-1].projected_cash_flow if months else result.months[1].cash_flow)
         recorded = [m for m in months if m.actual_cash_flow is not None]
         properties.append(
             schema.PortfolioProperty(
@@ -269,7 +272,6 @@ async def portfolio(session: AsyncSession, today: date | None = None) -> schema.
                 actual_to_date=round(sum(m.actual_cash_flow or 0 for m in recorded), 2),
             )
         )
-    current = [p.months[-1].projected_cash_flow for p in properties if p.months]
     return schema.Portfolio(
         properties=properties,
         projected_to_date=round(sum(p.projected_to_date for p in properties), 2),

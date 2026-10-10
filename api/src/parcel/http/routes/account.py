@@ -54,7 +54,7 @@ async def update_me(data: MeUpdate, principal: CurrentPrincipal, session: Tenant
     user = await session.get(User, principal.user_id)
     assert user is not None
     if data.name is not None:
-        user.name = data.name
+        user.name = data.name.strip() or None
     if data.defaults is not None:
         user.defaults = data.defaults
     await session.flush()

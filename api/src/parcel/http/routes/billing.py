@@ -32,7 +32,7 @@ def _billing(request: Request) -> Billing:
 
 
 def _return_to() -> str:
-    return f"{get_settings().web_origins[0]}/settings/billing"
+    return f"{get_settings().web_origins[0]}/settings"
 
 
 @router.post("/checkout")
