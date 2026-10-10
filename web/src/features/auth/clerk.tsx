@@ -5,12 +5,15 @@ import { useEffect, type ReactNode } from 'react'
 import { session } from '../../lib/session'
 import styles from '../shell/shell.module.css'
 
+/**
+ * Hands Clerk's token getter to the session. It happens during render on
+ * purpose: queries start during render too, so a child rendered in the same
+ * pass as a sign in would reach the API before an effect could run.
+ */
 function Bridge({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn } = useAuth()
-  useEffect(() => {
-    session.useClerk(isSignedIn ? () => getToken() : null)
-    return () => session.useClerk(null)
-  }, [getToken, isSignedIn])
+  session.useClerk(isSignedIn ? () => getToken() : null)
+  useEffect(() => () => session.useClerk(null), [])
   return children
 }
 
