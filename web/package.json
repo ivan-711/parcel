@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@clerk/testing": "^2.2.45",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.64.0",
     "@tanstack/eslint-plugin-query": "5.104.1",

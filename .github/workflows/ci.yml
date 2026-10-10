@@ -82,6 +82,14 @@ jobs:
           --health-retries 20
     env:
       ENVIRONMENT: test
+      PROVIDERS: fixtures
+      WEB_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
+      CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_EMAIL_2: ${{ secrets.E2E_EMAIL_2 }}
+      E2E_EMAIL_3: ${{ secrets.E2E_EMAIL_3 }}
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0

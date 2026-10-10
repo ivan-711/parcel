@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import jwt
+import structlog
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +15,8 @@ from parcel.db.session import db
 from parcel.domain import users
 from parcel.errors import Problem
 from parcel.settings import get_settings
+
+log = structlog.get_logger()
 
 DEMO_ISSUER = "parcel-demo"
 
@@ -75,6 +78,7 @@ async def current_principal(request: Request) -> Principal:
             try:
                 identity = await verifier.verify(token)
             except InvalidToken as e:
+                log.info("token_rejected", reason=str(e))
                 raise Problem(
                     401, "unauthenticated", "Your session is invalid. Sign in again."
                 ) from e
