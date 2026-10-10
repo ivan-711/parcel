@@ -27,7 +27,8 @@ async def provision(session: AsyncSession, identity: Identity) -> User:
         return user
     if identity.email and user.email != identity.email:
         user.email = identity.email
-    if identity.name and user.name != identity.name:
+    # The name is editable in settings, so Clerk's only fills a blank.
+    if identity.name and user.name is None:
         user.name = identity.name
     return user
 

@@ -30,3 +30,12 @@ async def test_clearing_the_name(client: httpx.AsyncClient, login: Login) -> Non
     me = login("landlord")
     await client.patch("/v1/me", json={"name": "Dana"}, headers=me)
     assert (await client.patch("/v1/me", json={"name": "  "}, headers=me)).json()["name"] is None
+
+
+async def test_a_name_set_here_survives_the_next_sign_in(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    me = login("someone", name="Clerk Name")
+    assert (await client.get("/v1/me", headers=me)).json()["name"] == "Clerk Name"
+    await client.patch("/v1/me", json={"name": "Chosen"}, headers=me)
+    assert (await client.get("/v1/me", headers=me)).json()["name"] == "Chosen"
