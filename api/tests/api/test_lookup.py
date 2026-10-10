@@ -133,3 +133,27 @@ async def test_demo_lookups_are_labeled_as_samples(client: httpx.AsyncClient) ->
     token = (await client.post("/v1/demo")).json()["token"]
     result = (await _lookup(client, {"authorization": f"Bearer {token}"}, DUPLEX)).json()
     assert result["notes"][0].startswith("Demo lookups use recorded sample figures")
+
+
+async def test_demo_samples_never_serve_real_lookups(
+    client: httpx.AsyncClient, me: dict[str, str], property_data: FixtureData
+) -> None:
+    token = (await client.post("/v1/demo")).json()["token"]
+    await _lookup(client, {"authorization": f"Bearer {token}"}, DUPLEX)
+    assert property_data.calls == []
+    result = (await _lookup(client, me, DUPLEX)).json()
+    assert result["notes"] == []
+    assert property_data.calls == [f"rent:{_key(DUPLEX)}", f"value:{_key(DUPLEX)}"]
+
+
+async def test_autocomplete_is_rationed_and_cached(
+    client: httpx.AsyncClient, me: dict[str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AUTOCOMPLETES_PER_USER_PER_DAY", "1")
+    get_settings.cache_clear()
+    params = {"q": "1420 N 14"}
+    assert len((await client.get("/v1/lookup/autocomplete", params=params, headers=me)).json()) == 1
+    assert len((await client.get("/v1/lookup/autocomplete", params=params, headers=me)).json()) == 1
+    limited = await client.get("/v1/lookup/autocomplete", params={"q": "2210 Koh"}, headers=me)
+    assert limited.status_code == 429
+    get_settings.cache_clear()

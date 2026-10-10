@@ -6,7 +6,8 @@ from pydantic import BaseModel, StringConstraints
 from parcel.adapters.fixtures import FixtureData
 from parcel.adapters.property_data import PropertyData, ProviderError
 from parcel.db.session import db
-from parcel.domain.lookup import Budget, lookup
+from parcel.domain import lookup
+from parcel.domain.lookup import Budget
 from parcel.http.auth import CurrentPrincipal
 from parcel.schemas.lookup import LookupResult, PlaceOut
 from parcel.settings import get_settings
@@ -27,10 +28,20 @@ async def autocomplete(
     principal: CurrentPrincipal,
     q: Annotated[str, Query(min_length=3, max_length=120)],
 ) -> list[PlaceOut]:
-    try:
-        places = await _source(request, principal.is_demo).autocomplete(q)
-    except ProviderError:
-        return []
+    if principal.is_demo:
+        places = await FixtureData().autocomplete(q)
+    else:
+        async with db.as_system() as session:
+            try:
+                places = await lookup.autocomplete(
+                    session,
+                    _source(request, False),
+                    q,
+                    user_key=f"autocomplete:{principal.user_id}",
+                    per_day=get_settings().autocompletes_per_user_per_day,
+                )
+            except ProviderError:
+                return []
     return [
         PlaceOut(line1=p.line1, city=p.city, state=p.state, zip=p.zip, label=p.one_line)
         for p in places
@@ -52,7 +63,7 @@ async def property_lookup(
         per_month=settings.rentcast_monthly_budget,
     )
     async with db.as_system() as session:
-        return await lookup(
+        return await lookup.lookup(
             session,
             _source(request, principal.is_demo),
             data.address,

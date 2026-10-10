@@ -8,6 +8,7 @@ works, with rent from HUD's Fair Market Rent and no value estimate.
 
 import dataclasses
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -33,6 +34,9 @@ INSURANCE_RATE = 0.005
 INVESTOR_RATE_PREMIUM = 0.005
 """Investment property loans usually price above the owner-occupied average FRED reports."""
 WIDE_RANGE = 0.25
+
+_namespace: ContextVar[str] = ContextVar("lookup_namespace", default="")
+"""Demo lookups answer from recorded samples, which must never pose as live data."""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -82,6 +86,7 @@ async def _cached[T](
     decode: Callable[[Any], T],
     fetch: Callable[[], Awaitable[T]],
 ) -> T:
+    key = _namespace.get() + key
     now = datetime.now(UTC)
     hit = await session.scalar(
         select(ProviderCache).where(ProviderCache.key == key, ProviderCache.expires_at > now)
@@ -101,6 +106,28 @@ async def _cached[T](
     return value
 
 
+async def autocomplete(
+    session: AsyncSession, data: PropertyData, text: str, user_key: str, per_day: int
+) -> list[Place]:
+    """Places matching a partial address. Each distinct query is cached for a
+    day and each user gets a daily allowance, so a script can't drain the
+    provider's quota for everyone."""
+    key = f"autocomplete:{' '.join(text.lower().split())}"
+    now = datetime.now(UTC)
+    hit = await session.scalar(
+        select(ProviderCache).where(ProviderCache.key == key, ProviderCache.expires_at > now)
+    )
+    if hit is not None:
+        return [Place(**p) for p in hit.payload["value"]]
+    if not await usage.take(session, user_key, date.today(), per_day):
+        raise Problem(429, "autocomplete_limit", "You've used today's address suggestions.")
+    return await _cached(session, key, timedelta(days=1), _places, lambda: data.autocomplete(text))
+
+
+def _places(raw: Any) -> list[Place]:
+    return [Place(**p) for p in raw]
+
+
 async def _safe[T](pending: Awaitable[T]) -> T | None:
     try:
         return await pending
@@ -116,6 +143,7 @@ async def lookup(
     *,
     sample_data: bool = False,
 ) -> schema.LookupResult:
+    _namespace.set("sample:" if sample_data else "")
     place = await _cached(
         session,
         f"census:{address.upper()}",

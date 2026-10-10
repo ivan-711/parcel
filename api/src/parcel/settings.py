@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     rentcast_api_key: SecretStr = SecretStr("")
     rentcast_monthly_budget: int = 45
     lookups_per_user_per_day: int = 5
+    autocompletes_per_user_per_day: int = 300
     geoapify_api_key: SecretStr = SecretStr("")
     fred_api_key: SecretStr = SecretStr("")
     hud_api_token: SecretStr = SecretStr("")
