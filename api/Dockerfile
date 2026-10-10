@@ -17,4 +17,6 @@ COPY --from=build /app /app
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 FORWARDED_ALLOW_IPS=100.0.0.0/8
 USER app
 EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn parcel.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2} --proxy-headers --no-access-log"]
+# Migrations run here rather than as a pre-deploy step, which Railway skipped on
+# CLI uploads. A failed upgrade stops the container before it can serve.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn parcel.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2} --proxy-headers --no-access-log"]
