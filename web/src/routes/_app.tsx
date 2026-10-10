@@ -1,4 +1,4 @@
-import { Navigate, Outlet, createFileRoute } from '@tanstack/react-router'
+import { Navigate, Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { lazy, Suspense, type ReactNode } from 'react'
 
 import { accountsEnabled } from '../features/auth/provider'
@@ -6,7 +6,16 @@ import { Sidebar } from '../features/shell/nav'
 import styles from '../features/shell/shell.module.css'
 import { session } from '../lib/session'
 
-export const Route = createFileRoute('/_app')({ component: AppLayout })
+export const Route = createFileRoute('/_app')({
+  // Loaders under here fetch as the current user, so they wait for auth to settle.
+  beforeLoad: async () => {
+    if (session.demo()) return
+    if (!accountsEnabled) throw redirect({ to: '/' })
+    await session.ready()
+    if (!(await session.isActive())) throw redirect({ to: '/sign-in' })
+  },
+  component: AppLayout,
+})
 
 const Signed = lazy(() => import('../features/auth/clerk').then((m) => ({ default: m.Signed })))
 

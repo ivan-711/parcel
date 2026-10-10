@@ -17,6 +17,8 @@ type TokenSource = () => Promise<string | null>
 
 let clerkTokens: TokenSource | null = null
 
+const { promise: clerkReady, resolve: clerkLoaded } = Promise.withResolvers<void>()
+
 function readDemo(): DemoSession | null {
   try {
     const raw = localStorage.getItem(KEY)
@@ -44,6 +46,18 @@ export const session = {
   },
   useClerk(source: TokenSource | null) {
     clerkTokens = source
+  },
+  /** Clerk has finished loading, so token() answers for real from here on. */
+  clerkLoaded() {
+    clerkLoaded()
+  },
+  /**
+   * Resolves once token() can be trusted. Route loaders run before anything
+   * renders, so without this they'd ask for a token Clerk hasn't produced yet.
+   */
+  async ready(): Promise<void> {
+    if (readDemo()) return
+    await clerkReady
   },
   async token(): Promise<string | null> {
     const demo = readDemo()
