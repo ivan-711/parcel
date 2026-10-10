@@ -9,8 +9,6 @@ import type { Page } from '@playwright/test'
 export async function signIn(page: Page, emailAddress = process.env.E2E_EMAIL ?? '') {
   await setupClerkTestingToken({ page })
   await page.goto('/')
-  await page.waitForFunction(() =>
-    Boolean((window as unknown as { Clerk?: { loaded?: boolean } }).Clerk?.loaded),
-  )
+  await page.waitForFunction('window.Clerk?.loaded === true')
   await clerk.signIn({ page, emailAddress })
 }
