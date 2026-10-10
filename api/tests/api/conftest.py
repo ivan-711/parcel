@@ -51,6 +51,7 @@ class Keys:
         self.current = self._new()
         self.published = [self.current]
         self.jwks_requests = 0
+        self.down = False
 
     @staticmethod
     def _new() -> tuple[str, Any]:
@@ -138,6 +139,8 @@ async def app(
     def clerk(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/.well-known/jwks.json":
             keys.jwks_requests += 1
+            if keys.down:
+                return httpx.Response(503)
             return httpx.Response(200, json=keys.jwks())
         return httpx.Response(404)
 

@@ -42,6 +42,35 @@ async def test_a_rotated_signing_key_is_picked_up(
     assert keys.jwks_requests == before + 1
 
 
+async def test_cached_keys_outlast_a_clerk_outage(
+    app: FastAPI, client: httpx.AsyncClient, login: Login, keys: Keys
+) -> None:
+    assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
+    keys.down = True
+    try:
+        app.state.clerk._fetched_at = 0
+        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
+        before = keys.jwks_requests
+        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
+        assert keys.jwks_requests == before
+    finally:
+        keys.down = False
+
+
+async def test_no_keys_at_all_is_an_outage_not_a_bad_token(
+    app: FastAPI, client: httpx.AsyncClient, login: Login, keys: Keys
+) -> None:
+    keys.down = True
+    try:
+        app.state.clerk._keys = {}
+        app.state.clerk._tried_at = 0
+        response = await client.get("/v1/me", headers=login("user_a"))
+        assert response.status_code == 503
+        assert response.json()["code"] == "auth_unavailable"
+    finally:
+        keys.down = False
+
+
 @pytest.mark.parametrize(
     "claims",
     [

@@ -9,7 +9,7 @@ import structlog
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from parcel.adapters.clerk import ClerkVerifier, InvalidToken
+from parcel.adapters.clerk import ClerkVerifier, InvalidToken, KeysUnavailable
 from parcel.db.models import Plan
 from parcel.db.session import db
 from parcel.domain import users
@@ -82,6 +82,11 @@ async def current_principal(request: Request) -> Principal:
                 raise Problem(
                     401, "unauthenticated", "Your session is invalid. Sign in again."
                 ) from e
+            except KeysUnavailable as e:
+                log.error("clerk_unreachable", error=str(e))
+                raise Problem(
+                    503, "auth_unavailable", "Sign in isn't available right now. Try again soon."
+                ) from e
             user = await users.provision(session, identity)
         return Principal(user_id=user.id, plan=user.plan, is_demo=user.is_demo)
 
@@ -94,7 +99,9 @@ async def tenant_session(principal: CurrentPrincipal) -> AsyncIterator[AsyncSess
         yield session
 
 
-Tenant = Annotated[AsyncSession, Depends(tenant_session)]
+# Function scope commits before the response goes out. The default would send
+# the 201 first and commit after, so a refetch could miss what was just saved.
+Tenant = Annotated[AsyncSession, Depends(tenant_session, scope="function")]
 
 
 def demo_expiry() -> datetime:
