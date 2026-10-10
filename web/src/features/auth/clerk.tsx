@@ -1,5 +1,4 @@
 import { ClerkProvider, SignOutButton, useAuth, useUser } from '@clerk/react'
-import { Link } from '@tanstack/react-router'
 import { useEffect, type ReactNode } from 'react'
 
 import { session } from '../../lib/session'
@@ -32,19 +31,19 @@ export function ClerkShell({
   )
 }
 
-/** The signed in corner of the nav: settings and a sign out button. */
+/** The signed in user's spot in the rail: their initial, and a way out. */
 export function Account() {
   const { user } = useUser()
   const initial = user?.firstName?.[0] ?? user?.primaryEmailAddress?.emailAddress[0] ?? '?'
   return (
-    <>
-      <Link to="/settings">Settings</Link>
-      <SignOutButton>
-        <button type="button" className={styles.avatar} aria-label="Sign out">
+    <SignOutButton>
+      <button type="button" className={styles.item}>
+        <span className={styles.initial} aria-hidden="true">
           {initial.toUpperCase()}
-        </button>
-      </SignOutButton>
-    </>
+        </span>
+        <span>Sign out</span>
+      </button>
+    </SignOutButton>
   )
 }
 

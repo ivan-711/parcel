@@ -87,6 +87,18 @@
 .spacer {
   margin-top: auto;
 }
+.initial {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tile2);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
 .main {
   min-width: 0;
   padding: 22px 32px 80px;
@@ -157,6 +169,8 @@
 @media (max-width: 900px) {
   .app {
     grid-template-columns: minmax(0, 1fr);
+    /* Auto rows would split the spare height with the bar on short pages. */
+    grid-template-rows: auto 1fr;
   }
   .rail {
     position: sticky;
