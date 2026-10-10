@@ -1,3 +1,4 @@
+import tracemalloc
 from dataclasses import replace
 
 import numpy as np
@@ -113,6 +114,16 @@ def test_simulation_is_reproducible_with_a_seed(rental: BuyAndHold) -> None:
     assert a.probability_of_loss == b.probability_of_loss
     assert a.irr_percentiles == b.irr_percentiles
     assert a.irr_percentiles[10] <= a.irr_percentiles[50] <= a.irr_percentiles[90]
+
+
+def test_a_long_hold_simulates_in_bounded_memory(rental: BuyAndHold) -> None:
+    long = replace(rental, hold_years=40)
+    tracemalloc.start()
+    sim = simulate(long, runs=4_000, seed=5)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert sim.irr.shape == (4_000,)
+    assert peak < 150 * 1024 * 1024
 
 
 def test_simulation_spread_brackets_the_base_case(rental: BuyAndHold) -> None:

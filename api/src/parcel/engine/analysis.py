@@ -167,6 +167,9 @@ DEFAULT_UNCERTAINTY = (
 )
 
 
+_BATCH_CELLS = 120_000
+
+
 @dataclass(frozen=True)
 class Simulation:
     runs: int
@@ -184,7 +187,7 @@ def simulate(
     seed: int | None = None,
 ) -> Simulation:
     rng = np.random.default_rng(seed)
-    batch = strategy
+    draws: dict[str, NDArray[np.float64]] = {}
     for u in uncertainty:
         base = _scalar(strategy, u.field)
         if base is None or (u.relative and base == 0):
@@ -193,13 +196,24 @@ def simulate(
         shock = rng.standard_normal(runs) * scale
         if u.skew_up:
             shock = np.abs(shock)
-        draws = base + shock
+        drawn = base + shock
         if u.floor is not None:
-            draws = np.maximum(draws, u.floor)
-        batch = with_value(batch, u.field, draws)
-    _, m = run(batch)
-    profit = np.broadcast_to(m.total_profit, (runs,))
-    irr = np.broadcast_to(m.irr, (runs,))
+            drawn = np.maximum(drawn, u.floor)
+        draws[u.field] = drawn
+    # Every ledger line is a runs by months grid, so a long hold with every
+    # run at once would take gigabytes. Batches keep each pass to a few MB.
+    step = max(250, _BATCH_CELLS // (strategy.deal().horizon + 1))
+    profits, irrs = [], []
+    for start in range(0, runs, step):
+        batch = strategy
+        for field, drawn in draws.items():
+            batch = with_value(batch, field, drawn[start : start + step])
+        _, m = run(batch)
+        size = min(step, runs - start)
+        profits.append(np.broadcast_to(m.total_profit, (size,)))
+        irrs.append(np.broadcast_to(m.irr, (size,)))
+    profit = np.concatenate(profits)
+    irr = np.concatenate(irrs)
     pct = (10, 50, 90)
     finite = irr[np.isfinite(irr)]
     return Simulation(
