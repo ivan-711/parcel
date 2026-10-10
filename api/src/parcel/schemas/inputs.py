@@ -7,7 +7,7 @@ engine can trust what it gets.
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from parcel.engine import model, strategies, wholesale
 
@@ -20,6 +20,14 @@ Years = Annotated[int, Field(ge=1, le=40)]
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+def _within_hold(hold_years: int, **months: int) -> None:
+    """Month counts are capped on their own, so the engine's rule that work
+    finishes before the exit has to be checked here, where it becomes a 422."""
+    for name, value in months.items():
+        if value >= hold_years * 12:
+            raise ValueError(f"{name} runs past the {hold_years} year hold")
 
 
 class Operations(_Strict):
@@ -58,6 +66,11 @@ class BuyAndHold(_Strict):
     selling_cost_rate: Rate = 0.06
     exit_cap_rate: Annotated[float, Field(gt=0, le=0.3)] | None = None
 
+    @model_validator(mode="after")
+    def _fits(self) -> "BuyAndHold":
+        _within_hold(self.hold_years, rehab_months=self.rehab_months)
+        return self
+
     def to_engine(self) -> strategies.BuyAndHold:
         data = self.model_dump(exclude={"strategy", "operations"})
         return strategies.BuyAndHold(operations=self.operations.to_engine(), **data)
@@ -83,6 +96,16 @@ class Brrrr(_Strict):
     appreciation: Growth = 0.03
     hold_years: Years = 10
     selling_cost_rate: Rate = 0.06
+
+    @model_validator(mode="after")
+    def _fits(self) -> "Brrrr":
+        _within_hold(
+            self.hold_years,
+            rehab_months=self.rehab_months,
+            seasoning_months=self.seasoning_months,
+            refinance=self.rehab_months + self.operations.lease_up_months,
+        )
+        return self
 
     def to_engine(self) -> strategies.Brrrr:
         data = self.model_dump(exclude={"strategy", "operations"})
@@ -129,6 +152,11 @@ class CreativeFinance(_Strict):
     appreciation: Growth = 0.03
     hold_years: Years = 10
     selling_cost_rate: Rate = 0.06
+
+    @model_validator(mode="after")
+    def _fits(self) -> "CreativeFinance":
+        _within_hold(self.hold_years, rehab_months=self.rehab_months)
+        return self
 
     def to_engine(self) -> strategies.CreativeFinance:
         data = self.model_dump(exclude={"strategy", "operations"})

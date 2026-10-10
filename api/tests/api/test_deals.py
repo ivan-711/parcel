@@ -178,3 +178,37 @@ async def test_wholesale_deals_summarize_the_fee(
     created = (await client.post("/v1/deals", json=body, headers=me)).json()
     assert created["analysis"]["strategy"] == "wholesale"
     assert created["summary"]["total_profit"] == created["analysis"]["assignment_fee"]
+
+
+async def test_notes_can_be_cleared_but_a_name_cannot(
+    client: httpx.AsyncClient, me: dict[str, str]
+) -> None:
+    deal = (await client.post("/v1/deals", json=deal_body(), headers=me)).json()
+    url = f"/v1/deals/{deal['id']}"
+    await client.patch(url, json={"notes": "call the listing agent"}, headers=me)
+    cleared = await client.patch(url, json={"notes": None}, headers=me)
+    assert cleared.status_code == 200
+    assert cleared.json()["notes"] == ""
+    assert (await client.patch(url, json={"name": None}, headers=me)).status_code == 422
+    assert (await client.get(url, headers=me)).json()["name"] == "Duplex"
+
+
+async def test_work_that_outlasts_the_hold_is_a_field_error(
+    client: httpx.AsyncClient, me: dict[str, str]
+) -> None:
+    brrrr = {
+        "strategy": "brrrr",
+        "price": 150_000,
+        "rehab_cost": 40_000,
+        "rehab_months": 4,
+        "after_repair_value": 240_000,
+        "seasoning_months": 12,
+        "hold_years": 1,
+        "operations": RENTAL["operations"],
+    }
+    body = {"name": "Rehab", "inputs": brrrr}
+    response = await client.post("/v1/deals", json=body, headers=me)
+    assert response.status_code == 422
+    assert "seasoning_months" in response.text
+    rental = deal_body(rehab_months=12, hold_years=1)
+    assert (await client.post("/v1/deals", json=rental, headers=me)).status_code == 422

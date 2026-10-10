@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from parcel.db.models import Actual, Deal, Stage, Strategy
 from parcel.domain.analysis import analyze
-from parcel.errors import not_found
+from parcel.errors import Problem, not_found
 from parcel.schemas import deals as schema
 from parcel.schemas.analysis import Analysis, WholesaleAnalysis
 from parcel.schemas.inputs import Inputs
@@ -77,6 +77,8 @@ async def create(session: AsyncSession, owner_id: uuid.UUID, data: schema.DealCr
 async def apply_update(session: AsyncSession, deal: Deal, data: schema.DealUpdate) -> Deal:
     changes = data.model_dump(exclude_unset=True)
     if "name" in changes:
+        if changes["name"] is None:
+            raise Problem(422, "name_required", "A deal needs a name.")
         deal.name = changes["name"]
     if data.inputs is not None:
         deal.inputs = data.inputs.model_dump(mode="json")
@@ -86,7 +88,7 @@ async def apply_update(session: AsyncSession, deal: Deal, data: schema.DealUpdat
     if data.provenance is not None:
         deal.provenance = {k: v.model_dump(mode="json") for k, v in data.provenance.items()}
     if "notes" in changes:
-        deal.notes = changes["notes"]
+        deal.notes = changes["notes"] or ""
     if "acquired_on" in changes:
         deal.acquired_on = changes["acquired_on"]
     deal.updated_at = datetime.now(UTC)
