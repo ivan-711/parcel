@@ -167,8 +167,7 @@ def test_the_brief_gives_the_month_the_engine_refinances_in() -> None:
 @pytest.mark.parametrize(("case", "deal"), RECORDINGS)
 def test_recorded_memos_stay_grounded(case: str, deal: Deal) -> None:
     path = RECORDED / f"{case}.md"
-    if not path.exists():
-        pytest.skip("no recording yet")
+    assert path.exists(), f"no recording for {case}; run python -m tests.domain.record_memos"
     assert memo.check(path.read_text(), memo.brief(deal).allowed) == []
 
 

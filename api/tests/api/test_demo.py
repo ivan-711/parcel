@@ -1,13 +1,13 @@
 from datetime import UTC, datetime, timedelta
 
 import httpx
-import pytest
 from sqlalchemy import func, select, update
 
 from parcel.db.models import Deal, User
 from parcel.db.session import db
 from parcel.domain.demo import SAMPLES, remove_expired
-from parcel.settings import get_settings
+
+from .conftest import OverrideSettings
 
 
 async def test_the_sandbox_comes_stocked(client: httpx.AsyncClient) -> None:
@@ -36,16 +36,14 @@ async def test_each_visitor_gets_their_own_copy(client: httpx.AsyncClient) -> No
 
 
 async def test_demos_are_rationed_per_visitor(
-    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    client: httpx.AsyncClient, settings_override: OverrideSettings
 ) -> None:
-    monkeypatch.setenv("DEMOS_PER_IP_PER_DAY", "2")
-    get_settings.cache_clear()
+    settings_override(DEMOS_PER_IP_PER_DAY="2")
     assert (await client.post("/v1/demo")).status_code == 201
     assert (await client.post("/v1/demo")).status_code == 201
     third = await client.post("/v1/demo")
     assert third.status_code == 429
     assert third.json()["code"] == "demo_limit"
-    get_settings.cache_clear()
 
 
 async def test_expired_sandboxes_are_cleaned_up(client: httpx.AsyncClient) -> None:

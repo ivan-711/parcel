@@ -2,7 +2,7 @@ import asyncio
 import os
 import time
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -15,16 +15,18 @@ from asgi_lifespan import LifespanManager
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import FastAPI
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
-ADMIN_URL = os.environ.get(
-    "TEST_ADMIN_URL", "postgresql+asyncpg://parcel:parcel@localhost:5433/parcel"
+ADMIN_URL = make_url(
+    os.environ.get("TEST_ADMIN_URL", "postgresql+asyncpg://parcel:parcel@localhost:5433/parcel")
 )
+if ADMIN_URL.drivername in {"postgres", "postgresql"}:
+    ADMIN_URL = ADMIN_URL.set(drivername="postgresql+asyncpg")
 TEST_DB = "parcel_test"
-TEST_URL = ADMIN_URL.rsplit("/", 1)[0] + f"/{TEST_DB}"
+TEST_URL = ADMIN_URL.set(database=TEST_DB).render_as_string(hide_password=False)
 ISSUER = "https://clerk.test.parcel"
 ORIGIN = "http://localhost:5173"
-TABLES = ("users", "deals", "actuals", "memos", "usage", "provider_cache", "stripe_events")
 
 os.environ.update(
     DATABASE_URL=TEST_URL,
@@ -38,6 +40,7 @@ os.environ.update(
 
 from parcel.adapters.fixtures import FixtureData  # noqa: E402
 from parcel.app import create_app  # noqa: E402
+from parcel.db.models import Base  # noqa: E402
 from parcel.db.session import db  # noqa: E402
 from parcel.settings import get_settings  # noqa: E402
 
@@ -88,7 +91,7 @@ async def database() -> AsyncIterator[None]:
         await conn.execute(text(f"create database {TEST_DB}"))
     await admin.dispose()
     config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-    config.set_main_option("sqlalchemy.url", TEST_URL)
+    config.set_main_option("sqlalchemy.url", TEST_URL.replace("%", "%%"))
     await asyncio.to_thread(command.upgrade, config, "head")
     yield
     await db.dispose()
@@ -97,8 +100,10 @@ async def database() -> AsyncIterator[None]:
 @pytest.fixture(autouse=True)
 async def clean() -> AsyncIterator[None]:
     yield
+    # Not in the metadata, so alembic_version keeps its row.
+    tables = ", ".join(t.name for t in Base.metadata.sorted_tables)
     async with db.engine.begin() as conn:
-        await conn.execute(text(f"truncate {', '.join(TABLES)} cascade"))
+        await conn.execute(text(f"truncate {tables} cascade"))
 
 
 @pytest.fixture
@@ -170,6 +175,24 @@ def login(keys: Keys) -> Login:
         return {"authorization": f"Bearer {keys.token(sub, **claims)}"}
 
     return headers
+
+
+class OverrideSettings(Protocol):
+    def __call__(self, **env: str) -> None: ...
+
+
+@pytest.fixture
+def settings_override() -> Iterator[OverrideSettings]:
+    """Sets environment variables for one test and drops the cached settings afterwards."""
+    with pytest.MonkeyPatch.context() as patch:
+
+        def apply(**env: str) -> None:
+            for name, value in env.items():
+                patch.setenv(name, value)
+            get_settings.cache_clear()
+
+        yield apply
+    get_settings.cache_clear()
 
 
 RENTAL = {

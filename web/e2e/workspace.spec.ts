@@ -105,7 +105,7 @@ test('every tab renders, the ledger has monthly rows and what if answers', async
 
   await page.getByRole('tab', { name: 'What if' }).click()
   await page.getByRole('button', { name: 'Work it out' }).click()
-  await expect(page.getByText(/would need to be|No value of|Couldn.t work that out/)).toBeVisible()
+  await expect(page.getByText(/would need to be|No value of/)).toBeVisible()
   await expect(page.getByText('What moves the return most')).toBeVisible()
   await page.getByRole('button', { name: 'Run 10,000 versions' }).click()
   await expect(page.getByText(/of runs lose money|This needs Pro/).first()).toBeVisible({
@@ -115,8 +115,9 @@ test('every tab renders, the ledger has monthly rows and what if answers', async
   await page.getByRole('tab', { name: 'Memo' }).click()
   await expect(page.getByRole('button', { name: /Write the memo|Rewrite/ })).toBeVisible()
   await page.getByRole('button', { name: /Write the memo|Rewrite/ }).click()
+  // A server run without a memo writer says so instead of writing one.
   await expect(
-    page.getByText(/checked against the engine|available right now|needs Pro/).first(),
+    page.getByText(/checked against the engine|Memos aren.t available right now/).first(),
   ).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('tabpanel')).not.toBeEmpty()
   await expect(broken).toHaveCount(0)

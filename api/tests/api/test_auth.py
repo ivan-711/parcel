@@ -42,6 +42,19 @@ async def test_a_rotated_signing_key_is_picked_up(
     assert keys.jwks_requests == before + 1
 
 
+async def test_unknown_signing_keys_do_not_refetch_within_the_gap(
+    client: httpx.AsyncClient, keys: Keys
+) -> None:
+    before = keys.jwks_requests
+    first = {"authorization": f"Bearer {Keys().token('user_a')}"}
+    assert (await client.get("/v1/me", headers=first)).status_code == 401
+    assert keys.jwks_requests == before + 1
+
+    second = {"authorization": f"Bearer {Keys().token('user_b')}"}
+    assert (await client.get("/v1/me", headers=second)).status_code == 401
+    assert keys.jwks_requests == before + 1
+
+
 async def test_cached_keys_outlast_a_clerk_outage(
     app: FastAPI, client: httpx.AsyncClient, login: Login, keys: Keys
 ) -> None:

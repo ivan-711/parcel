@@ -8,6 +8,7 @@ up in the normal test run without calling the model.
 """
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -21,6 +22,8 @@ OUT = Path(__file__).parent / "memos"
 
 
 async def main() -> int:
+    # Only the model key matters here, so don't demand production's full config.
+    os.environ.setdefault("ENVIRONMENT", "development")
     settings = get_settings()
     key = settings.anthropic_api_key.get_secret_value()
     if not key:

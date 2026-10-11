@@ -30,6 +30,7 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-asyncio>=1.4.0",
     "asgi-lifespan>=2.1.0",
+    "httpx2>=2.13.1",
 ]
 
 [build-system]

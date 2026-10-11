@@ -5,10 +5,8 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
-from parcel.settings import get_settings
-
 from ..writer import FakeWriter
-from .conftest import Login, deal_body
+from .conftest import Login, OverrideSettings, deal_body
 
 GOOD = "## Summary\nA $250,000 rental that rents for $2,000 a month."
 BAD = "## Summary\nA $250,000 rental with a 19.5% IRR."
@@ -40,12 +38,6 @@ async def _write(
     return await client.post(f"/v1/deals/{deal_id}/memo", headers=headers)
 
 
-def _limit(monkeypatch: pytest.MonkeyPatch, **env: str) -> None:
-    for key, value in env.items():
-        monkeypatch.setenv(key, value)
-    get_settings.cache_clear()
-
-
 async def test_a_memo_streams_in_and_is_saved(
     client: httpx.AsyncClient, me: dict[str, str], writer: FakeWriter
 ) -> None:
@@ -70,9 +62,9 @@ async def test_an_unchanged_deal_reuses_its_memo_for_free(
     client: httpx.AsyncClient,
     me: dict[str, str],
     writer: FakeWriter,
-    monkeypatch: pytest.MonkeyPatch,
+    settings_override: OverrideSettings,
 ) -> None:
-    _limit(monkeypatch, MEMOS_PER_DAY_FREE="1")
+    settings_override(MEMOS_PER_DAY_FREE="1")
     deal_id = await _deal(client, me)
     writer.drafts = [GOOD]
     first = _events(await _write(client, me, deal_id))[-1][1]
@@ -118,9 +110,9 @@ async def test_the_daily_memo_limit(
     client: httpx.AsyncClient,
     me: dict[str, str],
     writer: FakeWriter,
-    monkeypatch: pytest.MonkeyPatch,
+    settings_override: OverrideSettings,
 ) -> None:
-    _limit(monkeypatch, MEMOS_PER_DAY_FREE="1")
+    settings_override(MEMOS_PER_DAY_FREE="1")
     first, second = await _deal(client, me), await _deal(client, me)
     writer.drafts = [GOOD]
     await _write(client, me, first)
@@ -134,9 +126,9 @@ async def test_the_shared_daily_budget(
     client: httpx.AsyncClient,
     me: dict[str, str],
     writer: FakeWriter,
-    monkeypatch: pytest.MonkeyPatch,
+    settings_override: OverrideSettings,
 ) -> None:
-    _limit(monkeypatch, MEMO_DAILY_BUDGET="0")
+    settings_override(MEMO_DAILY_BUDGET="0")
     response = await _write(client, me, await _deal(client, me))
     assert response.status_code == 429
     assert response.json()["code"] == "memo_budget"

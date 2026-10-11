@@ -35,8 +35,7 @@ def test_solved_price_hits_the_target(rental: BuyAndHold, target: float) -> None
     price = solve(
         rental, "price", metric_name="cash_on_cash", target=target, lo=20_000, hi=1_000_000
     )
-    if price is None:
-        return
+    assert price is not None
     assert metric(replace(rental, price=price), "cash_on_cash") == pytest.approx(target, abs=1e-6)
 
 

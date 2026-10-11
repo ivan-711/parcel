@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import TypeAdapter
 from sqlalchemy import func, or_, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -201,17 +202,15 @@ def to_detail(deal: Deal, *, monthly: bool = False) -> schema.DealDetail:
 async def put_actual(
     session: AsyncSession, deal: Deal, month: date, data: schema.ActualIn
 ) -> Actual:
-    month = month.replace(day=1)
-    actual = await session.scalar(
-        select(Actual).where(Actual.deal_id == deal.id, Actual.month == month)
+    values = data.model_dump()
+    stmt = (
+        insert(Actual)
+        .values(deal_id=deal.id, owner_id=deal.owner_id, month=month.replace(day=1), **values)
+        .on_conflict_do_update(index_elements=[Actual.deal_id, Actual.month], set_=values)
+        .returning(Actual)
     )
-    if actual is None:
-        actual = Actual(deal_id=deal.id, owner_id=deal.owner_id, month=month)
-        session.add(actual)
-    for key, value in data.model_dump().items():
-        setattr(actual, key, value)
-    await session.flush()
-    return actual
+    result = await session.scalars(stmt, execution_options={"populate_existing": True})
+    return result.one()
 
 
 async def delete_actual(session: AsyncSession, deal: Deal, month: date) -> None:

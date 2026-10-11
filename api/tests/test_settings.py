@@ -16,9 +16,8 @@ PRODUCTION: dict[str, Any] = {
 
 @pytest.fixture(autouse=True)
 def bare_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ("ENVIRONMENT", "SECRET_KEY", "DATABASE_URL", "CLERK_ISSUER"):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.delenv("CLERK_WEBHOOK_SECRET", raising=False)
+    for name in Settings.model_fields:
+        monkeypatch.delenv(name.upper(), raising=False)
 
 
 def make(**values: Any) -> Settings:
@@ -70,3 +69,10 @@ def test_stripe_needs_its_webhook_secret_once_it_has_a_key() -> None:
 def test_database_urls_from_hosts_get_the_async_driver(scheme: str) -> None:
     settings = make(environment="test", database_url=f"{scheme}u:p@db:5432/parcel")
     assert settings.database_url == "postgresql+asyncpg://u:p@db:5432/parcel"
+
+
+def test_a_bare_environment_means_live_providers_and_the_local_web_app() -> None:
+    settings = make(environment="test")
+    assert settings.providers == "live"
+    assert settings.web_origins == ["http://localhost:5173"]
+    assert settings.stripe_webhook_secret.get_secret_value() == ""

@@ -1,6 +1,15 @@
+import asyncio
+import uuid
 from datetime import date
+from typing import Any
 
 import httpx
+import pytest
+from sqlalchemy import select
+
+from parcel.db.models import Actual
+from parcel.db.session import db
+from parcel.domain import deals
 
 from .conftest import Login, deal_body
 
@@ -91,3 +100,58 @@ async def test_a_sold_property_stops_counting_its_sale_as_income(
     assert len(prop["months"]) == 12
     assert all(abs(m["projected_cash_flow"]) < 5_000 for m in prop["months"])
     assert portfolio["monthly_projected_now"] == 0
+
+
+async def test_entering_a_month_again_replaces_it(client: httpx.AsyncClient, login: Login) -> None:
+    me = login("landlord")
+    deal = (
+        await client.post("/v1/deals", json={**deal_body(), "stage": "owned"}, headers=me)
+    ).json()
+    first = {"rent_collected": 2_000, "operating_expenses": 500, "debt_service": 1_200}
+    second = {**first, "rent_collected": 1_900, "capital_spent": 300, "note": "new roof"}
+    base = f"/v1/deals/{deal['id']}/actuals"
+    await client.put(f"{base}/2026-05-17", json=first, headers=me)
+    put = await client.put(f"{base}/2026-05-01", json=second, headers=me)
+
+    assert put.json() == {"month": "2026-05-01", **second}
+    async with db.as_system() as session:
+        rows = (
+            await session.scalars(select(Actual).where(Actual.deal_id == uuid.UUID(deal["id"])))
+        ).all()
+    assert [(r.month, r.rent_collected, r.capital_spent, r.note) for r in rows] == [
+        (date(2026, 5, 1), 1_900, 300, "new roof")
+    ]
+
+
+async def test_two_first_entries_for_a_month_do_not_collide(
+    client: httpx.AsyncClient, login: Login, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    me = login("landlord")
+    deal = (
+        await client.post("/v1/deals", json={**deal_body(), "stage": "owned"}, headers=me)
+    ).json()
+    url = f"/v1/deals/{deal['id']}/actuals/{date.today().replace(day=1).isoformat()}"
+    first = {"rent_collected": 2_000, "operating_expenses": 500, "debt_service": 1_200}
+    second = {**first, "rent_collected": 2_100, "note": "second"}
+
+    # Hold each request until both are about to write, so they overlap for certain.
+    both_here = asyncio.Barrier(2)
+    write = deals.put_actual
+
+    async def together(*args: Any) -> Actual:
+        await both_here.wait()
+        return await write(*args)
+
+    monkeypatch.setattr(deals, "put_actual", together)
+    async with asyncio.timeout(10):
+        puts = await asyncio.gather(
+            client.put(url, json=first, headers=me), client.put(url, json=second, headers=me)
+        )
+
+    assert [p.status_code for p in puts] == [200, 200]
+    async with db.as_system() as session:
+        rows = (
+            await session.scalars(select(Actual).where(Actual.deal_id == uuid.UUID(deal["id"])))
+        ).all()
+    assert len(rows) == 1
+    assert (rows[0].rent_collected, rows[0].note) in {(2_000, ""), (2_100, "second")}

@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { api, unwrap } from '../../../lib/api/client'
+import { api, ApiError, unwrap } from '../../../lib/api/client'
 import {
   sensitivityQuery,
   simulateQuery,
@@ -263,6 +263,7 @@ function MonteCarlo({ inputs }: { inputs: HoldingInputs }) {
   const [armed, setArmed] = useState(false)
   const { data, isFetching, error } = useQuery({ ...simulateQuery(inputs), enabled: armed })
   const p = data?.irr_percentiles
+  const refused = error instanceof ApiError && error.code === 'pro_required'
   return (
     <Card className={styles.wide}>
       <CardTitle sub="Rent, empty months, repair overruns and the sale price all vary at once, ten thousand times.">
@@ -273,7 +274,7 @@ function MonteCarlo({ inputs }: { inputs: HoldingInputs }) {
           <Button size="small" onClick={() => setArmed(true)} disabled={isFetching}>
             {isFetching ? 'Running' : 'Run 10,000 versions'}
           </Button>
-          {error ? '  This needs Pro, or the demo.' : ''}
+          {error && (refused ? '  This needs Pro, or the demo.' : '  That run failed. Try again.')}
         </p>
       )}
       {data && p && (
