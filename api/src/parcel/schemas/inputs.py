@@ -68,7 +68,10 @@ class BuyAndHold(_Strict):
 
     @model_validator(mode="after")
     def _fits(self) -> "BuyAndHold":
-        _within_hold(self.hold_years, rehab_months=self.rehab_months)
+        idle = self.rehab_months + self.operations.lease_up_months
+        _within_hold(self.hold_years, rehab_months=self.rehab_months, lease_up=idle)
+        if self.exit_cap_rate is not None and self.hold_years * 12 - idle < 12:
+            raise ValueError("exit_cap_rate needs a full year of rent before the sale")
         return self
 
     def to_engine(self) -> strategies.BuyAndHold:
@@ -155,7 +158,12 @@ class CreativeFinance(_Strict):
 
     @model_validator(mode="after")
     def _fits(self) -> "CreativeFinance":
-        _within_hold(self.hold_years, rehab_months=self.rehab_months)
+        idle = self.rehab_months + self.operations.lease_up_months
+        _within_hold(self.hold_years, rehab_months=self.rehab_months, lease_up=idle)
+        if self.existing_balance + self.cash_to_seller > self.price:
+            raise ValueError(
+                "cash_to_seller and the existing balance add up to more than the price"
+            )
         return self
 
     def to_engine(self) -> strategies.CreativeFinance:

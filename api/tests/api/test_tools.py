@@ -3,6 +3,8 @@ import pytest
 
 from .conftest import RENTAL, Login
 
+OPS = {"monthly_rent": 2_000, "property_tax_annual": 3_000, "insurance_annual": 1_200}
+
 
 @pytest.fixture
 def me(login: Login) -> dict[str, str]:
@@ -13,6 +15,54 @@ async def test_analyze_without_saving(client: httpx.AsyncClient, me: dict[str, s
     response = await client.post("/v1/analyze", json={"inputs": RENTAL}, headers=me)
     assert response.status_code == 200
     assert response.json()["metrics"]["noi"] == 15_636.0
+
+
+@pytest.mark.parametrize(
+    ("overrides", "field"),
+    [
+        (
+            {"hold_years": 1, "operations": {**OPS, "lease_up_months": 13}},
+            "lease_up",
+        ),
+        ({"hold_years": 1, "rehab_months": 1, "exit_cap_rate": 0.06}, "exit_cap_rate"),
+        (
+            {
+                "hold_years": 1,
+                "operations": {**OPS, "lease_up_months": 1},
+                "exit_cap_rate": 0.06,
+            },
+            "exit_cap_rate",
+        ),
+    ],
+    ids=["lease up past the hold", "no full year after rehab", "no full year after lease up"],
+)
+async def test_timelines_the_engine_cannot_run_are_field_errors(
+    client: httpx.AsyncClient, me: dict[str, str], overrides: dict[str, object], field: str
+) -> None:
+    response = await client.post(
+        "/v1/analyze", json={"inputs": {**RENTAL, **overrides}}, headers=me
+    )
+    assert response.status_code == 422
+    assert field in response.text
+
+
+async def test_seller_cash_cannot_exceed_what_the_seller_is_owed(
+    client: httpx.AsyncClient, me: dict[str, str]
+) -> None:
+    creative = {
+        "strategy": "creative",
+        "price": 200_000,
+        "operations": OPS,
+        "existing_balance": 180_000,
+        "existing_rate": 0.04,
+        "existing_months_left": 300,
+        "cash_to_seller": 40_000,
+    }
+    response = await client.post("/v1/analyze", json={"inputs": creative}, headers=me)
+    assert response.status_code == 422
+    assert "cash_to_seller" in response.text
+    fine = {**creative, "cash_to_seller": 20_000}
+    assert (await client.post("/v1/analyze", json={"inputs": fine}, headers=me)).status_code == 200
 
 
 async def test_solve_finds_the_price_for_a_target(
