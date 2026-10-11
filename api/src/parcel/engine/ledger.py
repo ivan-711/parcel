@@ -55,12 +55,25 @@ class Ledger:
         return self.gross_rent - self.vacancy + self.other_income
 
     @property
+    def potential_income(self) -> Grid:
+        return self.gross_rent + self.other_income
+
+    @property
     def fixed_expenses(self) -> Grid:
         return self.taxes + self.insurance + self.hoa + self.utilities
 
     @property
+    def other_opex(self) -> Grid:
+        return self.management + self.maintenance
+
+    @property
     def opex(self) -> Grid:
-        return self.fixed_expenses + self.management + self.maintenance
+        return self.fixed_expenses + self.other_opex
+
+    @property
+    def total_costs(self) -> Grid:
+        """Everything that comes off the rent before the loan: vacancy, opex and reserves."""
+        return self.vacancy + self.opex + self.capex
 
     @property
     def noi(self) -> Grid:

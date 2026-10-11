@@ -65,6 +65,31 @@ async def test_seller_cash_cannot_exceed_what_the_seller_is_owed(
     assert (await client.post("/v1/analyze", json={"inputs": fine}, headers=me)).status_code == 200
 
 
+async def test_the_ledger_carries_its_own_subtotals(
+    client: httpx.AsyncClient, me: dict[str, str]
+) -> None:
+    ops = {"monthly_rent": 2_000, "property_tax_annual": 3_000, "insurance_annual": 1_200}
+    body = {
+        "inputs": {**RENTAL, "operations": {**ops, "other_income_monthly": 100}},
+        "monthly": True,
+    }
+    result = (await client.post("/v1/analyze", json=body, headers=me)).json()
+    month = result["months"][13]
+    assert month["potential_income"] == round(month["gross_rent"] + month["other_income"], 2)
+    assert month["fixed_costs"] == round(month["taxes"] + month["insurance"], 2)
+    assert month["other_opex"] == round(month["opex"] - month["fixed_costs"], 2)
+    assert month["debt_service"] == round(month["interest"] + month["principal"], 2)
+    assert month["total_costs"] == round(month["vacancy"] + month["opex"] + month["capex"], 2)
+    assert month["operating_cash_flow"] == round(
+        month["noi"] - month["capex"] - month["debt_service"], 2
+    )
+    metrics = result["metrics"]
+    assert metrics["total_returned"] == round(
+        metrics["total_invested"] + metrics["total_profit"], 2
+    )
+    assert metrics["monthly_cash_flow"] == round(metrics["cash_flow"] / 12, 2)
+
+
 async def test_solve_finds_the_price_for_a_target(
     client: httpx.AsyncClient, me: dict[str, str]
 ) -> None:

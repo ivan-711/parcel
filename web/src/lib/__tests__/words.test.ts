@@ -49,7 +49,13 @@ describe('verdict', () => {
   it('says no when the money never comes back', () => {
     const loser: Analysis = {
       ...analysis,
-      metrics: { ...metrics, cash_flow: -2_400, irr: -0.02, total_profit: -9_000 },
+      metrics: {
+        ...metrics,
+        cash_flow: -2_400,
+        monthly_cash_flow: -200,
+        irr: -0.02,
+        total_profit: -9_000,
+      },
     }
     const v = verdict(duplex, loser)
     expect(v.answer).toBe('no')

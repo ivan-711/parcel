@@ -8,11 +8,11 @@ import { Segmented } from '../../../ui/segmented'
 import styles from './ledger.module.css'
 
 const COLUMNS: { label: string; pick: (p: Period) => number; sum?: boolean }[] = [
-  { label: 'Rent', pick: (p) => p.gross_rent + p.other_income },
+  { label: 'Rent', pick: (p) => p.potential_income },
   { label: 'Empty', pick: (p) => -p.vacancy },
   { label: 'Costs', pick: (p) => -p.opex },
   { label: 'Reserves', pick: (p) => -p.capex },
-  { label: 'Loan', pick: (p) => -(p.interest + p.principal) },
+  { label: 'Loan', pick: (p) => -p.debt_service },
   { label: 'Cash flow', pick: (p) => p.cash_flow, sum: true },
   { label: 'Running total', pick: (p) => p.cumulative_cash_flow, sum: true },
   { label: 'Your equity', pick: (p) => p.equity },

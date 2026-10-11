@@ -20,6 +20,9 @@ class Metrics:
     cash_left_in_deal: Vec
     """Cash still in after stabilization. Negative when a refinance pulls out more than went in."""
     total_profit: Vec
+    total_invested: Vec
+    """Every dollar that went in over the hold, closing day and covered months alike."""
+    total_returned: Vec
     equity_multiple: Vec
     irr: Vec
     unlevered_irr: Vec
@@ -34,6 +37,7 @@ class Metrics:
     noi: Vec
     debt_service: Vec
     cash_flow: Vec
+    monthly_cash_flow: Vec
     cap_rate: Vec
     yield_on_cost: Vec
     cash_on_cash: Vec
@@ -87,6 +91,8 @@ def measure(ledger: Ledger, discount_rate: float = 0.10) -> Metrics:
         peak_cash=peak,
         cash_left_in_deal=left,
         total_profit=profit,
+        total_invested=outflow,
+        total_returned=inflow,
         equity_multiple=_div(inflow, outflow),
         irr=annualize(monthly_irr(cf)),
         unlevered_irr=annualize(monthly_irr(ledger.unlevered_cash_flow)),
@@ -100,6 +106,7 @@ def measure(ledger: Ledger, discount_rate: float = 0.10) -> Metrics:
         noi=noi,
         debt_service=service,
         cash_flow=cash_flow,
+        monthly_cash_flow=cash_flow / 12,
         cap_rate=_div(noi, price),
         yield_on_cost=_div(noi, project_cost),
         cash_on_cash=np.where(left > 0, _div(cash_flow, left), np.nan),

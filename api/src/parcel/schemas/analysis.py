@@ -8,6 +8,8 @@ class Metrics(BaseModel):
     peak_cash: float
     cash_left_in_deal: float
     total_profit: float
+    total_invested: float
+    total_returned: float
     equity_multiple: float | None
     irr: float | None
     unlevered_irr: float | None
@@ -21,6 +23,7 @@ class Metrics(BaseModel):
     noi: float | None
     debt_service: float | None
     cash_flow: float | None
+    monthly_cash_flow: float | None
     cap_rate: float | None
     yield_on_cost: float | None
     cash_on_cash: float | None
@@ -39,14 +42,19 @@ class Period(BaseModel):
     gross_rent: float
     vacancy: float
     other_income: float
+    potential_income: float
     egi: float
     taxes: float
     insurance: float
+    fixed_costs: float
+    other_opex: float
     opex: float
     noi: float
     capex: float
+    total_costs: float
     interest: float
     principal: float
+    debt_service: float
     rehab: float
     cash_flow: float
     operating_cash_flow: float

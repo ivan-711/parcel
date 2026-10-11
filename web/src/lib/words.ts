@@ -37,10 +37,6 @@ function answer(positive: boolean, flags: Flag[], catches = false): Answer {
   return catches || flags.some((f) => f.severity === 'risk') ? 'catch' : 'yes'
 }
 
-function perMonth(annual: number | null | undefined): string {
-  return moneySigned((annual ?? 0) / 12)
-}
-
 export function verdict(inputs: Inputs, analysis: AnyAnalysis): Verdict {
   if (isWholesale(analysis)) {
     const w = analysis
@@ -95,7 +91,7 @@ export function verdict(inputs: Inputs, analysis: AnyAnalysis): Verdict {
         { text: ' back at the refinance, leave ' },
         { text: money(Math.max(m.cash_left_in_deal, 0)), lit: true },
         { text: ' in the deal, and clear ' },
-        { text: `${perMonth(m.cash_flow)} a month`, lit: true },
+        { text: `${moneySigned(m.monthly_cash_flow ?? 0)} a month`, lit: true },
         { text: '.' },
       ]
       break
@@ -104,7 +100,7 @@ export function verdict(inputs: Inputs, analysis: AnyAnalysis): Verdict {
       ok = m.total_profit > 0 && (m.irr ?? 0) > 0
       const positive = (m.cash_flow ?? 0) > 0
       parts = [
-        { text: `${perMonth(m.cash_flow)} a month`, lit: true },
+        { text: `${moneySigned(m.monthly_cash_flow ?? 0)} a month`, lit: true },
         { text: positive ? ' in your pocket, and your money grows ' : ' out of your pocket' },
       ]
       if (positive && m.irr !== null)

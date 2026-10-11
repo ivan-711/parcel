@@ -32,6 +32,9 @@ def test_irr_and_npv_match_numpy_financial(rental: BuyAndHold) -> None:
     assert m.npv[0] == pytest.approx(npf.npv(1.08 ** (1 / 12) - 1, cf))
     assert m.equity_multiple[0] == pytest.approx(cf[cf > 0].sum() / -cf[cf < 0].sum())
     assert m.total_profit[0] == pytest.approx(cf.sum())
+    assert m.total_invested[0] == pytest.approx(-cf[cf < 0].sum())
+    assert m.total_returned[0] == pytest.approx(m.total_invested[0] + m.total_profit[0])
+    assert m.monthly_cash_flow[0] == pytest.approx(m.cash_flow[0] / 12)
 
 
 @settings(max_examples=60, deadline=None)

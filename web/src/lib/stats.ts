@@ -71,12 +71,15 @@ function cashToClose(inputs: Inputs, a: Hold): Stat {
 function irr(inputs: Inputs, a: Hold): Stat {
   const m = a.metrics
   const value = m.irr === null ? 'n/a' : percent(m.irr)
-  const back = money(m.cash_to_close + m.total_profit)
   const hold = months(a.horizon_months)
+  const covered = m.total_invested - m.cash_to_close > 0.5
+  const put = covered
+    ? `${money(m.cash_to_close)} to close and ${money(m.total_invested)} all told, counting the months you had to cover`
+    : money(m.cash_to_close)
   const explain =
     m.irr === null
       ? 'The return can’t be worked out because the money never comes back.'
-      : `You put in ${money(m.cash_to_close)}. Over ${hold} you get back ${back}, ${money(m.net_sale_proceeds)} of it when you sell. That’s ${multiple(m.equity_multiple ?? 0)} your money, which works out to ${value} a year.`
+      : `You put in ${put}. Over ${hold} you get back ${money(m.total_returned)}, ${money(m.net_sale_proceeds)} of it when you sell. That’s ${multiple(m.equity_multiple ?? 0)} your money, which works out to ${value} a year.`
   const rate =
     inputs.strategy === 'brrrr'
       ? 'refi_rate'
@@ -97,7 +100,7 @@ function irr(inputs: Inputs, a: Hold): Stat {
 
 function cashFlow(inputs: Inputs, a: Hold): Stat {
   const m = a.metrics
-  const monthly = (m.cash_flow ?? 0) / 12
+  const monthly = m.monthly_cash_flow ?? 0
   const rent = money(num(getPath(inputs, 'operations.monthly_rent')))
   const loan = inputs.strategy === 'creative' ? 'both loan payments' : 'the mortgage'
   return {

@@ -1028,6 +1028,10 @@ export interface components {
             cash_left_in_deal: number;
             /** Total Profit */
             total_profit: number;
+            /** Total Invested */
+            total_invested: number;
+            /** Total Returned */
+            total_returned: number;
             /** Equity Multiple */
             equity_multiple: number | null;
             /** Irr */
@@ -1054,6 +1058,8 @@ export interface components {
             debt_service: number | null;
             /** Cash Flow */
             cash_flow: number | null;
+            /** Monthly Cash Flow */
+            monthly_cash_flow: number | null;
             /** Cap Rate */
             cap_rate: number | null;
             /** Yield On Cost */
@@ -1145,22 +1151,32 @@ export interface components {
             vacancy: number;
             /** Other Income */
             other_income: number;
+            /** Potential Income */
+            potential_income: number;
             /** Egi */
             egi: number;
             /** Taxes */
             taxes: number;
             /** Insurance */
             insurance: number;
+            /** Fixed Costs */
+            fixed_costs: number;
+            /** Other Opex */
+            other_opex: number;
             /** Opex */
             opex: number;
             /** Noi */
             noi: number;
             /** Capex */
             capex: number;
+            /** Total Costs */
+            total_costs: number;
             /** Interest */
             interest: number;
             /** Principal */
             principal: number;
+            /** Debt Service */
+            debt_service: number;
             /** Rehab */
             rehab: number;
             /** Cash Flow */

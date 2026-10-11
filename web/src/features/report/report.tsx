@@ -120,13 +120,9 @@ export function Report({ token }: { token: string }) {
             {ledger.years.map((y) => (
               <tr key={y.period}>
                 <td>{y.period === 0 ? 'Closing' : `Year ${y.period}`}</td>
-                <td>{y.gross_rent ? money(y.gross_rent + y.other_income) : ''}</td>
-                <td className={styles.neg}>
-                  {y.opex + y.capex + y.vacancy ? moneySigned(-(y.opex + y.capex + y.vacancy)) : ''}
-                </td>
-                <td className={styles.neg}>
-                  {y.interest + y.principal ? moneySigned(-(y.interest + y.principal)) : ''}
-                </td>
+                <td>{y.gross_rent ? money(y.potential_income) : ''}</td>
+                <td className={styles.neg}>{y.total_costs ? moneySigned(-y.total_costs) : ''}</td>
+                <td className={styles.neg}>{y.debt_service ? moneySigned(-y.debt_service) : ''}</td>
                 <td className={y.cash_flow < 0 ? styles.neg : ''}>{moneySigned(y.cash_flow)}</td>
                 <td className={y.cumulative_cash_flow < 0 ? styles.neg : ''}>
                   {moneySigned(y.cumulative_cash_flow)}

@@ -1,6 +1,5 @@
 import type { Analysis, Inputs } from '../../../lib/api/queries'
 import { money, moneySigned, months } from '../../../lib/format'
-import { getPath } from '../../../lib/paths'
 import { useMedia } from '../../../lib/use-media'
 import { MoneyLine, type ChartPoint } from '../../../ui/chart'
 import { Card, CardTitle } from '../../../ui/card'
@@ -40,14 +39,11 @@ function Timeline({ analysis }: { analysis: Analysis }) {
 
 function RentBreakdown({ inputs, analysis }: { inputs: Inputs; analysis: Analysis }) {
   const month = analysis.months?.[analysis.stabilized_month + 1]
-  const rent = Number(getPath(inputs, 'operations.monthly_rent') ?? 0)
   if (!month || month.gross_rent <= 0) return null
-  const loan = month.interest + month.principal
-  const fixed = month.taxes + month.insurance
   const rows: [string, number, 'on' | 'bad' | ''][] = [
-    [inputs.strategy === 'creative' ? 'Loan payments' : 'Mortgage', loan, ''],
-    ['Taxes, insurance', fixed, ''],
-    ['Upkeep', month.opex - fixed, ''],
+    [inputs.strategy === 'creative' ? 'Loan payments' : 'Mortgage', month.debt_service, ''],
+    ['Taxes, insurance', month.fixed_costs, ''],
+    ['Upkeep', month.other_opex, ''],
     ['Reserves', month.capex, ''],
     ['Empty months', month.vacancy, ''],
     ['Left over', month.cash_flow, month.cash_flow < 0 ? 'bad' : 'on'],
@@ -56,7 +52,7 @@ function RentBreakdown({ inputs, analysis }: { inputs: Inputs; analysis: Analysi
   rows.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
   return (
     <Card className={styles.panel} padded={false}>
-      <CardTitle sub={`Each month, out of ${money(rent + month.other_income)}`}>
+      <CardTitle sub={`Each month, out of ${money(month.potential_income)}`}>
         Where the rent goes
       </CardTitle>
       <div className={styles.rows}>
