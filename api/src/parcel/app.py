@@ -21,6 +21,7 @@ from parcel.errors import Problem
 from parcel.http.problems import problem_handler, validation_handler
 from parcel.http.routes import account, analyze, deals, lookup, memo
 from parcel.http.routes import billing as billing_routes
+from parcel.redact import redact_path, scrub_event
 from parcel.settings import Settings, get_settings
 
 log = structlog.get_logger()
@@ -37,7 +38,11 @@ def create_app(
     logging.configure(json=settings.log_json)
     if settings.sentry_dsn:
         sentry_sdk.init(
-            dsn=settings.sentry_dsn, environment=settings.environment, traces_sample_rate=0.1
+            dsn=settings.sentry_dsn,
+            environment=settings.environment,
+            traces_sample_rate=0.1,
+            before_send=scrub_event,
+            before_send_transaction=scrub_event,
         )
 
     @asynccontextmanager
@@ -100,11 +105,18 @@ async def _request_context(
         log.info(
             "request",
             method=request.method,
-            path=request.url.path,
+            path=_logged_path(request),
             status=response.status_code,
             ms=round(elapsed, 1),
         )
     return response
+
+
+def _logged_path(request: Request) -> str:
+    # Routing has run once the response exists. Unrouted requests (404s, slash redirects) have
+    # no template, so their raw path is logged with any share token removed.
+    route = request.scope.get("route")
+    return route.path if route else redact_path(request.url.path)
 
 
 def _property_data(settings: Settings, client: httpx.AsyncClient) -> PropertyData:
