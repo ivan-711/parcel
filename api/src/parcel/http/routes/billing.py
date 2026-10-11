@@ -73,7 +73,7 @@ async def stripe_webhook(request: Request) -> Response:
     event = json.loads(payload)
     async with db.as_system() as session:
         if await billing.first_delivery(session, event):
-            await billing.apply(session, event["type"], event["data"]["object"])
+            await billing.apply(session, event)
             log.info("stripe_event", type=event["type"], id=event["id"])
     return Response(status_code=204)
 

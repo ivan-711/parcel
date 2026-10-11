@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 import json
@@ -35,6 +36,15 @@ async def _me(client: httpx.AsyncClient, headers: dict[str, str]) -> dict[str, A
 CHECKOUT = {"customer": "cus_123", "payment_status": "paid"}
 
 
+def _checkout(user_id: str, **obj: Any) -> dict[str, Any]:
+    return {
+        "id": "evt_1",
+        "type": "checkout.session.completed",
+        "created": 1_000,
+        "data": {"object": {**CHECKOUT, "client_reference_id": user_id, **obj}},
+    }
+
+
 async def _send(
     client: httpx.AsyncClient, event_id: str, event_type: str, created: int, **obj: Any
 ) -> None:
@@ -50,13 +60,7 @@ async def _send(
 
 async def _subscribe(client: httpx.AsyncClient, headers: dict[str, str]) -> None:
     me = await _me(client, headers)
-    completed = {
-        "id": "evt_1",
-        "type": "checkout.session.completed",
-        "created": 1_000,
-        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
-    }
-    payload, sig = stripe_signed(completed)
+    payload, sig = stripe_signed(_checkout(me["id"]))
     await client.post("/webhooks/stripe", content=payload, headers=sig)
     assert (await _me(client, headers))["plan"] == "pro"
 
@@ -89,13 +93,7 @@ async def test_portal_needs_a_subscription_first(client: httpx.AsyncClient, logi
 async def test_checkout_then_cancel_moves_the_plan(client: httpx.AsyncClient, login: Login) -> None:
     headers = login("buyer")
     me = await _me(client, headers)
-    completed = {
-        "id": "evt_1",
-        "type": "checkout.session.completed",
-        "created": 1_000,
-        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
-    }
-    payload, sig = stripe_signed(completed)
+    payload, sig = stripe_signed(_checkout(me["id"]))
     assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
     assert (await _me(client, headers))["plan"] == "pro"
 
@@ -109,13 +107,7 @@ async def test_checkout_then_cancel_moves_the_plan(client: httpx.AsyncClient, lo
 async def test_replayed_events_are_applied_once(client: httpx.AsyncClient, login: Login) -> None:
     headers = login("buyer")
     me = await _me(client, headers)
-    completed = {
-        "id": "evt_1",
-        "type": "checkout.session.completed",
-        "created": 1_000,
-        "data": {"object": {**CHECKOUT, "client_reference_id": me["id"]}},
-    }
-    payload, sig = stripe_signed(completed)
+    payload, sig = stripe_signed(_checkout(me["id"]))
     await client.post("/webhooks/stripe", content=payload, headers=sig)
     await _send(client, "evt_2", "customer.subscription.updated", 2_000, status="unpaid")
     assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
@@ -143,20 +135,50 @@ async def test_a_late_retry_cannot_drop_a_paying_user(
     assert (await _me(client, headers))["plan"] == "pro"
 
 
+async def test_subscription_events_before_checkout_do_not_lock_a_buyer_out(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    me = await _me(client, headers)
+    await _send(client, "evt_2", "customer.subscription.created", 2_000, status="active")
+    payload, sig = stripe_signed(_checkout(me["id"]))
+    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    assert (await _me(client, headers))["plan"] == "pro"
+    await _send(client, "evt_3", "customer.subscription.deleted", 3_000, status="canceled")
+    assert (await _me(client, headers))["plan"] == "free"
+
+
+async def test_events_landing_at_once_settle_on_the_newest(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    await _subscribe(client, headers)
+    for _ in range(5):
+        await asyncio.gather(
+            _send(
+                client,
+                f"evt_{uuid.uuid4()}",
+                "customer.subscription.updated",
+                2_000,
+                status="active",
+            ),
+            _send(
+                client,
+                f"evt_{uuid.uuid4()}",
+                "customer.subscription.deleted",
+                3_000,
+                status="canceled",
+            ),
+        )
+        assert (await _me(client, headers))["plan"] == "free"
+
+
 async def test_checkout_grants_nothing_until_it_is_paid(
     client: httpx.AsyncClient, login: Login
 ) -> None:
     headers = login("buyer")
     me = await _me(client, headers)
-    pending = {
-        "id": "evt_1",
-        "type": "checkout.session.completed",
-        "created": 1_000,
-        "data": {
-            "object": {**CHECKOUT, "client_reference_id": me["id"], "payment_status": "unpaid"}
-        },
-    }
-    payload, sig = stripe_signed(pending)
+    payload, sig = stripe_signed(_checkout(me["id"], payment_status="unpaid"))
     assert (await client.post("/webhooks/stripe", content=payload, headers=sig)).status_code == 204
     assert (await _me(client, headers))["plan"] == "free"
 

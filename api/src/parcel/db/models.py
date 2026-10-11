@@ -81,6 +81,8 @@ class User(Base):
     name: Mapped[str | None] = mapped_column(String(200))
     plan: Mapped[Plan] = mapped_column(_enum(Plan, "plan"), server_default=Plan.free.value)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    stripe_event_created: Mapped[int] = mapped_column(BigInteger, server_default="0")
+    """Stripe's timestamp on the last event applied here. Older ones are stale."""
     defaults: Mapped[dict[str, Any]] = mapped_column(server_default=text("'{}'::jsonb"))
     demo_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _now()
