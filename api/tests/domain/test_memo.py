@@ -4,8 +4,9 @@ import pytest
 
 from parcel.db.models import Deal
 from parcel.domain import memo
+from parcel.domain.deals import analysis_of
 from parcel.domain.memo import Brief, Chunk, Figure, Finished, Retry
-from parcel.schemas.analysis import Flag
+from parcel.schemas.analysis import Analysis, Flag
 
 from ..writer import FakeWriter
 from .memo_cases import cases
@@ -40,6 +41,10 @@ def faithful(brief: Brief) -> str:
         ("18 months", "months", 18, 1),
         ("10-year", "months", 120, 12),
         ("2 years", "months", 24, 12),
+        ("+$12,000", "money", 12_000, 1_000),
+        ("-$12,000", "money", -12_000, 1_000),
+        ("\u2212$1,234", "money", -1_234, 1),
+        ("-6.3%", "percent", -6.3, 0.1),
     ],
 )
 def test_numbers_are_read_with_the_precision_they_are_written_in(
@@ -84,6 +89,31 @@ def test_a_loss_can_be_written_without_its_minus_sign() -> None:
     assert memo.check("The property loses $1,820 a year.", allowed) == []
 
 
+def test_a_written_sign_has_to_agree_with_the_figure() -> None:
+    loss = _brief(cash_flow=(-12_000, "money"), irr=(-0.043, "percent"))
+    assert memo.check("Cash flow is +$12,000 and IRR +4.3%.", loss) == ["+$12,000", "+4.3%"]
+    assert memo.check("Cash flow is -$12,000 and IRR -4.3%.", loss) == []
+    assert memo.check("Cash flow is \u2212$12,000.", loss) == []
+    assert memo.check("Cash flow is a $12,000 loss.", loss) == []
+    profit = _brief(cash_flow=(12_000, "money"))
+    assert memo.check("Cash flow is -$12,000.", profit) == ["-$12,000"]
+    assert memo.check("Cash flow is +$12,000.", profit) == []
+
+
+def test_a_flag_that_states_no_sign_accepts_either() -> None:
+    flags = [Flag(code="cash_flow_negative", severity="risk", message="Short by $1,820 a year.")]
+    allowed = memo.allowed_numbers([], flags)
+    assert memo.check("It runs -$1,820 a year.", allowed) == []
+    assert memo.check("It runs +$1,820 a year.", allowed) == []
+
+
+@pytest.mark.parametrize("text", ["$1,200-$1,500", "8-10%", "10-12 months", "+/-5%"])
+def test_a_dash_between_numbers_is_not_a_minus_sign(text: str) -> None:
+    found = memo.numbers(text)
+    assert found
+    assert all(n.value > 0 for n in found)
+
+
 def test_numbers_from_the_flags_areallowed_numbers() -> None:
     flags = [Flag(code="dscr_thin", severity="caution", message="Lenders want 1.25.")]
     assert memo.check("Below the 1.25 most lenders want.", memo.allowed_numbers([], flags)) == []
@@ -110,6 +140,28 @@ def test_every_eval_deal_gets_a_complete_checkable_brief(deal: Deal) -> None:
     money = next(f for f in brief.figures if f.kind == "money" and f.value > 1_000)
     altered = Figure(money.label, money.value * 1.2, "money")
     assert memo.check(f"It needs {altered.text}.", brief.allowed) == [altered.text]
+
+
+def test_the_brief_gives_the_month_the_engine_refinances_in() -> None:
+    base = dict(CASES)["brrrr-base"]
+    deal = Deal(
+        name=base.name,
+        address=base.address,
+        inputs={
+            **base.inputs,
+            "rehab_months": 9,
+            "seasoning_months": 6,
+            "operations": {**base.inputs["operations"], "lease_up_months": 2},
+        },
+    )
+    brief = memo.brief(deal)
+    analysis = analysis_of(deal)
+    assert isinstance(analysis, Analysis)
+    [refinance] = [e for e in analysis.events if e.kind == "refinance"]
+    assert refinance.month == 11
+    assert "- Refinance after: 11 months\n" in brief.prompt
+    assert memo.check("We refinance after 11 months.", brief.allowed) == []
+    assert memo.check("We refinance after 6 months.", brief.allowed) == ["6 months"]
 
 
 @pytest.mark.parametrize(("case", "deal"), RECORDINGS)

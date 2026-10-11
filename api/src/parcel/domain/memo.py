@@ -94,11 +94,17 @@ class Number:
     value: float
     kind: Kind
     unit: float
+    signed: bool = False
+    """Whether the sign is known: written in the text, or a figure's own sign."""
 
     def matches(self, other: "Number") -> bool:
         if not _compatible(self.kind, other.kind):
             return False
-        return abs(abs(self.value) - abs(other.value)) <= self.unit / 2 + 1e-9
+        if self.signed and other.signed:
+            gap = self.value - other.value
+        else:
+            gap = abs(self.value) - abs(other.value)
+        return abs(gap) <= self.unit / 2 + 1e-9
 
 
 @dataclass(frozen=True)
@@ -189,7 +195,10 @@ def check(body: str, allowed: Iterable[Number]) -> list[str]:
     return unmatched
 
 
+# A sign only counts when it stands alone in front of the number. Joined to a
+# digit or a word it is a dash, as in "$1,200-$1,500" or "10-12 months".
 _NUMBER = re.compile(
+    r"(?:(?<![^\s(\[*])(?P<sign>[+\-\u2212]))?"
     r"(?P<cur>\$)?"
     r"(?P<int>\d{1,3}(?:,\d{3})+|\d+)(?:\.(?P<dec>\d+))?"
     r"(?:[ -]?(?P<unit>%|percent\b|x\b|[kKmM]\b|thousand\b|million\b|months?\b|years?\b))?"
@@ -201,13 +210,17 @@ def numbers(text: str) -> list[Number]:
     """The numbers in `text` that carry a unit worth checking.
 
     Bare integers like "year 3" or "2 units" are skipped. A bare decimal is
-    read as a ratio, which is how DSCR is written.
+    read as a ratio, which is how DSCR is written. A number written without a
+    sign is read as a magnitude, so "a $12,000 loss" is still $12,000.
     """
     found = []
     for m in _NUMBER.finditer(text):
         digits = m["int"].replace(",", "")
         dec = m["dec"] or ""
         value = float(f"{digits}.{dec}" if dec else digits)
+        signed = m["sign"] is not None
+        if m["sign"] in ("-", "\u2212"):
+            value = -value
         unit_word = (m["unit"] or "").lower()
         step = 10.0 ** -len(dec) if dec else 1.0
         if m["cur"]:
@@ -215,17 +228,17 @@ def numbers(text: str) -> list[Number]:
             if not dec and scale == 1.0:
                 trailing = len(digits) - len(digits.rstrip("0"))
                 step = 10.0 ** min(trailing, 3)
-            found.append(Number(m[0], value * scale, "money", step * scale))
+            found.append(Number(m[0], value * scale, "money", step * scale, signed))
         elif unit_word in {"%", "percent"}:
-            found.append(Number(m[0], value, "percent", step))
+            found.append(Number(m[0], value, "percent", step, signed))
         elif unit_word == "x":
-            found.append(Number(m[0], value, "multiple", step))
+            found.append(Number(m[0], value, "multiple", step, signed))
         elif unit_word.startswith("month"):
-            found.append(Number(m[0], value, "months", step))
+            found.append(Number(m[0], value, "months", step, signed))
         elif unit_word.startswith("year"):
-            found.append(Number(m[0], value * 12, "months", step * 12))
+            found.append(Number(m[0], value * 12, "months", step * 12, signed))
         elif dec:
-            found.append(Number(m[0], value, "ratio", step))
+            found.append(Number(m[0], value, "ratio", step, signed))
     return found
 
 
@@ -235,13 +248,13 @@ def _compatible(a: Kind, b: Kind) -> bool:
 
 def allowed_numbers(figures: list[Figure], flags: list[Flag]) -> list[Number]:
     exact = [
-        Number(f.text, f.value * 100 if f.kind == "percent" else f.value, f.kind, 0.0)
+        Number(f.text, f.value * 100 if f.kind == "percent" else f.value, f.kind, 0.0, True)
         for f in figures
     ]
     stated = [
         n for text in [f.label for f in figures] + [f.message for f in flags] for n in numbers(text)
     ]
-    return exact + [Number(n.text, n.value, n.kind, 0.0) for n in stated]
+    return exact + [Number(n.text, n.value, n.kind, 0.0, n.signed) for n in stated]
 
 
 def _correction(unmatched: list[str]) -> str:
@@ -302,7 +315,7 @@ def _input_figures(spec: inputs.Holding) -> list[Figure]:
         case inputs.Brrrr():
             figures += _pct("Purchase loan to cost", spec.loan_to_cost)
             figures += _pct("Purchase loan rate", spec.acquisition_rate)
-            figures.append(Figure("Refinance after", spec.seasoning_months, "months"))
+            figures.append(Figure("Refinance after", spec.to_engine().refi_month, "months"))
             figures += _pct("Refinance loan to value", spec.refi_ltv)
             figures += _pct("Refinance rate", spec.refi_rate)
         case inputs.CreativeFinance():
