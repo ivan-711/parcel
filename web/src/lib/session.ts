@@ -16,6 +16,12 @@ interface DemoSession {
 type TokenSource = () => Promise<string | null>
 
 let clerkTokens: TokenSource | null = null
+let clerkUser: string | null = null
+const listeners = new Set<() => void>()
+
+function identityChanged() {
+  for (const listener of listeners) listener()
+}
 
 let clerkLoaded: () => void = () => undefined
 const clerkReady = new Promise<void>((resolve) => {
@@ -43,12 +49,23 @@ export const session = {
   },
   startDemo(token: string, expiresAt: string) {
     localStorage.setItem(KEY, JSON.stringify({ token, expiresAt }))
+    identityChanged()
   },
+  // No identity change here: whatever is still mounted would refetch with no token on its
+  // way out, and the next identity clears the cache when it starts.
   endDemo() {
     localStorage.removeItem(KEY)
   },
-  useClerk(source: TokenSource | null) {
+  useClerk(source: TokenSource | null, userId: string | null = null) {
     clerkTokens = source
+    if (userId === clerkUser) return
+    clerkUser = userId
+    identityChanged()
+  },
+  /** Runs when the app starts acting as someone else, so nothing fetched for the last one lingers. */
+  onIdentityChange(listener: () => void): () => void {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
   },
   /** Clerk has finished loading, so token() answers for real from here on. */
   clerkLoaded() {

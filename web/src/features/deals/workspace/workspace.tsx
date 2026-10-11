@@ -40,6 +40,22 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'memo', label: 'Memo' },
 ]
 
+interface SaveBody {
+  inputs: Inputs
+  provenance: Provenance
+}
+
+/** keepalive lets the request outlive the page when the tab is closing. */
+async function patchDeal(dealId: string, body: SaveBody, keepalive = false) {
+  return unwrap(
+    await api.PATCH('/v1/deals/{deal_id}', {
+      params: { path: { deal_id: dealId } },
+      body,
+      keepalive,
+    }),
+  )
+}
+
 function useDebounced<T>(value: T, ms: number): T {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -65,21 +81,38 @@ export function Workspace({ dealId }: { dealId: string }) {
   const live = useQuery({ ...analysisQuery(debounced), enabled: dirty })
   const analysis: AnyAnalysis = dirty && live.data ? live.data : deal.analysis
 
+  // The inputs as last stored, so the label and the save below follow what the server has.
+  const [saved, setSaved] = useState(() => JSON.stringify(deal.inputs))
+  const unsaved = JSON.stringify(inputs) !== saved
   const save = useMutation({
-    mutationFn: async (body: { inputs: Inputs; provenance: Provenance }) =>
-      unwrap(
-        await api.PATCH('/v1/deals/{deal_id}', { params: { path: { deal_id: dealId } }, body }),
-      ),
-    onSuccess: () => {
+    mutationFn: (body: SaveBody) => patchDeal(dealId, body),
+    onSuccess: (_, body) => {
+      setSaved(JSON.stringify(body.inputs))
       void queryClient.invalidateQueries({ queryKey: ['deals'] })
     },
   })
   const { mutate } = save
   useEffect(() => {
-    if (!dirty) return
+    if (JSON.stringify(debounced) === saved) return
     const id = setTimeout(() => mutate({ inputs: debounced, provenance }), 700)
     return () => clearTimeout(id)
-  }, [debounced, dirty, provenance, mutate])
+  }, [debounced, provenance, saved, mutate])
+
+  // Whatever hasn't been sent yet, for the moments the timers above never get to run.
+  const waiting = useRef<SaveBody | null>(null)
+  useEffect(() => {
+    waiting.current = unsaved ? { inputs, provenance } : null
+  }, [unsaved, inputs, provenance])
+  useEffect(() => {
+    const leaving = () => {
+      if (waiting.current) void patchDeal(dealId, waiting.current, true).catch(() => undefined)
+    }
+    window.addEventListener('beforeunload', leaving)
+    return () => {
+      window.removeEventListener('beforeunload', leaving)
+      if (waiting.current) mutate(waiting.current)
+    }
+  }, [dealId, mutate])
 
   const labels = useMemo(
     () => Object.fromEntries(fieldsFor(inputs.strategy).map((f) => [f.path, f.label])),
@@ -184,16 +217,18 @@ export function Workspace({ dealId }: { dealId: string }) {
             <div className={styles.sideHead}>
               <h2>Assumptions</h2>
               <span
-                className={`${styles.saving} ${save.isError ? styles.failed : save.isPending || (dirty && live.isFetching) ? styles.busy : ''}`}
+                className={`${styles.saving} ${save.isError ? styles.failed : save.isPending || unsaved || (dirty && live.isFetching) ? styles.busy : ''}`}
                 aria-live="polite"
               >
                 {save.isPending
                   ? 'Saving'
                   : save.isError
                     ? "Couldn't save"
-                    : dirty && live.isFetching
-                      ? 'Updating'
-                      : 'Saved'}
+                    : unsaved
+                      ? 'Unsaved'
+                      : dirty && live.isFetching
+                        ? 'Updating'
+                        : 'Saved'}
               </span>
             </div>
             <Inspector

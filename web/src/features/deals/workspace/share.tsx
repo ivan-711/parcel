@@ -21,7 +21,11 @@ export function ShareButton({ dealId, shared }: { dealId: string; shared: boolea
   })
   const stop = useMutation({
     mutationFn: async () => {
-      await api.DELETE('/v1/deals/{deal_id}/share', { params: { path: { deal_id: dealId } } })
+      const result = await api.DELETE('/v1/deals/{deal_id}/share', {
+        params: { path: { deal_id: dealId } },
+      })
+      // A 204 has no data for unwrap to return, so only a failed status goes through it.
+      if (!result.response.ok) unwrap(result)
     },
     onSuccess: () => {
       share.reset()
@@ -89,6 +93,11 @@ export function ShareButton({ dealId, shared }: { dealId: string; shared: boolea
               Stop sharing
             </button>
           </div>
+          {stop.isError && (
+            <span role="alert" className={styles.error}>
+              Couldn&rsquo;t stop sharing. Try again.
+            </span>
+          )}
         </Card>
       )}
     </div>

@@ -38,6 +38,12 @@
   font-size: var(--fs-small);
   color: var(--risk);
 }
+.error {
+  display: block;
+  margin-top: 10px;
+  font-size: var(--fs-small);
+  color: var(--risk);
+}
 @keyframes pop {
   from {
     opacity: 0;

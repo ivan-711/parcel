@@ -13,7 +13,7 @@ import {
 import { fieldsFor, type Field } from '../../lib/fields'
 import { money, percent } from '../../lib/format'
 import { getPath, setPath } from '../../lib/paths'
-import { STRATEGIES, blank, infoFor, suggestionKey } from '../../lib/strategies'
+import { STRATEGIES, blank, infoFor, suggestionKey, type Draft } from '../../lib/strategies'
 import { Button } from '../../ui/button'
 import { Card } from '../../ui/card'
 import styles from './new.module.css'
@@ -118,12 +118,13 @@ function NumberField({
   onChange: (value: number | null) => void
 }) {
   const [draft, setDraft] = useState<string | null>(null)
-  const raw = value
-    ? field.kind === 'rate'
-      ? String(Number((value * 100).toFixed(4)))
-      : String(value)
-    : ''
-  const shown = value && field.kind !== 'rate' ? value.toLocaleString('en-US') : raw
+  const raw =
+    value === null
+      ? ''
+      : field.kind === 'rate'
+        ? String(Number((value * 100).toFixed(4)))
+        : String(value)
+  const shown = value !== null && field.kind !== 'rate' ? value.toLocaleString('en-US') : raw
   const id = useId()
   const unit =
     field.kind === 'rate'
@@ -168,11 +169,17 @@ function NumberField({
   )
 }
 
+/** What was typed for a field, or null when nothing usable has been. */
+function entered(inputs: Draft, field: Field): number | null {
+  const own = getPath(inputs, field.path)
+  return typeof own === 'number' && own >= (field.min ?? 0) ? own : null
+}
+
 export function NewDeal() {
   const navigate = useNavigate()
   const [address, setAddress] = useState<string | null>(null)
   const [strategy, setStrategy] = useState<Strategy>('buy_and_hold')
-  const [inputs, setInputs] = useState<Inputs>(() => blank('buy_and_hold'))
+  const [inputs, setInputs] = useState<Draft>(() => blank('buy_and_hold'))
   const [provenance, setProvenance] = useState<Provenance>({})
   const [name, setName] = useState('')
   const [manual, setManual] = useState(false)
@@ -195,14 +202,10 @@ export function NewDeal() {
   }
 
   const suggested = (path: string) => result?.suggestions[suggestionKey(path)] ?? null
-  const valueFor = (field: Field): number | null => {
-    const own = getPath(inputs, field.path)
-    if (typeof own === 'number' && own > 0) return own
-    return suggested(field.path)?.value ?? null
-  }
+  const valueFor = (field: Field): number | null =>
+    entered(inputs, field) ?? suggested(field.path)?.value ?? null
   const fromFor = (field: Field): string | null => {
-    const own = getPath(inputs, field.path)
-    if (typeof own === 'number' && own > 0) return null
+    if (entered(inputs, field) !== null) return null
     const s = suggested(field.path)
     if (!s) return null
     const range =
@@ -212,7 +215,7 @@ export function NewDeal() {
     return `${s.source.label}${range}`
   }
 
-  const missing = info.required.filter((f) => !valueFor(f))
+  const missing = info.required.filter((f) => valueFor(f) === null)
   const ready = missing.length === 0 && name.trim().length > 0
 
   const create = useMutation({
@@ -220,9 +223,8 @@ export function NewDeal() {
       let body = inputs
       const prov: Provenance = { ...provenance }
       for (const field of info.required) {
-        const own = getPath(body, field.path)
         const s = suggested(field.path)
-        if ((typeof own !== 'number' || own <= 0) && s) {
+        if (entered(body, field) === null && s) {
           body = setPath(body, field.path, s.value)
           prov[field.path] = {
             kind: s.source.kind,
@@ -254,7 +256,8 @@ export function NewDeal() {
         await api.POST('/v1/deals', {
           body: {
             name: name.trim(),
-            inputs: body,
+            // The button only enables once every required number is set.
+            inputs: body as Inputs,
             address: addr
               ? {
                   line1: addr.line1,
@@ -357,7 +360,7 @@ export function NewDeal() {
                   value={valueFor(field)}
                   from={fromFor(field)}
                   onChange={(v) => {
-                    setInputs((cur) => setPath(cur, field.path, v ?? 0))
+                    setInputs((cur) => setPath(cur, field.path, v))
                     setProvenance((cur) => ({
                       ...cur,
                       [field.path]: { kind: 'user', label: 'Your number', as_of: null },

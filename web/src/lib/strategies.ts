@@ -126,6 +126,7 @@ export const STRATEGIES: StrategyInfo[] = [
         label: 'Months left on it',
         kind: 'months',
         help: 'From the payoff statement',
+        min: 1,
       },
     ],
   },
@@ -140,49 +141,58 @@ export function suggestionKey(path: string): string {
   return path === 'property_tax_annual' || path === 'insurance_annual' ? `operations.${path}` : path
 }
 
-export function blank(strategy: Strategy): Inputs {
+type Entered<T> = T extends number
+  ? number | null
+  : T extends object
+    ? { [K in keyof T]: Entered<T[K]> }
+    : T
+
+/** A deal's inputs while they're being typed in, where a number not entered yet is null. */
+export type Draft = Entered<Inputs>
+
+export function blank(strategy: Strategy): Draft {
   switch (strategy) {
     case 'wholesale':
       return {
         strategy,
-        contract_price: 0,
-        after_repair_value: 0,
-        rehab_cost: 0,
-        property_tax_annual: 0,
-        insurance_annual: 0,
+        contract_price: null,
+        after_repair_value: null,
+        rehab_cost: null,
+        property_tax_annual: null,
+        insurance_annual: null,
       }
     case 'flip':
       return {
         strategy,
-        price: 0,
-        rehab_cost: 0,
-        after_repair_value: 0,
-        property_tax_annual: 0,
-        insurance_annual: 0,
+        price: null,
+        rehab_cost: null,
+        after_repair_value: null,
+        property_tax_annual: null,
+        insurance_annual: null,
       }
     case 'brrrr':
       return {
         strategy,
-        price: 0,
-        rehab_cost: 0,
-        rehab_months: 0,
-        after_repair_value: 0,
-        operations: { monthly_rent: 0, property_tax_annual: 0, insurance_annual: 0 },
+        price: null,
+        rehab_cost: null,
+        rehab_months: null,
+        after_repair_value: null,
+        operations: { monthly_rent: null, property_tax_annual: null, insurance_annual: null },
       }
     case 'creative':
       return {
         strategy,
-        price: 0,
-        existing_balance: 0,
-        existing_rate: 0,
+        price: null,
+        existing_balance: null,
+        existing_rate: null,
         existing_months_left: 1,
-        operations: { monthly_rent: 0, property_tax_annual: 0, insurance_annual: 0 },
+        operations: { monthly_rent: null, property_tax_annual: null, insurance_annual: null },
       }
     default:
       return {
         strategy: 'buy_and_hold',
-        price: 0,
-        operations: { monthly_rent: 0, property_tax_annual: 0, insurance_annual: 0 },
+        price: null,
+        operations: { monthly_rent: null, property_tax_annual: null, insurance_annual: null },
       }
   }
 }

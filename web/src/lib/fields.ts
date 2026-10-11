@@ -16,6 +16,8 @@ export interface Field {
   help?: string
   more?: boolean
   optional?: boolean
+  /** The lowest value the API takes, when that isn't 0. */
+  min?: number
 }
 
 export interface Group {

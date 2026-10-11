@@ -10,8 +10,8 @@ import styles from '../shell/shell.module.css'
  * pass as a sign in would reach the API before an effect could run.
  */
 function Bridge({ children }: { children: ReactNode }) {
-  const { getToken, isLoaded, isSignedIn } = useAuth()
-  session.useClerk(isSignedIn ? () => getToken() : null)
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth()
+  session.useClerk(isSignedIn ? () => getToken() : null, isSignedIn ? userId : null)
   if (isLoaded) session.clerkLoaded()
   useEffect(() => () => session.useClerk(null), [])
   return children
