@@ -5,6 +5,7 @@ Strategy inputs accept numpy arrays anywhere a dollar amount or rate goes, so
 tornado charts, grids and Monte Carlo all evaluate in one vectorized pass.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, fields, is_dataclass, replace
 from typing import Protocol
 
@@ -57,10 +58,28 @@ def solve(
         value = metric(with_value(strategy, field, x), metric_name)
         return value - target if np.isfinite(value) else np.nan
 
-    g_lo, g_hi = gap(lo), gap(hi)
+    # A metric can be undefined at the edge of the range, like the IRR of a
+    # near-free purchase, so each end moves inward until the metric exists.
+    lo, g_lo = _first_defined(gap, lo, hi)
+    hi, g_hi = _first_defined(gap, hi, lo)
     if not (np.isfinite(g_lo) and np.isfinite(g_hi)) or g_lo * g_hi > 0:
         return None
     return brent(gap, lo, hi, tol=1e-6 * max(abs(lo), abs(hi), 1.0))
+
+
+def _first_defined(
+    gap: Callable[[float], float], start: float, toward: float
+) -> tuple[float, float]:
+    steps = 40
+    for i in range(steps):
+        if start > 0 and toward > 0:
+            x = start * (toward / start) ** (i / steps)
+        else:
+            x = start + (toward - start) * (i / steps)
+        g = gap(x)
+        if np.isfinite(g):
+            return x, g
+    return start, np.nan
 
 
 @dataclass(frozen=True)

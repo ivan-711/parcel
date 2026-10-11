@@ -99,6 +99,22 @@ def test_exit_cap_prices_the_sale_off_forward_noi(ops: Operations) -> None:
     assert led.sale_price[0, 60] == pytest.approx(trailing * 1.03 / 0.07)
 
 
+def test_exit_cap_grows_income_and_costs_at_their_own_rates() -> None:
+    ops = Operations(
+        monthly_rent=2_000,
+        property_tax_annual=12_000,
+        insurance_annual=0,
+        vacancy_rate=0,
+        management_rate=0,
+        maintenance_rate=0,
+        capex_rate=0,
+        rent_growth=0.0,
+        expense_growth=0.10,
+    )
+    led = build(BuyAndHold(price=200_000, operations=ops, exit_cap_rate=0.05, hold_years=1).deal())
+    assert led.sale_price[0, 12] == pytest.approx((24_000 - 13_200) / 0.05)
+
+
 def test_exit_cap_needs_a_year_of_operations(ops: Operations) -> None:
     deal = Deal(
         price=1,

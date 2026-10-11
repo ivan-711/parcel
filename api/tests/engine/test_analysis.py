@@ -17,7 +17,16 @@ from parcel.engine.analysis import (
     tornado,
     with_value,
 )
+from parcel.engine.model import Operations
 from parcel.engine.strategies import BuyAndHold, Flip
+
+
+def test_a_bracket_that_starts_where_irr_is_undefined_still_solves(ops: Operations) -> None:
+    deal = BuyAndHold(price=250_000, operations=ops)
+    assert np.isnan(metric(with_value(deal, "price", 1.0), "irr"))
+    price = solve(deal, "price", metric_name="irr", target=0.12, lo=1.0, hi=1_250_000)
+    assert price is not None
+    assert metric(with_value(deal, "price", price), "irr") == pytest.approx(0.12, abs=1e-6)
 
 
 @settings(max_examples=40, deadline=None)

@@ -19,6 +19,16 @@ def test_payment_at_zero_rate_is_straight_line() -> None:
     assert payment(col(120_000), col(0.0), 120)[0, 0] == pytest.approx(1_000)
 
 
+@pytest.mark.parametrize("annual", [1e-16, 1e-13, 1e-10])
+def test_a_rate_next_to_zero_behaves_like_zero(annual: float) -> None:
+    assert payment(col(100_000), col(annual / 12), 360)[0, 0] == pytest.approx(
+        100_000 / 360, rel=1e-6
+    )
+    s = amortizing(col(100_000), col(annual), 24, amort_months=360, retire=24)
+    assert np.isfinite(s.balance).all()
+    assert s.principal[0, 1:25] == pytest.approx(np.full(24, 100_000 / 360), rel=1e-6)
+
+
 def test_payment_rejects_zero_months() -> None:
     with pytest.raises(ValueError, match="at least one month"):
         payment(col(1), col(0.01), 0)

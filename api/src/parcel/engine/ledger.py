@@ -22,6 +22,7 @@ class Ledger:
     """Last month without rent. Rent is collected from the month after."""
     stabilized: int
     """Last month before the deal runs on full rent and its long-term financing."""
+    refi_month: int | None
 
     gross_rent: Grid
     vacancy: Grid
@@ -164,15 +165,14 @@ def build(deal: Deal) -> Ledger:
 
     funded = sum((s.col(loan.principal) for loan in deal.loans), s.col(0.0))
     points = sum((s.col(loan.principal) * s.col(loan.points) for loan in deal.loans), s.col(0.0))
-    operating = lines["gross_rent"] - lines["vacancy"] + lines["other_income"]
-    operating = operating - sum(lines[k] for k in _OPEX)
-    sale = s.at(h, _sale_price(deal, s, value, operating))
+    sale = s.at(h, _sale_price(deal, s, value, lines))
 
     return Ledger(
         runs=s.runs,
         horizon=h,
         income_start=income_start,
         stabilized=max(income_start, refi.month if refi else 0),
+        refi_month=refi.month if refi else None,
         **lines,
         interest=_total(schedules, "interest", s),
         principal=_total(schedules, "principal", s),
@@ -292,14 +292,29 @@ def _total(schedules: list[Schedule], line: str, s: _Shape) -> Grid:
     return sum((getattr(sc, line) for sc in schedules), s.zeros())
 
 
-def _sale_price(deal: Deal, s: _Shape, value: Grid, operating: Grid) -> Grid:
+def _sale_price(deal: Deal, s: _Shape, value: Grid, lines: dict[str, Grid]) -> Grid:
+    """Forward NOI over the exit cap rate, or market value when there is no cap.
+
+    Forward NOI is the trailing year rolled ahead one year. Rent, the income
+    tied to it and the costs charged as a share of it grow at the rent rate;
+    taxes, insurance and the other fixed costs grow at their own.
+    """
     h = deal.horizon
     cap = deal.exit.exit_cap_rate
-    if cap is None or deal.operations is None:
+    ops = deal.operations
+    if cap is None or ops is None:
         return value[:, h]
     if h - deal.rehab_months < 12:
         raise ValueError("pricing a sale off a cap rate needs 12 months of operations")
-    forward = operating[:, h - 11 : h + 1].sum(axis=1) * (
-        1 + s.col(deal.operations.rent_growth)[:, 0]
+
+    def trailing(*names: str) -> Grid:
+        return sum((lines[n][:, h - 11 : h + 1].sum(axis=1) for n in names), np.zeros(s.runs))
+
+    collected = trailing("gross_rent", "other_income") - trailing(
+        "vacancy", "management", "maintenance"
+    )
+    fixed = trailing("taxes", "insurance", "hoa", "utilities")
+    forward = collected * (1 + s.col(ops.rent_growth)[:, 0]) - fixed * (
+        1 + s.col(ops.expense_growth)[:, 0]
     )
     return forward / s.col(cap)[:, 0]

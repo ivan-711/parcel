@@ -22,7 +22,9 @@ def payment(principal: Grid, monthly_rate: Grid, months: int) -> Grid:
     if months <= 0:
         raise ValueError("amortization needs at least one month")
     safe = np.where(monthly_rate == 0, 1.0, monthly_rate)
-    level = principal * safe / (1 - (1 + safe) ** -months)
+    # log1p and expm1 keep this exact as the rate heads to zero; the plain
+    # power formula rounds 1 + r to 1 and divides by nothing.
+    level = principal * safe / -np.expm1(-months * np.log1p(safe))
     return np.where(monthly_rate == 0, principal / months, level)
 
 
@@ -40,9 +42,9 @@ def amortizing(
     m = np.arange(horizon + 1)
     k = np.clip(m - start - io_months, 0, amort_months)
     pay = payment(principal, r, amort_months)
-    growth = (1 + r) ** k
     safe = np.where(r == 0, 1.0, r)
-    balance = np.where(r == 0, principal - pay * k, principal * growth - pay * (growth - 1) / safe)
+    grown = np.expm1(k * np.log1p(safe))
+    balance = np.where(r == 0, principal - pay * k, principal * (1 + grown) - pay * grown / safe)
     return _settle(np.maximum(balance, 0.0), r, m, start, retire)
 
 

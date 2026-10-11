@@ -67,7 +67,7 @@ def measure(ledger: Ledger, discount_rate: float = 0.10) -> Metrics:
         return line[:, window].sum(axis=1) if has_year else np.full(ledger.runs, np.nan)
 
     gross = year(ledger.gross_rent)
-    potential = year(ledger.gross_rent + ledger.other_income)
+    other = year(ledger.other_income)
     egi = year(ledger.egi)
     opex = year(ledger.opex)
     noi = year(ledger.noi)
@@ -104,7 +104,7 @@ def measure(ledger: Ledger, discount_rate: float = 0.10) -> Metrics:
         yield_on_cost=_div(noi, project_cost),
         cash_on_cash=np.where(left > 0, _div(cash_flow, left), np.nan),
         dscr=_div(noi, service),
-        break_even_occupancy=_div(fixed, potential * (1 - _div(variable, egi))),
+        break_even_occupancy=_break_even(fixed, variable, egi, other, gross),
         grm=_div(price, gross),
         refi_cash_out=refi_out,
         sale_price=ledger.sale_price[:, h],
@@ -128,8 +128,18 @@ def _payback(cumulative: np.ndarray) -> Vec:
     return np.where(recovered.any(axis=1), first, np.nan)
 
 
+def _break_even(fixed: Vec, variable: Vec, egi: Vec, other: Vec, gross: Vec) -> Vec:
+    """The share of rent that has to come in for cash flow to reach zero.
+
+    Vacancy only touches rent, so other income is earned in full and the costs
+    charged as a share of collections shrink with it.
+    """
+    needed = _div(fixed, 1 - _div(variable, egi)) - other
+    return np.maximum(_div(needed, gross), 0.0)
+
+
 def _payoffs_at_refi(ledger: Ledger) -> Vec:
     out = np.zeros_like(ledger.loan_payoffs)
-    refi_months = ledger.refi_proceeds.any(axis=0)
-    out[:, refi_months] = ledger.loan_payoffs[:, refi_months]
+    if ledger.refi_month is not None:
+        out[:, ledger.refi_month] = ledger.loan_payoffs[:, ledger.refi_month]
     return out

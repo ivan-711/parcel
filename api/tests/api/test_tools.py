@@ -24,6 +24,21 @@ async def test_solve_finds_the_price_for_a_target(
     assert result["analysis"]["metrics"]["cash_on_cash"] == pytest.approx(0.06, abs=1e-5)
 
 
+async def test_solve_reaches_a_target_irr(client: httpx.AsyncClient, me: dict[str, str]) -> None:
+    inputs = {
+        **RENTAL,
+        "operations": {
+            "monthly_rent": 2_000,
+            "property_tax_annual": 3_000,
+            "insurance_annual": 1_000,
+        },
+    }
+    body = {"inputs": inputs, "field": "price", "metric": "irr", "target": 0.12}
+    result = (await client.post("/v1/analyze/solve", json=body, headers=me)).json()
+    assert result["value"] == pytest.approx(223_382.83, abs=0.01)
+    assert result["analysis"]["metrics"]["irr"] == pytest.approx(0.12, abs=1e-5)
+
+
 async def test_solve_reports_an_unreachable_target(
     client: httpx.AsyncClient, me: dict[str, str]
 ) -> None:
