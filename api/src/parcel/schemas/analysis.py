@@ -49,6 +49,7 @@ class Period(BaseModel):
     principal: float
     rehab: float
     cash_flow: float
+    operating_cash_flow: float
     cumulative_cash_flow: float
     value: float
     debt: float

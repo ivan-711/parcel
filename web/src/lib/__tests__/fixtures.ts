@@ -25,6 +25,7 @@ const period = (over: Partial<Period>): Period => ({
   principal: 0,
   rehab: 0,
   cash_flow: 0,
+  operating_cash_flow: 0,
   cumulative_cash_flow: 0,
   value: 0,
   debt: 0,

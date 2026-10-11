@@ -126,6 +126,7 @@ class PortfolioMonth(BaseModel):
     month: date
     projected_cash_flow: float
     actual_cash_flow: float | None
+    actual: ActualIn | None
 
 
 class PortfolioProperty(BaseModel):
@@ -133,10 +134,14 @@ class PortfolioProperty(BaseModel):
     months: list[PortfolioMonth]
     projected_to_date: float
     actual_to_date: float
+    variance_to_date: float
 
 
 class Portfolio(BaseModel):
     properties: list[PortfolioProperty]
     projected_to_date: float
     actual_to_date: float
+    variance_to_date: float
+    variance_rate: float | None
+    """Variance as a share of what was planned, when anything was."""
     monthly_projected_now: float

@@ -1165,6 +1165,8 @@ export interface components {
             rehab: number;
             /** Cash Flow */
             cash_flow: number;
+            /** Operating Cash Flow */
+            operating_cash_flow: number;
             /** Cumulative Cash Flow */
             cumulative_cash_flow: number;
             /** Value */
@@ -1195,6 +1197,10 @@ export interface components {
             projected_to_date: number;
             /** Actual To Date */
             actual_to_date: number;
+            /** Variance To Date */
+            variance_to_date: number;
+            /** Variance Rate */
+            variance_rate: number | null;
             /** Monthly Projected Now */
             monthly_projected_now: number;
         };
@@ -1209,6 +1215,7 @@ export interface components {
             projected_cash_flow: number;
             /** Actual Cash Flow */
             actual_cash_flow: number | null;
+            actual: components["schemas"]["ActualIn"] | null;
         };
         /** PortfolioProperty */
         PortfolioProperty: {
@@ -1219,6 +1226,8 @@ export interface components {
             projected_to_date: number;
             /** Actual To Date */
             actual_to_date: number;
+            /** Variance To Date */
+            variance_to_date: number;
         };
         /** Redirect */
         Redirect: {

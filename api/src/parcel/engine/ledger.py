@@ -84,6 +84,11 @@ class Ledger:
         )
 
     @property
+    def operating_cash_flow(self) -> Grid:
+        """Cash flow from running the property: no purchase, financing event or sale."""
+        return self.noi - self.capex - self.rehab + self.rehab_draws - self.debt_service
+
+    @property
     def unlevered_cash_flow(self) -> Grid:
         return (
             self.noi

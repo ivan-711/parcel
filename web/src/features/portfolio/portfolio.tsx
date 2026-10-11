@@ -10,11 +10,11 @@ import { Card } from '../../ui/card'
 import styles from './portfolio.module.css'
 
 type Property = PortfolioData['properties'][number]
+type Recorded = NonNullable<Property['months'][number]['actual']>
 
-/** Shortfall as a share of plan; a small miss is a fact, not a warning. */
-function gap(data: PortfolioData): number {
-  if (!data.projected_to_date) return 0
-  return (data.actual_to_date - data.projected_to_date) / Math.abs(data.projected_to_date)
+/** What someone types for a dollar amount, commas and all. */
+function amount(text: string): number {
+  return Number(text.replace(/[,$\s]/g, '')) || 0
 }
 
 function monthName(iso: string): string {
@@ -24,11 +24,22 @@ function monthName(iso: string): string {
   })
 }
 
-function Entry({ dealId, month, onDone }: { dealId: string; month: string; onDone: () => void }) {
-  const [rent, setRent] = useState('')
-  const [costs, setCosts] = useState('')
-  const [loan, setLoan] = useState('')
-  const [capital, setCapital] = useState('')
+export function Entry({
+  dealId,
+  month,
+  recorded,
+  onDone,
+}: {
+  dealId: string
+  month: string
+  recorded: Recorded | null
+  onDone: () => void
+}) {
+  const was = (value: number | undefined) => (value ? String(value) : '')
+  const [rent, setRent] = useState(was(recorded?.rent_collected))
+  const [costs, setCosts] = useState(was(recorded?.operating_expenses))
+  const [loan, setLoan] = useState(was(recorded?.debt_service))
+  const [capital, setCapital] = useState(was(recorded?.capital_spent))
   const queryClient = useQueryClient()
   const save = useMutation({
     mutationFn: async () =>
@@ -36,10 +47,11 @@ function Entry({ dealId, month, onDone }: { dealId: string; month: string; onDon
         await api.PUT('/v1/deals/{deal_id}/actuals/{month}', {
           params: { path: { deal_id: dealId, month } },
           body: {
-            rent_collected: Number(rent) || 0,
-            operating_expenses: Number(costs) || 0,
-            debt_service: Number(loan) || 0,
-            capital_spent: Number(capital) || 0,
+            rent_collected: amount(rent),
+            operating_expenses: amount(costs),
+            debt_service: amount(loan),
+            capital_spent: amount(capital),
+            note: recorded?.note ?? '',
           },
         }),
       ),
@@ -125,7 +137,7 @@ function BoughtOn({ dealId, value }: { dealId: string; value: string | null }) {
 function PropertyCard({ property }: { property: Property }) {
   const [editing, setEditing] = useState<string | null>(null)
   const { deal } = property
-  const diff = property.actual_to_date - property.projected_to_date
+  const diff = property.variance_to_date
   return (
     <Card className={styles.property} as="article">
       <header>
@@ -166,7 +178,12 @@ function PropertyCard({ property }: { property: Property }) {
                 {m.actual_cash_flow === null ? '' : moneySigned(m.actual_cash_flow)}
               </span>
               {editing === m.month ? (
-                <Entry dealId={deal.id} month={m.month} onDone={() => setEditing(null)} />
+                <Entry
+                  dealId={deal.id}
+                  month={m.month}
+                  recorded={m.actual}
+                  onDone={() => setEditing(null)}
+                />
               ) : (
                 <button type="button" className={styles.add} onClick={() => setEditing(m.month)}>
                   {m.actual_cash_flow === null ? 'Record what happened' : 'Change'}
@@ -203,9 +220,9 @@ export function Portfolio() {
                 <>
                   So far <em>{moneySigned(data.actual_to_date)}</em> came in against{' '}
                   {moneySigned(data.projected_to_date)} planned,{' '}
-                  <em className={gap(data) < -0.05 ? styles.bad : ''}>
-                    {moneySigned(Math.abs(data.actual_to_date - data.projected_to_date))}{' '}
-                    {data.actual_to_date < data.projected_to_date ? 'behind' : 'ahead'}
+                  <em className={(data.variance_rate ?? 0) < -0.05 ? styles.bad : ''}>
+                    {moneySigned(Math.abs(data.variance_to_date))}{' '}
+                    {data.variance_to_date < 0 ? 'behind' : 'ahead'}
                   </em>
                   .
                 </>

@@ -251,34 +251,52 @@ async def portfolio(session: AsyncSession, today: date | None = None) -> schema.
             months.append(
                 schema.PortfolioMonth(
                     month=month,
-                    projected_cash_flow=result.months[i].cash_flow,
-                    actual_cash_flow=None
+                    projected_cash_flow=result.months[i].operating_cash_flow,
+                    actual_cash_flow=None if actual is None else _net(actual),
+                    actual=None
                     if actual is None
-                    else round(
-                        actual.rent_collected
-                        - actual.operating_expenses
-                        - actual.debt_service
-                        - actual.capital_spent,
-                        2,
-                    ),
+                    else schema.ActualIn.model_validate(actual, from_attributes=True),
                 )
             )
-        # Bought this month: no month has closed yet, so quote the plan's first.
-        current.append(months[-1].projected_cash_flow if months else result.months[1].cash_flow)
+        # The plan ends with the sale, so a property past its hold has nothing
+        # left to project. Bought this month, no month has closed yet, so
+        # quote the plan's first.
+        if elapsed < result.horizon_months:
+            current.append(
+                months[-1].projected_cash_flow if months else result.months[1].operating_cash_flow
+            )
         recorded = [m for m in months if m.actual_cash_flow is not None]
+        projected = round(sum(m.projected_cash_flow for m in recorded), 2)
+        actual_sum = round(sum(m.actual_cash_flow or 0 for m in recorded), 2)
         properties.append(
             schema.PortfolioProperty(
                 deal=to_out(deal, result),
                 months=months,
-                projected_to_date=round(sum(m.projected_cash_flow for m in recorded), 2),
-                actual_to_date=round(sum(m.actual_cash_flow or 0 for m in recorded), 2),
+                projected_to_date=projected,
+                actual_to_date=actual_sum,
+                variance_to_date=round(actual_sum - projected, 2),
             )
         )
+    projected = round(sum(p.projected_to_date for p in properties), 2)
+    actual_sum = round(sum(p.actual_to_date for p in properties), 2)
+    variance = round(actual_sum - projected, 2)
     return schema.Portfolio(
         properties=properties,
-        projected_to_date=round(sum(p.projected_to_date for p in properties), 2),
-        actual_to_date=round(sum(p.actual_to_date for p in properties), 2),
+        projected_to_date=projected,
+        actual_to_date=actual_sum,
+        variance_to_date=variance,
+        variance_rate=None if projected == 0 else round(variance / abs(projected), 4),
         monthly_projected_now=round(sum(current), 2),
+    )
+
+
+def _net(actual: Actual) -> float:
+    return round(
+        actual.rent_collected
+        - actual.operating_expenses
+        - actual.debt_service
+        - actual.capital_spent,
+        2,
     )
 
 

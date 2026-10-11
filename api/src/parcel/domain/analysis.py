@@ -160,6 +160,7 @@ def _lines(ledger: Ledger) -> dict[str, np.ndarray]:
         "principal": ledger.principal[0],
         "rehab": ledger.rehab[0],
         "cash_flow": ledger.cash_flow[0],
+        "operating_cash_flow": ledger.operating_cash_flow[0],
     }
 
 
