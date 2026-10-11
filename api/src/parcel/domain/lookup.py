@@ -159,7 +159,7 @@ async def lookup(
     notes = (
         ["Demo lookups use recorded sample figures, not live market data."] if sample_data else []
     )
-    rent, value = await _rentcast(session, data, place, budget, notes)
+    rent, value = await _rentcast(session, data, place, None if sample_data else budget, notes)
     if rent is not None:
         place = rent.place
     facts = rent.facts if rent else Facts()
@@ -209,16 +209,15 @@ async def lookup(
 
 
 async def _rentcast(
-    session: AsyncSession, data: PropertyData, place: Place, budget: Budget, notes: list[str]
+    session: AsyncSession,
+    data: PropertyData,
+    place: Place,
+    budget: Budget | None,
+    notes: list[str],
 ) -> tuple[Estimate | None, Estimate | None]:
+    """Rent and value estimates. No budget means the source is free, as samples are."""
     rent_key, value_key = f"rentcast:rent:{place.key}", f"rentcast:value:{place.key}"
-    now = datetime.now(UTC)
-    fresh = await session.scalars(
-        select(ProviderCache.key).where(
-            ProviderCache.key.in_([rent_key, value_key]), ProviderCache.expires_at > now
-        )
-    )
-    if len(list(fresh)) < 2:
+    if budget is not None and not await _both_cached(session, rent_key, value_key):
         today = date.today()
         if not await usage.take(session, budget.user_key, today, budget.per_user_per_day):
             notes.append("You've used today's address lookups. Rent comes from HUD instead.")
@@ -238,6 +237,16 @@ async def _rentcast(
         notes.append("Market data didn't come back for this address. Rent comes from HUD instead.")
         return None, None
     return rent, value
+
+
+async def _both_cached(session: AsyncSession, *keys: str) -> bool:
+    prefixed = [_namespace.get() + key for key in keys]
+    fresh = await session.scalars(
+        select(ProviderCache.key).where(
+            ProviderCache.key.in_(prefixed), ProviderCache.expires_at > datetime.now(UTC)
+        )
+    )
+    return len(list(fresh)) == len(keys)
 
 
 async def _county_tax(

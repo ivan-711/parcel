@@ -1,8 +1,11 @@
 import httpx
 import pytest
+from sqlalchemy import func, select
 
 from parcel.adapters.fixtures import FixtureData
 from parcel.adapters.property_data import Estimate, Place, ProviderError
+from parcel.db.models import Usage
+from parcel.db.session import db
 from parcel.settings import get_settings
 
 from .conftest import Login
@@ -133,6 +136,21 @@ async def test_demo_lookups_are_labeled_as_samples(client: httpx.AsyncClient) ->
     token = (await client.post("/v1/demo")).json()["token"]
     result = (await _lookup(client, {"authorization": f"Bearer {token}"}, DUPLEX)).json()
     assert result["notes"][0].startswith("Demo lookups use recorded sample figures")
+
+
+async def test_demo_lookups_cost_nothing(client: httpx.AsyncClient, me: dict[str, str]) -> None:
+    for _ in range(3):
+        token = (await client.post("/v1/demo")).json()["token"]
+        demo = {"authorization": f"Bearer {token}"}
+        for address in (DUPLEX, RANCH):
+            result = (await _lookup(client, demo, address)).json()
+            assert result["suggestions"]["price"]["source"]["kind"] == "rentcast"
+    async with db.as_system() as session:
+        spent = await session.scalar(
+            select(func.coalesce(func.sum(Usage.count), 0)).where(Usage.bucket == "rentcast:month")
+        )
+    assert spent == 0
+    assert (await _lookup(client, me, DUPLEX)).json()["notes"] == []
 
 
 async def test_demo_samples_never_serve_real_lookups(
