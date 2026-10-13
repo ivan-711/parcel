@@ -22,8 +22,9 @@ export const Route = createFileRoute('/demo')({
   beforeLoad: async ({ preload }) => {
     if (preload) return
     if (accountsEnabled) {
-      await session.ready()
-      // Someone already signed in has no use for a sandbox.
+      // Someone already signed in has no use for a sandbox. That is worth a moment's wait
+      // for Clerk, not a long one: a sandbox is cheap, and a real session still wins later.
+      await session.ready(2_000)
       if (await session.isActive()) throw redirect({ to: '/deals' })
     }
     if (!session.demo()) await startDemo()

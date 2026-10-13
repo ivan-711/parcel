@@ -27,6 +27,7 @@ let clerkLoaded: () => void = () => undefined
 const clerkReady = new Promise<void>((resolve) => {
   clerkLoaded = resolve
 })
+let gaveUpOnClerk = false
 
 function readDemo(): DemoSession | null {
   try {
@@ -74,11 +75,22 @@ export const session = {
   /**
    * Resolves once token() can be trusted. Route loaders run before anything
    * renders, so without this they'd ask for a token Clerk hasn't produced yet.
-   * A demo visitor only waits a moment, in case Clerk can't load at all.
+   * Clerk is a third party script a blocker can stop, so nobody waits forever:
+   * a demo visitor only a moment, since their token is already here, and anyone
+   * else long enough for a slow connection before being treated as signed out.
    */
-  async ready(): Promise<void> {
-    if (!readDemo()) return clerkReady
-    await Promise.race([clerkReady, new Promise((resolve) => setTimeout(resolve, 2000))])
+  async ready(limit = readDemo() ? 2_000 : 10_000): Promise<void> {
+    if (gaveUpOnClerk) return
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        gaveUpOnClerk = true
+        resolve()
+      }, limit)
+      void clerkReady.then(() => {
+        clearTimeout(timer)
+        resolve()
+      })
+    })
   },
   /** A signed in user wins over any demo token left in this browser. */
   async token(): Promise<string | null> {
