@@ -61,8 +61,9 @@ async def test_cached_keys_outlast_a_clerk_outage(
     assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
     keys.down = True
     try:
-        app.state.clerk._fetched_at = 0
-        app.state.clerk._tried_at = 0
+        # Aged relative to the clock: on a machine up less than an hour, zero isn't stale.
+        app.state.clerk._fetched_at -= 3601
+        app.state.clerk._tried_at -= 60
         before = keys.jwks_requests
         assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
         assert keys.jwks_requests == before + 1
