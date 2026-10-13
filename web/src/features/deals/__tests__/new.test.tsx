@@ -175,12 +175,31 @@ describe('NewDeal', () => {
       Insurance: '1200',
       'Their loan balance': '0',
       'Their rate (%)': '0',
+      'Months left on it (months)': '120',
       'Call it': 'Sub to on Elm',
     })
     submit()
     const { inputs } = await created()
     expect(inputs.existing_balance).toBe(0)
     expect(inputs.existing_rate).toBe(0)
+  })
+
+  it('asks for the months left on their loan rather than assuming one', () => {
+    mount()
+    skipLookup(/^Creative/)
+    fill({
+      Price: '200000',
+      'Rent a month': '1800',
+      'Property tax': '2400',
+      Insurance: '1200',
+      'Their loan balance': '90000',
+      'Their rate (%)': '4',
+      'Call it': 'Sub to on Elm',
+    })
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'See if it works' }).disabled,
+    ).toBe(true)
+    expect(screen.getByText(/Still need months left on it/)).toBeTruthy()
   })
 
   it('still asks for months left when 0 is typed, since the API needs at least 1', () => {

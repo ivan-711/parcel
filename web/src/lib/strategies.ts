@@ -185,7 +185,7 @@ export function blank(strategy: Strategy): Draft {
         price: null,
         existing_balance: null,
         existing_rate: null,
-        existing_months_left: 1,
+        existing_months_left: null,
         operations: { monthly_rent: null, property_tax_annual: null, insurance_annual: null },
       }
     default:
