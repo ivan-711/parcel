@@ -23,7 +23,7 @@ import { Segmented } from '../../../ui/segmented'
 import { Trace } from '../../../ui/trace'
 import { Inspector } from './inspector'
 import { Ledger } from './ledger'
-import { Memo } from './memo'
+import { Memo, useMemoWriter } from './memo'
 import { Overview } from './overview'
 import { WhatIf } from './whatif'
 import { Explain, StatTiles } from './stats'
@@ -72,7 +72,7 @@ export function Workspace({ dealId }: { dealId: string }) {
   const [provenance, setProvenance] = useState<Provenance>(deal.provenance)
   const [tab, setTab] = useState<Tab>('overview')
   const [picked, setPicked] = useState<string | null>(null)
-  const [memoRequest, setMemoRequest] = useState(0)
+  const memo = useMemoWriter(dealId)
   const layoutRef = useRef<HTMLDivElement>(null)
   const wide = useMedia('(min-width: 1101px)')
 
@@ -180,7 +180,7 @@ export function Workspace({ dealId }: { dealId: string }) {
             look="primary"
             onClick={() => {
               setTab('memo')
-              setMemoRequest((n) => n + 1)
+              memo.start()
             }}
           >
             Write memo
@@ -208,7 +208,7 @@ export function Workspace({ dealId }: { dealId: string }) {
             {tab === 'overview' && <Overview inputs={inputs} analysis={hold} />}
             {tab === 'ledger' && <Ledger analysis={hold} />}
             {tab === 'whatif' && inputs.strategy !== 'wholesale' && <WhatIf inputs={inputs} />}
-            {tab === 'memo' && <Memo dealId={dealId} request={memoRequest} />}
+            {tab === 'memo' && <Memo dealId={dealId} writer={memo} />}
           </div>
         </div>
 

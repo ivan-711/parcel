@@ -49,22 +49,26 @@ function Grounding({ memo, stale }: { memo: MemoOut; stale: boolean }) {
 
 type Phase = 'idle' | 'writing' | 'retrying'
 
-const OUTLINE: [string, string][] = [
-  ['Summary', 'The property, the plan and the answer in a paragraph.'],
-  ['Returns', 'What you put in, what comes back, and when.'],
-  ['Financing', 'The loan, its payment and how well the rent covers it.'],
-  ['Risks', 'Every flag on this page, in plain words.'],
-  ['Bottom line', 'Whether to proceed, and at what price.'],
-]
+export interface MemoWriter {
+  phase: Phase
+  draft: string
+  error: string | null
+  start: () => void
+}
 
-export function Memo({ dealId, request }: { dealId: string; request: number }) {
+/**
+ * Writes the memo and follows it as it streams in. It belongs to the page
+ * rather than the tab, so switching views mid-write neither restarts it nor
+ * throws it away.
+ */
+export function useMemoWriter(dealId: string): MemoWriter {
   const queryClient = useQueryClient()
-  const { data: memo, isPending } = useQuery(memoQuery(dealId))
   const [phase, setPhase] = useState<Phase>('idle')
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
   const abort = useRef<AbortController | null>(null)
-  const seen = useRef(0)
+
+  useEffect(() => () => abort.current?.abort(), [])
 
   const start = async () => {
     abort.current?.abort()
@@ -73,6 +77,7 @@ export function Memo({ dealId, request }: { dealId: string; request: number }) {
     setPhase('writing')
     setDraft('')
     setError(null)
+    let ended = false
     try {
       for await (const event of writeMemo(dealId, controller.signal)) {
         switch (event.kind) {
@@ -86,30 +91,39 @@ export function Memo({ dealId, request }: { dealId: string; request: number }) {
             break
           case 'done':
             queryClient.setQueryData(memoQuery(dealId).queryKey, event.memo)
-            setPhase('idle')
+            ended = true
             break
           case 'error':
             setError(event.title)
-            setPhase('idle')
+            ended = true
         }
+      }
+      // A connection can drop mid stream, in which case nothing says the memo is finished.
+      if (!ended && !controller.signal.aborted) {
+        setError('The memo was cut off before it finished. Try again.')
       }
     } catch (e) {
       if (!controller.signal.aborted)
         setError(e instanceof Error ? e.message : 'Something went wrong.')
-      setPhase('idle')
+    } finally {
+      if (abort.current === controller) setPhase('idle')
     }
   }
 
-  useEffect(() => {
-    if (request > seen.current) {
-      seen.current = request
-      void start()
-    }
-    // start reads fresh state each time; only the request counter should trigger it
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [request])
+  return { phase, draft, error, start: () => void start() }
+}
 
-  useEffect(() => () => abort.current?.abort(), [])
+const OUTLINE: [string, string][] = [
+  ['Summary', 'The property, the plan and the answer in a paragraph.'],
+  ['Returns', 'What you put in, what comes back, and when.'],
+  ['Financing', 'The loan, its payment and how well the rent covers it.'],
+  ['Risks', 'Every flag on this page, in plain words.'],
+  ['Bottom line', 'Whether to proceed, and at what price.'],
+]
+
+export function Memo({ dealId, writer }: { dealId: string; writer: MemoWriter }) {
+  const { data: memo, isPending } = useQuery(memoQuery(dealId))
+  const { phase, draft, error, start } = writer
 
   const writing = phase !== 'idle'
   return (
@@ -120,7 +134,7 @@ export function Memo({ dealId, request }: { dealId: string; request: number }) {
             ? `Written ${dateLong(memo.created_at)}${memo.stale ? ', before your latest changes' : ''}.`
             : 'A one page summary a lender would recognize, written from the figures on this page and checked against them before you see it.'}
         </p>
-        <Button onClick={() => void start()} disabled={writing}>
+        <Button onClick={start} disabled={writing}>
           {writing ? 'Writing' : memo ? 'Rewrite' : 'Write the memo'}
         </Button>
       </div>
