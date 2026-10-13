@@ -159,7 +159,7 @@ test('compare puts both deals side by side and marks metrics a strategy lacks', 
   await page.goto('/compare')
   const picker = page.getByRole('group', { name: 'Deals to compare' })
   await expect(picker).toBeVisible()
-  // Mine go in first: dropping below two picks falls back to the most recent pair.
+  // Mine go in first, so dropping the others never leaves fewer than two.
   for (const name of [rental, flip]) {
     const pick = picker.getByRole('button', { name })
     if ((await pick.getAttribute('aria-pressed')) !== 'true') await pick.click()
