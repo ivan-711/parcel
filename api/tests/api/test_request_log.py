@@ -139,3 +139,4 @@ def test_sentry_is_started_with_the_scrubber(monkeypatch: pytest.MonkeyPatch) ->
 
     assert options["before_send"] is scrub_event
     assert options["before_send_transaction"] is scrub_event
+    assert options["include_local_variables"] is False

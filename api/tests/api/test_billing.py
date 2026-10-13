@@ -14,9 +14,8 @@ from svix.webhooks import Webhook
 
 from parcel.db.models import User
 from parcel.db.session import db
-from parcel.settings import get_settings
 
-from .conftest import FakeBilling, Login
+from .conftest import FakeBilling, Login, OverrideSettings
 
 
 def stripe_signed(
@@ -314,10 +313,9 @@ async def test_unsigned_clerk_events_are_rejected(client: httpx.AsyncClient) -> 
 
 @pytest.mark.parametrize(("path", "variable"), [("stripe", "STRIPE"), ("clerk", "CLERK")])
 async def test_webhooks_without_a_secret_refuse_everything(
-    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch, path: str, variable: str
+    client: httpx.AsyncClient, settings_override: OverrideSettings, path: str, variable: str
 ) -> None:
-    monkeypatch.setenv(f"{variable}_WEBHOOK_SECRET", "")
-    get_settings.cache_clear()
+    settings_override(**{f"{variable}_WEBHOOK_SECRET": ""})
     payload, sig = stripe_signed({"id": "evt_y", "type": "x", "data": {"object": {}}}, secret="")
     response = await client.post(f"/webhooks/{path}", content=payload, headers=sig)
     assert response.status_code == 503

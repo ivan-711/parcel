@@ -37,10 +37,13 @@ def create_app(
     settings = settings or get_settings()
     logging.configure(json=settings.log_json)
     if settings.sentry_dsn:
+        # A frame's locals can hold a session or share token, and the scrubber only
+        # knows the share token's shape.
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.environment,
             traces_sample_rate=0.1,
+            include_local_variables=False,
             before_send=scrub_event,
             before_send_transaction=scrub_event,
         )

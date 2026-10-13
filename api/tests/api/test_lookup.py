@@ -8,9 +8,8 @@ from parcel.adapters.fixtures import FixtureData
 from parcel.adapters.property_data import Estimate, Place, ProviderError
 from parcel.db.models import ProviderCache, Usage
 from parcel.db.session import db
-from parcel.settings import get_settings
 
-from .conftest import Login, migration
+from .conftest import Login, OverrideSettings, migration
 
 DUPLEX = "1420 N 14th St, Sheboygan, WI 53081"
 RANCH = "2210 Kohler Ave, Sheboygan, WI 53081"
@@ -74,10 +73,9 @@ async def test_a_wide_value_range_is_called_out(
 
 
 async def test_daily_limit_falls_back_to_hud(
-    client: httpx.AsyncClient, me: dict[str, str], monkeypatch: pytest.MonkeyPatch
+    client: httpx.AsyncClient, me: dict[str, str], settings_override: OverrideSettings
 ) -> None:
-    monkeypatch.setenv("LOOKUPS_PER_USER_PER_DAY", "1")
-    get_settings.cache_clear()
+    settings_override(LOOKUPS_PER_USER_PER_DAY="1")
     await _lookup(client, me, DUPLEX)
     result = (await _lookup(client, me, RANCH)).json()
     rent = result["suggestions"]["operations.monthly_rent"]
@@ -85,18 +83,15 @@ async def test_daily_limit_falls_back_to_hud(
     assert rent["value"] == 1_180 + 220 * 3
     assert "price" not in result["suggestions"]
     assert any("today's address lookups" in n for n in result["notes"])
-    get_settings.cache_clear()
 
 
 async def test_monthly_budget_is_shared_by_everyone(
-    client: httpx.AsyncClient, me: dict[str, str], login: Login, monkeypatch: pytest.MonkeyPatch
+    client: httpx.AsyncClient, me: dict[str, str], login: Login, settings_override: OverrideSettings
 ) -> None:
-    monkeypatch.setenv("RENTCAST_MONTHLY_BUDGET", "3")
-    get_settings.cache_clear()
+    settings_override(RENTCAST_MONTHLY_BUDGET="3")
     await _lookup(client, me, DUPLEX)
     result = (await _lookup(client, login("another"), RANCH)).json()
     assert any("budget is used up" in n for n in result["notes"])
-    get_settings.cache_clear()
 
 
 async def test_unknown_addresses(client: httpx.AsyncClient, me: dict[str, str]) -> None:
@@ -194,13 +189,11 @@ async def test_samples_cached_as_live_before_they_were_kept_apart_are_forgotten(
 
 
 async def test_autocomplete_is_rationed_and_cached(
-    client: httpx.AsyncClient, me: dict[str, str], monkeypatch: pytest.MonkeyPatch
+    client: httpx.AsyncClient, me: dict[str, str], settings_override: OverrideSettings
 ) -> None:
-    monkeypatch.setenv("AUTOCOMPLETES_PER_USER_PER_DAY", "1")
-    get_settings.cache_clear()
+    settings_override(AUTOCOMPLETES_PER_USER_PER_DAY="1")
     params = {"q": "1420 N 14"}
     assert len((await client.get("/v1/lookup/autocomplete", params=params, headers=me)).json()) == 1
     assert len((await client.get("/v1/lookup/autocomplete", params=params, headers=me)).json()) == 1
     limited = await client.get("/v1/lookup/autocomplete", params={"q": "2210 Koh"}, headers=me)
     assert limited.status_code == 429
-    get_settings.cache_clear()
