@@ -62,10 +62,25 @@ async def test_cached_keys_outlast_a_clerk_outage(
     keys.down = True
     try:
         app.state.clerk._fetched_at = 0
-        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
+        app.state.clerk._tried_at = 0
         before = keys.jwks_requests
         assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
-        assert keys.jwks_requests == before
+        assert keys.jwks_requests == before + 1
+        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 200
+        assert keys.jwks_requests == before + 1
+    finally:
+        keys.down = False
+
+
+async def test_an_outage_with_no_keys_stays_an_outage_until_the_next_try(
+    app: FastAPI, client: httpx.AsyncClient, login: Login, keys: Keys
+) -> None:
+    keys.down = True
+    try:
+        app.state.clerk._keys = {}
+        app.state.clerk._tried_at = 0
+        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 503
+        assert (await client.get("/v1/me", headers=login("user_a"))).status_code == 503
     finally:
         keys.down = False
 

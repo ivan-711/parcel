@@ -1,3 +1,4 @@
+import asyncio
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -46,6 +47,7 @@ class ClerkVerifier:
         self._keys: dict[str, Any] = {}
         self._fetched_at = 0.0
         self._tried_at = 0.0
+        self._refreshing = asyncio.Lock()
 
     async def verify(self, token: str) -> Identity:
         if not self.issuer:
@@ -74,12 +76,21 @@ class ClerkVerifier:
     async def _key(self, kid: str | None) -> Any:
         if kid is None:
             raise InvalidToken("token has no key id")
-        stale = time.monotonic() - self._fetched_at > _JWKS_TTL
-        if (stale or kid not in self._keys) and self._may_refresh():
-            await self._refresh()
+        if self._wants_refresh(kid):
+            # One fetch at a time. Whoever arrives during it waits for the result instead of
+            # judging their token against keys that haven't landed yet.
+            async with self._refreshing:
+                if self._wants_refresh(kid) and self._may_refresh():
+                    await self._refresh()
         if kid not in self._keys:
+            if not self._keys:
+                raise KeysUnavailable("no signing keys have been fetched yet")
             raise InvalidToken("token was signed with an unknown key")
         return self._keys[kid]
+
+    def _wants_refresh(self, kid: str) -> bool:
+        stale = time.monotonic() - self._fetched_at > _JWKS_TTL
+        return stale or kid not in self._keys
 
     def _may_refresh(self) -> bool:
         return time.monotonic() - self._tried_at > self.min_refresh_gap

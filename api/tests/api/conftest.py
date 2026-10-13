@@ -141,9 +141,11 @@ async def app(
 ) -> AsyncIterator[FastAPI]:
     get_settings.cache_clear()
 
-    def clerk(request: httpx.Request) -> httpx.Response:
+    async def clerk(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/.well-known/jwks.json":
             keys.jwks_requests += 1
+            # A real fetch gives other requests a turn, which is when they'd see keys missing.
+            await asyncio.sleep(0)
             if keys.down:
                 return httpx.Response(503)
             return httpx.Response(200, json=keys.jwks())
