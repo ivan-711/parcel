@@ -51,14 +51,17 @@ test('billing shows the free plan and either starts checkout or says why not', a
   await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
   await expect(page.getByText('Free', { exact: true })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Try Pro' }).click()
-  const off = page.getByText(/Billing isn.t set up on this server/)
-  await expect
-    .poll(async () => page.url().includes('checkout.stripe.com') || (await off.isVisible()), {
-      timeout: 20_000,
-    })
-    .toBe(true)
-  if (page.url().includes('checkout.stripe.com')) {
+  const [response] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/v1/billing/checkout')),
+    page.getByRole('button', { name: 'Try Pro' }).click(),
+  ])
+  if (response.status() === 503) {
+    // The one refusal the message is written for. Any other failure is a real one.
+    expect(((await response.json()) as { code?: string }).code).toBe('billing_off')
+    await expect(page.getByText(/Billing isn.t set up on this server/)).toBeVisible()
+  } else {
+    expect(response.ok()).toBe(true)
+    await page.waitForURL(/checkout\.stripe\.com/, { timeout: 20_000 })
     await page.goBack()
     await expect(page).toHaveURL(/\/settings/)
   }
@@ -128,10 +131,38 @@ for (const path of ['/sign-in', '/sign-up']) {
   })
 }
 
-test('a deal that is missing or belongs to someone else reads as not found', async ({ page }) => {
+test('a deal that is missing or belongs to someone else reads as not found', async ({
+  page,
+  browser,
+}) => {
+  // Somebody else's real deal, made in its own browser so the two sessions never mix.
+  const other = await browser.newContext()
+  const theirs = await other.newPage()
+  await signIn(theirs, 'workspace')
+  await theirs.goto('/deals/new')
+  await theirs.getByLabel('Property address').fill('2210 Kohler')
+  await theirs.getByRole('option').first().click()
+  await theirs.getByRole('radio', { name: /Buy and hold|Rental/ }).click()
+  await theirs.getByLabel('Call it').fill(`Not yours ${Date.now().toString(36)}`)
+  await theirs.getByRole('button', { name: 'See if it works' }).click()
+  await theirs.waitForURL(/\/deals\/[0-9a-f-]+$/)
+  const theirId = theirs.url().split('/').pop() ?? ''
+  await other.close()
+
   await signIn(page)
-  for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-real-id']) {
-    await page.goto(`/deals/${id}`)
+  // Someone else's deal must look exactly like one that doesn't exist. A malformed id is
+  // turned away by validation instead, and reads the same on screen.
+  const cases: [string, number][] = [
+    [theirId, 404],
+    ['00000000-0000-4000-8000-000000000000', 404],
+    ['not-a-real-id', 422],
+  ]
+  for (const [id, status] of cases) {
+    const [response] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes(`/v1/deals/${id}`)),
+      page.goto(`/deals/${id}`),
+    ])
+    expect(response.status(), id).toBe(status)
     await expect(page.getByRole('heading', { name: "There's nothing here." })).toBeVisible()
     await noCrash(page)
   }

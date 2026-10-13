@@ -51,7 +51,7 @@ export function ShareButton({ dealId, shared }: { dealId: string; shared: boolea
   }
 
   return (
-    <div style={{ position: 'relative' }} ref={box}>
+    <div className={styles.box} ref={box}>
       <Button
         onClick={() => {
           setOpen((o) => !o)

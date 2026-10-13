@@ -19,6 +19,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .search {
   display: flex;
@@ -30,7 +31,8 @@
   background: var(--tile);
   border-radius: var(--r-md);
   color: var(--mute);
-  min-width: 240px;
+  flex: 1 1 240px;
+  min-width: 0;
 }
 .search input {
   flex: 1;
@@ -46,7 +48,7 @@
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: 14px;
   margin-top: 22px;
 }

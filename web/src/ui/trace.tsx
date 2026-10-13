@@ -127,7 +127,18 @@ export function Trace({
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(el)
-    return () => observer.disconnect()
+    // A sticky panel moves its inputs without resizing the container.
+    let frame = 0
+    const onScroll = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measure)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+    }
   }, [container, links, gutter, mode])
 
   if (!lines.length) return null

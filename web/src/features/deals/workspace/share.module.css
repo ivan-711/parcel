@@ -1,3 +1,6 @@
+.box {
+  position: relative;
+}
 .pop {
   position: absolute;
   right: 0;
@@ -48,5 +51,16 @@
   from {
     opacity: 0;
     transform: scale(0.97);
+  }
+}
+
+/* Anchored to the whole action row, since the button sits mid row. */
+@media (max-width: 560px) {
+  .box {
+    position: static;
+  }
+  .pop {
+    left: 0;
+    width: auto;
   }
 }

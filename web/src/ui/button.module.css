@@ -41,6 +41,7 @@
   box-shadow: var(--primary-shadow);
 }
 .primary:hover {
+  background: var(--primary-bg);
   filter: brightness(1.06);
 }
 .plain {

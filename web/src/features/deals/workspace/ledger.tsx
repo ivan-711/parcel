@@ -36,7 +36,7 @@ export function Ledger({ analysis }: { analysis: Analysis }) {
   const virtual = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 35,
+    estimateSize: () => 39,
     overscan: 8,
   })
   const name = (p: Period) =>
@@ -74,6 +74,8 @@ export function Ledger({ analysis }: { analysis: Analysis }) {
             return (
               <div
                 key={item.key}
+                ref={virtual.measureElement}
+                data-index={item.index}
                 className={styles.table}
                 role="row"
                 style={{

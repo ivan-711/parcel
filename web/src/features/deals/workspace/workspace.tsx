@@ -82,22 +82,25 @@ export function Workspace({ dealId }: { dealId: string }) {
   // share the screen.
   const [opened, setSheet] = useState(false)
   const sheet = phone && opened
-  const sheetRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLDialogElement>(null)
   const openerRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
-    if (!sheet) return
+    const dialog = sheetRef.current
+    if (!sheet || !dialog) return
     const opener = openerRef.current
-    sheetRef.current?.focus()
+    dialog.showModal()
     document.getElementById('verdict')?.scrollIntoView({ block: 'start' })
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSheet(false)
+    // Only the backdrop reports the dialog itself as the target.
+    const onClick = (e: MouseEvent) => {
+      if (e.target === dialog) setSheet(false)
     }
-    document.addEventListener('keydown', onKey)
+    dialog.addEventListener('click', onClick)
     const { overflow } = document.body.style
     document.body.style.overflow = 'hidden'
     return () => {
-      document.removeEventListener('keydown', onKey)
+      dialog.removeEventListener('click', onClick)
       document.body.style.overflow = overflow
+      if (dialog.open) dialog.close()
       opener?.focus()
     }
   }, [sheet])
@@ -184,7 +187,8 @@ export function Workspace({ dealId }: { dealId: string }) {
     const go = () => {
       const row = document.getElementById(`in-${path.replace(/\./g, '-')}`)
       if (!row) return
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      row.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' })
       row.classList.add('flash')
       setTimeout(() => row.classList.remove('flash'), 1200)
     }
@@ -251,7 +255,7 @@ export function Workspace({ dealId }: { dealId: string }) {
         <span>/</span>
         <b>{deal.name}</b>
       </div>
-      <header className={styles.title} inert={sheet}>
+      <header className={styles.title}>
         <h1>{deal.name}</h1>
         <span className={styles.chip}>{STRATEGY_NAMES[deal.strategy]}</span>
         <span className={styles.chip}>{STAGE_NAMES[deal.stage]}</span>
@@ -277,7 +281,7 @@ export function Workspace({ dealId }: { dealId: string }) {
         </div>
       </header>
 
-      <div className={styles.layout} ref={layoutRef} inert={sheet}>
+      <div className={styles.layout} ref={layoutRef}>
         <div>
           <Card className={styles.verdict} padded={false} id="verdict">
             <VerdictBand verdict={words} />
@@ -325,24 +329,14 @@ export function Workspace({ dealId }: { dealId: string }) {
             </button>
           </div>
           {sheet && (
-            <>
-              <button
-                type="button"
-                className={styles.scrim}
-                aria-label="Close assumptions"
-                onClick={() => setSheet(false)}
-              />
-              <div
-                className={styles.sheet}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="assumptions-title"
-                ref={sheetRef}
-                tabIndex={-1}
-              >
-                {assumptions}
-              </div>
-            </>
+            <dialog
+              className={styles.sheet}
+              aria-labelledby="assumptions-title"
+              ref={sheetRef}
+              onClose={() => setSheet(false)}
+            >
+              {assumptions}
+            </dialog>
           )}
         </>
       )}

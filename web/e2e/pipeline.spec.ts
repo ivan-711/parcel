@@ -89,8 +89,12 @@ test('two deals start in analyzing and can be moved by keyboard and by drag', as
   const target = column(page, 'Under contract').getByRole('heading', { level: 2 })
   await target.hover()
   await target.hover()
+  const moved = page.waitForResponse(
+    (r) => r.request().method() === 'PUT' && r.url().includes('/stage') && r.ok(),
+  )
   await page.mouse.up()
   await expect(card(page, 'Under contract', flip)).toBeVisible()
+  await moved
 
   await page.reload()
   await expect(card(page, 'Offer out', rental)).toBeVisible()
@@ -120,8 +124,12 @@ test('the deals list filters by name and shows the pipeline stage', async ({ pag
 
 test('an owned deal shows on the portfolio with its planned monthly figure', async ({ page }) => {
   await page.goto('/pipeline')
+  const owned = page.waitForResponse(
+    (r) => r.request().method() === 'PUT' && r.url().includes('/stage') && r.ok(),
+  )
   await page.getByLabel(`Move ${rental}`).selectOption({ label: 'Move to owned' })
   await expect(card(page, 'Owned', rental)).toBeVisible()
+  await owned
   await page.reload()
   await expect(card(page, 'Owned', rental)).toBeVisible()
 

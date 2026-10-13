@@ -104,34 +104,38 @@ export function Report({ token }: { token: string }) {
 
       <section className={styles.section}>
         <h2>Year by year</h2>
-        <table className={styles.years}>
-          <thead>
-            <tr>
-              <th />
-              <th>Rent</th>
-              <th>Costs</th>
-              <th>Loan</th>
-              <th>Cash flow</th>
-              <th>Running total</th>
-              <th>Equity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ledger.years.map((y) => (
-              <tr key={y.period}>
-                <td>{y.period === 0 ? 'Closing' : `Year ${y.period}`}</td>
-                <td>{y.gross_rent ? money(y.potential_income) : ''}</td>
-                <td className={styles.neg}>{y.total_costs ? moneySigned(-y.total_costs) : ''}</td>
-                <td className={styles.neg}>{y.debt_service ? moneySigned(-y.debt_service) : ''}</td>
-                <td className={y.cash_flow < 0 ? styles.neg : ''}>{moneySigned(y.cash_flow)}</td>
-                <td className={y.cumulative_cash_flow < 0 ? styles.neg : ''}>
-                  {moneySigned(y.cumulative_cash_flow)}
-                </td>
-                <td>{money(y.equity)}</td>
+        <div className={styles.scroll}>
+          <table className={styles.years}>
+            <thead>
+              <tr>
+                <th />
+                <th>Rent</th>
+                <th>Costs</th>
+                <th>Loan</th>
+                <th>Cash flow</th>
+                <th>Running total</th>
+                <th>Equity</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ledger.years.map((y) => (
+                <tr key={y.period}>
+                  <td>{y.period === 0 ? 'Closing' : `Year ${y.period}`}</td>
+                  <td>{y.gross_rent ? money(y.potential_income) : ''}</td>
+                  <td className={styles.neg}>{y.total_costs ? moneySigned(-y.total_costs) : ''}</td>
+                  <td className={styles.neg}>
+                    {y.debt_service ? moneySigned(-y.debt_service) : ''}
+                  </td>
+                  <td className={y.cash_flow < 0 ? styles.neg : ''}>{moneySigned(y.cash_flow)}</td>
+                  <td className={y.cumulative_cash_flow < 0 ? styles.neg : ''}>
+                    {moneySigned(y.cumulative_cash_flow)}
+                  </td>
+                  <td>{money(y.equity)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <div className={styles.actions}>

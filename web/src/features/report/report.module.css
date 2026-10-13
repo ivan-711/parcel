@@ -112,6 +112,9 @@
   font-weight: 500;
   white-space: nowrap;
 }
+.scroll {
+  overflow-x: auto;
+}
 .years {
   width: 100%;
   border-collapse: collapse;
@@ -156,7 +159,8 @@
     width: 100%;
     padding: 0;
   }
-  :root {
+  :root,
+  :root[data-theme='light'] {
     color-scheme: light;
     --bg: #fff;
     --card: #fff;
@@ -169,6 +173,12 @@
     --shadow: none;
     --glow: none;
     --accent: #0a4fd0;
+    --good: #0f6b3a;
+    --caution: #7a4a00;
+    --risk: #b42318;
+  }
+  .scroll {
+    overflow: visible;
   }
 }
 @media (max-width: 720px) {

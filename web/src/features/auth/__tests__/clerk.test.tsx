@@ -37,21 +37,25 @@ describe('ClerkShell', () => {
   })
 
   it('keeps route guards waiting until Clerk has loaded', async () => {
-    session.endDemo()
+    // Readiness is settled once for the life of the module, so this needs a fresh one.
+    vi.resetModules()
+    const fresh = await import('../../../lib/session')
+    const { ClerkShell: Shell } = await import('../clerk')
+    fresh.session.endDemo()
     auth.isLoaded = false
     auth.isSignedIn = undefined
-    const view = render(<ClerkShell publishableKey="pk_test_x">{null}</ClerkShell>)
+    const view = render(<Shell publishableKey="pk_test_x">{null}</Shell>)
     let settled = false
-    const ready = session.ready().then(() => {
+    const ready = fresh.session.ready().then(() => {
       settled = true
     })
-    await Promise.resolve()
+    for (let i = 0; i < 10; i++) await Promise.resolve()
     expect(settled).toBe(false)
     auth.isLoaded = true
     auth.isSignedIn = true
-    view.rerender(<ClerkShell publishableKey="pk_test_x">{null}</ClerkShell>)
+    view.rerender(<Shell publishableKey="pk_test_x">{null}</Shell>)
     await ready
-    expect(await session.token()).toBe('tok')
+    expect(await fresh.session.token()).toBe('tok')
   })
 
   describe('who the cached data belongs to', () => {

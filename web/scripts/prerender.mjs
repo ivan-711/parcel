@@ -1,7 +1,7 @@
 // Renders the public pages to static HTML after `vite build`, so crawlers and
 // first paint get real content. The app hydrates over it on load.
 import { spawn } from 'node:child_process'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdir, writeFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
 
 const PAGES = ['/', '/methodology']
@@ -38,17 +38,8 @@ const wait = async () => {
 
 try {
   await wait()
-  // Only the public pages get prerendered markup. Everything else is served the plain
-  // shell, kept aside here before the landing page takes over index.html.
-  // The routes write the title and description themselves, so the shell carries only a
-  // name for the moment before the app loads.
-  await writeFile(
-    `${DIR}/app.html`,
-    (await readFile(`${DIR}/index.html`, 'utf8')).replace(
-      '</head>',
-      '    <title>Parcel</title>\n  </head>',
-    ),
-  )
+  // Every path outside the public pages is served app.html, which the build emits.
+  await access(`${DIR}/app.html`)
   const browser = await chromium.launch()
   // Every page is rendered before any is written: once index.html holds the landing page,
   // the preview server would hand it out as the shell for the pages still to come.

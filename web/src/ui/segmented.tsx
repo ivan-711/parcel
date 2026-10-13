@@ -27,7 +27,9 @@ export function Segmented<T extends string>({
     if (!step) return
     event.preventDefault()
     const next = options[(index + step + options.length) % options.length]
-    if (next) onChange(next.value)
+    if (!next) return
+    onChange(next.value)
+    document.getElementById(`${id}-${next.value}`)?.focus()
   }
   return (
     <div className={styles.group} role="tablist" aria-label={label} onKeyDown={onKey} tabIndex={-1}>

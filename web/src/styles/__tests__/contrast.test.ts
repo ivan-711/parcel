@@ -85,7 +85,9 @@ describe.each([
 
   it('reads the primary button label on every stop of its gradient', () => {
     const ink = parse(token(t, 'accent-ink'))[0]
-    for (const stop of stops(token(t, 'primary-bg'))) {
+    const found = stops(token(t, 'primary-bg'))
+    expect(found.length).toBeGreaterThanOrEqual(2)
+    for (const stop of found) {
       expect(ratio(ink, parse(stop)[0]), stop).toBeGreaterThanOrEqual(4.5)
     }
   })

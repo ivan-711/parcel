@@ -24,6 +24,10 @@ test('on a phone the rail still names its links and the assumptions open in a sh
   await page.getByRole('button', { name: /^Assumptions/ }).click()
   const sheet = page.getByRole('dialog', { name: 'Assumptions' })
   await expect(sheet).toBeVisible()
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press(i % 7 === 6 ? 'Shift+Tab' : 'Tab')
+    await expect(sheet.locator(':focus')).toHaveCount(1)
+  }
   const rent = sheet.locator('#in-operations-monthly_rent-input')
   await rent.click()
   await rent.fill('2800')

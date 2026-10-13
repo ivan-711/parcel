@@ -64,9 +64,14 @@ test('edited assumptions update the figures and survive a reload', async ({ page
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(rentalName)
   const cashFlow = page.locator('#stat-cash_flow b')
   const before = await cashFlow.innerText()
-  // Edits save on a short delay, so a reload right away would race the write.
+  // Edits save on a short delay, so a reload right away would race the write. Only the
+  // save carrying the last edit counts; an earlier one with the rent alone would not.
   const saved = page.waitForResponse(
-    (r) => r.request().method() === 'PATCH' && r.url().includes('/v1/deals/') && r.ok(),
+    (r) =>
+      r.request().method() === 'PATCH' &&
+      r.url().includes('/v1/deals/') &&
+      r.ok() &&
+      (r.request().postData() ?? '').includes('"down_payment_rate":0.3'),
   )
 
   await setInput(page, 'in-operations-monthly_rent', '3100')

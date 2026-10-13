@@ -343,6 +343,7 @@
     width: 100%;
   }
   .actions {
+    position: relative;
     margin-left: 0;
     width: 100%;
   }
@@ -384,18 +385,15 @@
 .barButton .saving {
   font-size: var(--fs-small);
 }
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: rgba(0, 0, 0, 0.5);
-}
 .sheet {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 21;
+  inset: auto 0 0 0;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  max-width: none;
+  color: inherit;
+  border: 0;
   max-height: 56vh;
   display: flex;
   flex-direction: column;
@@ -405,6 +403,9 @@
   box-shadow: var(--shadow-pop);
   outline: none;
   animation: lift 200ms var(--ease);
+}
+.sheet::backdrop {
+  background: rgba(0, 0, 0, 0.5);
 }
 .sheet .sheetCard {
   min-height: 0;
@@ -435,6 +436,6 @@
   .bar {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    background: var(--rail);
+    background: var(--bg);
   }
 }
