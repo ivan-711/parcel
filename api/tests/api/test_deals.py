@@ -1,13 +1,16 @@
+import uuid
 from datetime import date
 
 import httpx
 import pytest
+from sqlalchemy import text
 
+from parcel.db.session import db
 from parcel.domain.analysis import analyze
 from parcel.schemas.analysis import Analysis
 from parcel.schemas.inputs import BuyAndHold
 
-from .conftest import RENTAL, Login, deal_body
+from .conftest import RENTAL, Login, deal_body, migration
 
 
 @pytest.fixture
@@ -212,3 +215,46 @@ async def test_work_that_outlasts_the_hold_is_a_field_error(
     assert "seasoning_months" in response.text
     rental = deal_body(rehab_months=12, hold_years=1)
     assert (await client.post("/v1/deals", json=rental, headers=me)).status_code == 422
+
+
+async def test_deals_saved_before_the_stricter_checks_still_load(
+    client: httpx.AsyncClient, me: dict[str, str]
+) -> None:
+    creative = {
+        "strategy": "creative",
+        "price": 200_000,
+        "operations": RENTAL["operations"],
+        "existing_balance": 180_000,
+        "existing_rate": 0.04,
+        "existing_months_left": 300,
+        "cash_to_seller": 10_000,
+    }
+    sub_to = (
+        await client.post("/v1/deals", json={"name": "Sub to", "inputs": creative}, headers=me)
+    ).json()
+    short = (
+        await client.post(
+            "/v1/deals", json=deal_body("Short hold", hold_years=2, exit_cap_rate=0.06), headers=me
+        )
+    ).json()
+    # What older code let through: more cash to the seller than the price leaves, and a cap rate
+    # exit on a hold with no full year of rent.
+    overpaid = (
+        "update deals set inputs = jsonb_set(inputs, '{cash_to_seller}', '40000') where id = :id"
+    )
+    too_short = (
+        """update deals set inputs = inputs || '{"hold_years": 1, "rehab_months": 1}' """
+        "where id = :id"
+    )
+    async with db.as_system() as session:
+        await session.execute(text(overpaid), {"id": uuid.UUID(sub_to["id"])})
+        await session.execute(text(too_short), {"id": uuid.UUID(short["id"])})
+        for statement in migration("20261012_repair_inputs_saved_before_stricter_checks").REPAIRS:
+            await session.execute(text(statement))
+
+    listed = await client.get("/v1/deals", headers=me)
+    assert listed.status_code == 200
+    inputs = {d["name"]: d["inputs"] for d in listed.json()}
+    assert inputs["Sub to"]["cash_to_seller"] == 20_000
+    assert inputs["Short hold"]["exit_cap_rate"] is None
+    assert inputs["Short hold"]["hold_years"] == 1

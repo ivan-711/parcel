@@ -1,14 +1,16 @@
+from datetime import UTC, datetime, timedelta
+
 import httpx
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, insert, select, text
 
 from parcel.adapters.fixtures import FixtureData
 from parcel.adapters.property_data import Estimate, Place, ProviderError
-from parcel.db.models import Usage
+from parcel.db.models import ProviderCache, Usage
 from parcel.db.session import db
 from parcel.settings import get_settings
 
-from .conftest import Login
+from .conftest import Login, migration
 
 DUPLEX = "1420 N 14th St, Sheboygan, WI 53081"
 RANCH = "2210 Kohler Ave, Sheboygan, WI 53081"
@@ -162,6 +164,33 @@ async def test_demo_samples_never_serve_real_lookups(
     result = (await _lookup(client, me, DUPLEX)).json()
     assert result["notes"] == []
     assert property_data.calls == [f"rent:{_key(DUPLEX)}", f"value:{_key(DUPLEX)}"]
+
+
+async def test_samples_cached_as_live_before_they_were_kept_apart_are_forgotten(
+    client: httpx.AsyncClient, me: dict[str, str], property_data: FixtureData
+) -> None:
+    # A live lookup against the fixtures writes exactly what a demo lookup used to.
+    await _lookup(client, me, DUPLEX)
+    assert len(property_data.calls) == 2
+    token = (await client.post("/v1/demo")).json()["token"]
+    await _lookup(client, {"authorization": f"Bearer {token}"}, RANCH)
+    elsewhere = {"value": {"place": {"line1": "9 Elm St", "city": "Madison"}}}
+    async with db.as_system() as session:
+        await session.execute(
+            insert(ProviderCache).values(
+                key="rentcast:rent:9 ELM ST MADISON WI 53703",
+                payload=elsewhere,
+                expires_at=datetime.now(UTC) + timedelta(days=1),
+            )
+        )
+        sweep = migration("20261012_forget_sample_lookups_cached_as_live")
+        await session.execute(text(sweep.SWEEP))
+        keys = set(await session.scalars(select(ProviderCache.key)))
+    assert "rentcast:rent:9 ELM ST MADISON WI 53703" in keys
+    assert {k for k in keys if k.startswith("sample:")}
+    assert not {k for k in keys if not k.startswith(("sample:", "rentcast:rent:9 ELM"))}
+    await _lookup(client, me, DUPLEX)
+    assert len(property_data.calls) == 4
 
 
 async def test_autocomplete_is_rationed_and_cached(

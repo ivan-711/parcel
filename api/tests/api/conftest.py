@@ -1,9 +1,11 @@
 import asyncio
+import importlib.util
 import os
 import time
 import uuid
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Protocol
 
 import httpx
@@ -206,3 +208,14 @@ RENTAL = {
 
 def deal_body(name: str = "Duplex", **overrides: Any) -> dict[str, Any]:
     return {"name": name, "inputs": {**RENTAL, **overrides}}
+
+
+def migration(name: str) -> ModuleType:
+    """A migration module by file name, for the ones that fix data rather than shape."""
+    path = Path(__file__).parents[2] / "src" / "parcel" / "db" / "migrations" / "versions"
+    spec = importlib.util.spec_from_file_location(name, path / f"{name}.py")
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
