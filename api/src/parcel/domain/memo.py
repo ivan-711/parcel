@@ -25,7 +25,9 @@ from parcel.schemas import inputs
 from parcel.schemas.analysis import Analysis, Flag, WholesaleAnalysis
 from parcel.schemas.memo import MemoOut
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
+"""Goes up whenever the prompt or the figures a memo is checked against change, so
+memos written under the old ones are redone rather than served as current."""
 
 SYSTEM = """\
 You write short underwriting memos for real estate investors, in the voice of a \
