@@ -183,6 +183,58 @@ async def test_checkout_grants_nothing_until_it_is_paid(
     assert (await _me(client, headers))["plan"] == "free"
 
 
+async def test_a_bank_debit_grants_pro_once_it_clears(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    me = await _me(client, headers)
+    payload, sig = stripe_signed(_checkout(me["id"], payment_status="unpaid"))
+    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    assert (await client.post("/v1/billing/portal", headers=headers)).status_code == 200
+    await _send(
+        client,
+        "evt_2",
+        "checkout.session.async_payment_succeeded",
+        1_500,
+        client_reference_id=me["id"],
+        payment_status="paid",
+    )
+    assert (await _me(client, headers))["plan"] == "pro"
+
+
+async def test_an_unpaid_checkout_still_links_the_subscription_that_follows(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    me = await _me(client, headers)
+    payload, sig = stripe_signed(_checkout(me["id"], payment_status="unpaid"))
+    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    await _send(client, "evt_2", "customer.subscription.updated", 2_000, status="active")
+    assert (await _me(client, headers))["plan"] == "pro"
+
+
+async def test_a_cancellation_that_lands_before_its_checkout_still_counts(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    me = await _me(client, headers)
+    await _send(client, "evt_2", "customer.subscription.deleted", 2_000, status="canceled")
+    payload, sig = stripe_signed(_checkout(me["id"]))
+    await client.post("/webhooks/stripe", content=payload, headers=sig)
+    assert (await _me(client, headers))["plan"] == "free"
+
+
+async def test_changes_within_the_same_second_apply_in_the_order_they_arrive(
+    client: httpx.AsyncClient, login: Login
+) -> None:
+    headers = login("buyer")
+    await _subscribe(client, headers)
+    await _send(client, "evt_2", "customer.subscription.updated", 1_000, status="unpaid")
+    assert (await _me(client, headers))["plan"] == "free"
+    await _send(client, "evt_3", "customer.subscription.updated", 1_000, status="active")
+    assert (await _me(client, headers))["plan"] == "pro"
+
+
 async def test_unsigned_stripe_events_are_rejected(client: httpx.AsyncClient) -> None:
     payload, sig = stripe_signed(
         {"id": "evt_x", "type": "x", "data": {"object": {}}}, secret="wrong"

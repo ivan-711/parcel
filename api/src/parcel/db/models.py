@@ -191,4 +191,6 @@ class StripeEvent(Base):
     customer: Mapped[str | None] = mapped_column(String(64), index=True)
     created: Mapped[int] = mapped_column(BigInteger, server_default="0")
     """Stripe's own timestamp for the event, which orders retries correctly."""
+    subscription_status: Mapped[str | None] = mapped_column(String(32))
+    """Kept for subscription events, so one that beat its checkout here still counts."""
     received_at: Mapped[datetime] = _now()
