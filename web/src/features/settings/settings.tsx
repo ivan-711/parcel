@@ -40,6 +40,14 @@ const DEFAULTS: Default[] = [
   { key: 'operations.rent_growth', label: 'Rent growth', help: 'A year', usual: '3' },
 ]
 
+/** A percentage as typed, sign or no sign: null when blank, undefined when it can't be read. */
+function readPercent(text: string): number | null | undefined {
+  const digits = text.replace(/[%,\s]/g, '')
+  if (!digits) return null
+  const n = Number(digits)
+  return Number.isFinite(n) ? n / 100 : undefined
+}
+
 export function Settings() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -54,18 +62,27 @@ export function Settings() {
     ),
   )
 
+  const [problem, setProblem] = useState<string | null>(null)
   const save = useMutation({
-    mutationFn: async () => {
-      const clean: Record<string, number> = {}
-      for (const d of DEFAULTS) {
-        const text = defaults[d.key]?.trim() ?? ''
-        const n = Number(text)
-        if (text && Number.isFinite(n)) clean[d.key] = n / 100
-      }
-      return unwrap(await api.PATCH('/v1/me', { body: { name: name.trim(), defaults: clean } }))
-    },
+    mutationFn: async (clean: Record<string, number>) =>
+      unwrap(await api.PATCH('/v1/me', { body: { name: name.trim(), defaults: clean } })),
     onSuccess: (data) => queryClient.setQueryData(meQuery.queryKey, data),
   })
+  // The whole set goes up together, so a field that can't be read has to stop the save
+  // rather than drop out of it and take its stored value with it.
+  const submit = () => {
+    const clean: Record<string, number> = {}
+    for (const d of DEFAULTS) {
+      const rate = readPercent(defaults[d.key] ?? '')
+      if (rate === undefined) {
+        setProblem(`Couldn't read the ${d.label.toLowerCase()}. Try a number like ${d.usual}.`)
+        return
+      }
+      if (rate !== null) clean[d.key] = rate
+    }
+    setProblem(null)
+    save.mutate(clean)
+  }
 
   const checkout = useMutation({
     mutationFn: async () => unwrap(await api.POST('/v1/billing/checkout')),
@@ -125,11 +142,11 @@ export function Settings() {
           ))}
         </div>
         <div className={styles.actions}>
-          <Button look="primary" onClick={() => save.mutate()} disabled={save.isPending}>
+          <Button look="primary" onClick={submit} disabled={save.isPending}>
             Save
           </Button>
           <span className={styles.status} aria-live="polite">
-            {save.isSuccess ? 'Saved.' : save.isError ? "Couldn't save." : ''}
+            {problem ?? (save.isSuccess ? 'Saved.' : save.isError ? "Couldn't save." : '')}
           </span>
         </div>
       </section>
