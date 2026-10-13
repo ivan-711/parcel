@@ -2,17 +2,21 @@ import { queryOptions } from '@tanstack/react-query'
 
 import { api, unwrap } from './client'
 import type { components } from './schema'
+import type { Inputs } from './analysis'
 
 export type Schemas = components['schemas']
 export type Deal = Schemas['DealOut']
 export type DealDetail = Schemas['DealDetail']
-export type Inputs = Schemas['DealCreate']['inputs']
-export type Analysis = Schemas['Analysis']
-export type WholesaleAnalysis = Schemas['WholesaleAnalysis']
-export type AnyAnalysis = Analysis | WholesaleAnalysis
-export type Metrics = Schemas['Metrics']
-export type Flag = Schemas['Flag']
-export type Period = Schemas['Period']
+export type {
+  Analysis,
+  AnyAnalysis,
+  Flag,
+  Inputs,
+  Metrics,
+  Period,
+  WholesaleAnalysis,
+} from './analysis'
+export { isWholesale, ledgerOf } from './analysis'
 export type Stage = Schemas['Stage']
 export type Strategy = Schemas['Strategy']
 export type Source = Schemas['Source']
@@ -27,15 +31,6 @@ export type SolveResult = Schemas['SolveResult']
 export type HoldingInputs = Exclude<Inputs, { strategy: 'wholesale' }>
 export type Metric = NonNullable<Schemas['SensitivityRequest']['metric']>
 export type SolveField = Schemas['SolveRequest']['field']
-
-export function isWholesale(analysis: AnyAnalysis): analysis is WholesaleAnalysis {
-  return 'buyer' in analysis
-}
-
-/** The ledger a view draws: the deal's own, or the end buyer's flip for a wholesale. */
-export function ledgerOf(analysis: AnyAnalysis): Analysis {
-  return isWholesale(analysis) ? analysis.buyer : analysis
-}
 
 export const meQuery = queryOptions({
   queryKey: ['me'],

@@ -36,7 +36,7 @@ export default tseslint.config(
       ],
     },
   },
-  { files: ['*.config.ts', 'e2e/**'], languageOptions: { globals: globals.node } },
+  { files: ['*.config.ts', 'e2e/**', 'api/**'], languageOptions: { globals: globals.node } },
   {
     files: ['**/*.{js,mjs,cjs}'],
     ...tseslint.configs.disableTypeChecked,

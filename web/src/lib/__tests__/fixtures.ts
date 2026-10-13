@@ -1,4 +1,4 @@
-import type { Analysis, Inputs, Metrics, Period } from '../api/queries'
+import type { Analysis, Inputs, Metrics, Period } from '../api/analysis'
 
 export const duplex: Inputs = {
   strategy: 'buy_and_hold',

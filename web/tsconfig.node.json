@@ -12,5 +12,17 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "e2e"]
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "e2e",
+    "api",
+    "src/lib/share-head.ts",
+    "src/lib/words.ts",
+    "src/lib/format.ts",
+    "src/lib/api/analysis.ts",
+    "src/lib/api/schema.d.ts",
+    "src/lib/__tests__/fixtures.ts",
+    "src/lib/__tests__/share-api.test.ts"
+  ]
 }

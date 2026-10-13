@@ -5,8 +5,8 @@
  * phrases them for someone who doesn't speak IRR.
  */
 
-import { money, moneySigned, months, multiple, percent } from './format'
-import { isWholesale, ledgerOf, type AnyAnalysis, type Flag, type Inputs } from './api/queries'
+import { money, moneySigned, months, multiple, percent } from './format.js'
+import { isWholesale, ledgerOf, type AnyAnalysis, type Flag, type Inputs } from './api/analysis.js'
 
 export interface Part {
   text: string
