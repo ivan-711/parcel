@@ -42,15 +42,15 @@
   --r-lg: 12px;
   --r-xl: 16px;
   --ease: cubic-bezier(0.23, 1, 0.32, 1);
-  --fs-caption: 11.5px;
-  --fs-small: 12px;
-  --fs-ui: 13px;
-  --fs-body: 14px;
-  --fs-lead: 15px;
-  --fs-title: 22px;
-  --fs-answer: 25px;
-  --fs-figure: 24px;
-  --fs-display: 48px;
+  --fs-caption: 0.71875rem;
+  --fs-small: 0.75rem;
+  --fs-ui: 0.8125rem;
+  --fs-body: 0.875rem;
+  --fs-lead: 0.9375rem;
+  --fs-title: 1.375rem;
+  --fs-answer: 1.5625rem;
+  --fs-figure: 1.5rem;
+  --fs-display: 3rem;
   --rail-w: 232px;
   --content-w: 1120px;
   --panel-w: 316px;
@@ -66,7 +66,7 @@
   --fs-page-title: var(--fs-title);
   --fs-secondary: var(--fs-ui);
   --fs-card-title: var(--fs-body);
-  --fs-tick: 11px;
+  --fs-tick: 0.6875rem;
   --card-pad: 20px 24px;
   --verdict-pad: 22px 24px;
 }
@@ -86,11 +86,11 @@
   --text: #1c1c1e;
   --sub: #5c5c61;
   --mute: #6e6e73;
-  --accent: #0a6cff;
+  --accent: #0a5ae6;
   --accent-2: #0a56e6;
   --accent-ink: #ffffff;
   --accent-soft: #e8f0ff;
-  --accent-line: rgba(10, 108, 255, 0.35);
+  --accent-line: rgba(10, 90, 230, 0.35);
   --glow: none;
   --glow-sm: none;
   --good: #177d44;
@@ -104,10 +104,18 @@
   --risk-line: rgba(196, 47, 47, 0.3);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px rgba(20, 30, 50, 0.06);
   --shadow-pop: 0 12px 40px rgba(20, 30, 50, 0.16);
-  --primary-bg: linear-gradient(180deg, #2a7fff, #0a56e6);
-  --primary-shadow: 0 1px 2px rgba(10, 108, 255, 0.3);
+  --primary-bg: linear-gradient(180deg, #1a6cf0, #0a56e6);
+  --primary-shadow: 0 1px 2px rgba(10, 90, 230, 0.3);
   --atmosphere:
     radial-gradient(900px 500px at 15% -10%, rgba(10, 108, 255, 0.1), transparent 60%),
     radial-gradient(700px 400px at 95% 10%, rgba(90, 200, 250, 0.1), transparent 60%);
   --chart-mark: #dfe4ec;
+}
+
+/* The type scale is in rem so a larger browser font size carries through. Captions get a
+   little more room on a phone, where they sit at the smallest size that still reads. */
+@media (max-width: 900px) {
+  :root {
+    --fs-caption: 0.75rem;
+  }
 }

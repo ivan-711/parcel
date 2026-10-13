@@ -2,11 +2,18 @@ const KEY = 'parcel.theme'
 
 export type Theme = 'dark' | 'light'
 
-function read(): Theme {
+const LIGHT = '(prefers-color-scheme: light)'
+
+function system(): Theme {
+  return window.matchMedia(LIGHT).matches ? 'light' : 'dark'
+}
+
+function saved(): Theme | null {
   try {
-    return localStorage.getItem(KEY) === 'light' ? 'light' : 'dark'
+    const value = localStorage.getItem(KEY)
+    return value === 'light' || value === 'dark' ? value : null
   } catch {
-    return 'dark'
+    return null
   }
 }
 
@@ -15,11 +22,14 @@ function apply(theme: Theme) {
   else delete document.documentElement.dataset.theme
 }
 
-/** Dark is the default; a light choice is kept on this device. */
+/** The system appearance, unless a choice made in the app is kept on this device. */
 export const theme = {
-  current: read,
+  current: (): Theme => saved() ?? system(),
   init() {
-    apply(read())
+    apply(saved() ?? system())
+    window.matchMedia(LIGHT).addEventListener('change', () => {
+      if (saved() === null) apply(system())
+    })
   },
   set(next: Theme) {
     try {

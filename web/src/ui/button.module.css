@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 32px;
+  min-height: 32px;
   padding: 0 12px;
   border-radius: var(--r-md);
   font-size: var(--fs-ui);
@@ -53,12 +53,21 @@
   background: var(--accent-soft);
 }
 .large {
-  height: 40px;
+  min-height: 40px;
   padding: 0 18px;
   font-size: var(--fs-body);
 }
 .small {
-  height: 28px;
+  min-height: 28px;
   padding: 0 10px;
   font-size: var(--fs-small);
+}
+
+@media (max-width: 900px) {
+  .button {
+    min-height: 36px;
+  }
+  .small {
+    min-height: 32px;
+  }
 }

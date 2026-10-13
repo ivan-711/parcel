@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 
 import { money, percent } from '../../lib/format'
 import { useMedia } from '../../lib/use-media'
@@ -26,53 +26,6 @@ const PROMISES = [
     'The written summary is checked against the engine’s figures before you see it, and flagged if a number doesn’t match.',
   ],
 ]
-
-/** A sparse field of dim particles behind the answer card, only in the dark appearance. */
-function Sea() {
-  const ref = useRef<HTMLCanvasElement>(null)
-  const dark = document.documentElement.dataset.theme !== 'light'
-  const still = useMedia('(prefers-reduced-motion: reduce)')
-  useEffect(() => {
-    const canvas = ref.current
-    if (!canvas || !dark) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    let seed = 7
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
-    const dots = Array.from({ length: 220 }, () => ({
-      x: rnd(),
-      y: rnd(),
-      r: rnd() * 1.2 + 0.3,
-      a: rnd() * 0.5 + 0.1,
-      v: rnd() * 0.00004 + 0.00001,
-    }))
-    let frame = 0
-    let t = 0
-    const draw = () => {
-      const { clientWidth: w, clientHeight: h } = canvas
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w
-        canvas.height = h
-      }
-      ctx.clearRect(0, 0, w, h)
-      for (const d of dots) {
-        const y = (((d.y - t * d.v) % 1) + 1) % 1
-        ctx.fillStyle = `rgba(124, 156, 255, ${d.a * 0.6})`
-        ctx.beginPath()
-        ctx.arc(d.x * w, y * h, d.r, 0, 7)
-        ctx.fill()
-      }
-      if (!still) {
-        t += 1
-        frame = requestAnimationFrame(draw)
-      }
-    }
-    draw()
-    return () => cancelAnimationFrame(frame)
-  }, [dark, still])
-  if (!dark) return null
-  return <canvas ref={ref} className={styles.sea} aria-hidden="true" />
-}
 
 /* The three figures below are the product's own controls, drawn still. */
 
@@ -166,7 +119,6 @@ export function Landing() {
   const wide = useMedia('(min-width: 900px)')
   return (
     <>
-      <Sea />
       <PublicNav />
       <main className={styles.main}>
         <section className={styles.hero}>

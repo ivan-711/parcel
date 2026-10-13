@@ -59,6 +59,7 @@
 /* The answer card: status band, sentence, figures, explanation. */
 .verdict {
   overflow: hidden;
+  scroll-margin-top: 64px;
 }
 .band {
   padding: 22px 24px 20px;
@@ -347,5 +348,93 @@
   }
   .actions > * {
     flex: 1;
+  }
+}
+
+/* Phone: the assumptions open in a sheet from a bar along the bottom. */
+.barSpace {
+  height: 72px;
+}
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--rail) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.barButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line2);
+  background: var(--tile);
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+.barButton .saving {
+  font-size: var(--fs-small);
+}
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+}
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  max-height: 56vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px 16px 0 0;
+  background: var(--card);
+  border-top: 1px solid var(--line2);
+  box-shadow: var(--shadow-pop);
+  outline: none;
+  animation: lift 200ms var(--ease);
+}
+.sheet .sheetCard {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.sheet .sideHead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card);
+}
+.sheet .sideHead > :last-child {
+  margin-left: 8px;
+}
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .bar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--rail);
   }
 }

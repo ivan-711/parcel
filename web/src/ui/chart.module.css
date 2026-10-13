@@ -16,7 +16,7 @@
   stroke-width: 1;
 }
 .tick {
-  font-size: 11px;
+  font-size: 0.6875rem;
   fill: var(--mute);
 }
 .line {
@@ -35,7 +35,7 @@
   stroke-width: 1.5;
 }
 .label {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   fill: var(--text);
 }
@@ -49,7 +49,7 @@
   transform: translate(-50%, calc(-100% - 10px));
   background: var(--text);
   color: var(--bg);
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 5px 8px;
   border-radius: 6px;
   white-space: nowrap;

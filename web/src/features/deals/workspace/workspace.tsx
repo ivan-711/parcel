@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { SlidersHorizontal } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { api, unwrap } from '../../../lib/api/client'
@@ -76,6 +77,30 @@ export function Workspace({ dealId }: { dealId: string }) {
   const memo = useMemoWriter(dealId)
   const layoutRef = useRef<HTMLDivElement>(null)
   const wide = useMedia('(min-width: 1101px)')
+  const phone = useMedia('(max-width: 900px)')
+  // On a phone the assumptions live in a sheet over the answer, so an edit and its effect
+  // share the screen.
+  const [opened, setSheet] = useState(false)
+  const sheet = phone && opened
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const openerRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!sheet) return
+    const opener = openerRef.current
+    sheetRef.current?.focus()
+    document.getElementById('verdict')?.scrollIntoView({ block: 'start' })
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSheet(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const { overflow } = document.body.style
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = overflow
+      opener?.focus()
+    }
+  }, [sheet])
 
   const debounced = useDebounced(inputs, 250)
   const dirty = JSON.stringify(debounced) !== JSON.stringify(deal.inputs)
@@ -156,11 +181,17 @@ export function Workspace({ dealId }: { dealId: string }) {
 
   // A chip scrolls to its row and flashes it; on a phone that is the whole trace.
   const jump = (path: string) => {
-    const row = document.getElementById(`in-${path.replace(/\./g, '-')}`)
-    if (!row) return
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    row.classList.add('flash')
-    setTimeout(() => row.classList.remove('flash'), 1200)
+    const go = () => {
+      const row = document.getElementById(`in-${path.replace(/\./g, '-')}`)
+      if (!row) return
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      row.classList.add('flash')
+      setTimeout(() => row.classList.remove('flash'), 1200)
+    }
+    if (phone && !sheet) {
+      setSheet(true)
+      setTimeout(go, 50)
+    } else go()
   }
 
   const edit = (path: string, value: number | null) => {
@@ -176,6 +207,43 @@ export function Workspace({ dealId }: { dealId: string }) {
     : ''
   const tabs = inputs.strategy === 'wholesale' ? TABS.filter((t) => t.value !== 'whatif') : TABS
 
+  const status = save.isPending
+    ? 'Saving'
+    : save.isError
+      ? "Couldn't save"
+      : unsaved
+        ? 'Unsaved'
+        : dirty && live.isFetching
+          ? 'Updating'
+          : 'Saved'
+  const tone = save.isError
+    ? styles.failed
+    : save.isPending || unsaved || (dirty && live.isFetching)
+      ? styles.busy
+      : ''
+  const assumptions = (
+    <Card padded={false} className={phone ? styles.sheetCard : undefined}>
+      <div className={styles.sideHead}>
+        <h2 id="assumptions-title">Assumptions</h2>
+        <span className={`${styles.saving} ${tone}`} aria-live="polite">
+          {status}
+        </span>
+        {phone && (
+          <Button size="small" onClick={() => setSheet(false)}>
+            Done
+          </Button>
+        )}
+      </div>
+      <Inspector
+        strategy={inputs.strategy}
+        inputs={inputs}
+        provenance={provenance}
+        lit={lit}
+        onChange={edit}
+      />
+    </Card>
+  )
+
   return (
     <>
       <div className={styles.crumb}>
@@ -183,7 +251,7 @@ export function Workspace({ dealId }: { dealId: string }) {
         <span>/</span>
         <b>{deal.name}</b>
       </div>
-      <header className={styles.title}>
+      <header className={styles.title} inert={sheet}>
         <h1>{deal.name}</h1>
         <span className={styles.chip}>{STRATEGY_NAMES[deal.strategy]}</span>
         <span className={styles.chip}>{STAGE_NAMES[deal.stage]}</span>
@@ -209,15 +277,15 @@ export function Workspace({ dealId }: { dealId: string }) {
         </div>
       </header>
 
-      <div className={styles.layout} ref={layoutRef}>
+      <div className={styles.layout} ref={layoutRef} inert={sheet}>
         <div>
-          <Card className={styles.verdict} padded={false}>
+          <Card className={styles.verdict} padded={false} id="verdict">
             <VerdictBand verdict={words} />
             <StatTiles stats={stats} picked={picked} onPick={setPicked} />
             {stat && <Explain stat={stat} labels={labels} onJump={jump} />}
           </Card>
 
-          {!wide && (
+          {!wide && !phone && (
             <a href="#inspector" className={styles.toInspector}>
               Your assumptions <Chevron />
             </a>
@@ -233,36 +301,51 @@ export function Workspace({ dealId }: { dealId: string }) {
           </div>
         </div>
 
-        <aside className={styles.side} id="inspector">
-          <Card padded={false}>
-            <div className={styles.sideHead}>
-              <h2>Assumptions</h2>
-              <span
-                className={`${styles.saving} ${save.isError ? styles.failed : save.isPending || unsaved || (dirty && live.isFetching) ? styles.busy : ''}`}
-                aria-live="polite"
-              >
-                {save.isPending
-                  ? 'Saving'
-                  : save.isError
-                    ? "Couldn't save"
-                    : unsaved
-                      ? 'Unsaved'
-                      : dirty && live.isFetching
-                        ? 'Updating'
-                        : 'Saved'}
-              </span>
-            </div>
-            <Inspector
-              strategy={inputs.strategy}
-              inputs={inputs}
-              provenance={provenance}
-              lit={lit}
-              onChange={edit}
-            />
-          </Card>
-        </aside>
+        {!phone && (
+          <aside className={styles.side} id="inspector">
+            {assumptions}
+          </aside>
+        )}
         {wide && stat && <Trace container={layoutRef} links={links} gutter="inspector" />}
       </div>
+      {phone && (
+        <>
+          <div className={styles.barSpace} />
+          <div className={styles.bar}>
+            <button
+              type="button"
+              className={styles.barButton}
+              ref={openerRef}
+              onClick={() => setSheet(true)}
+              aria-expanded={sheet}
+            >
+              <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true" />
+              Assumptions
+              <span className={`${styles.saving} ${tone}`}>{status}</span>
+            </button>
+          </div>
+          {sheet && (
+            <>
+              <button
+                type="button"
+                className={styles.scrim}
+                aria-label="Close assumptions"
+                onClick={() => setSheet(false)}
+              />
+              <div
+                className={styles.sheet}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="assumptions-title"
+                ref={sheetRef}
+                tabIndex={-1}
+              >
+                {assumptions}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </>
   )
 }

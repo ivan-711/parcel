@@ -93,7 +93,7 @@
   border-radius: 50%;
   background: var(--tile2);
   color: var(--text);
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 600;
   display: inline-grid;
   place-items: center;
@@ -204,16 +204,39 @@
     margin-top: 0;
     margin-left: auto;
   }
+  /* The label leaves the screen but stays in the accessibility tree. */
   .item span {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .item {
-    padding: 8px;
+    position: relative;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
   }
   .main {
     padding: 16px 16px 64px;
   }
   .top .hideMobile {
     display: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .top {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg);
+  }
+  .rail {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--rail);
   }
 }

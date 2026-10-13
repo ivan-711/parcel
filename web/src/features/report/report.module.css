@@ -21,7 +21,7 @@
 .brand {
   margin-left: auto;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 0.9375rem;
   letter-spacing: -0.02em;
 }
 .verdict {
@@ -79,14 +79,14 @@
   color: var(--risk);
 }
 .stat span {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--sub);
 }
 .section {
   margin-top: 22px;
 }
 .section h2 {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -101,12 +101,12 @@
   gap: 12px;
   padding: 7px 0;
   border-top: 1px solid var(--hair);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .assumptions .row small {
   display: block;
   color: var(--mute);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .assumptions .row b {
   font-weight: 500;
@@ -115,7 +115,7 @@
 .years {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 .years th,
@@ -139,7 +139,7 @@
 }
 .foot {
   margin-top: 28px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--mute);
   line-height: 1.5;
 }

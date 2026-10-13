@@ -45,7 +45,7 @@
   line-height: 1.35;
 }
 .value {
-  width: 112px;
+  width: 8.6em;
   text-align: right;
   font-size: var(--fs-ui);
   color: var(--text);
@@ -93,4 +93,13 @@
   font-size: var(--fs-small);
   font-weight: 500;
   color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .value {
+    padding: 8px 9px;
+  }
+  .more {
+    padding: 10px 16px;
+  }
 }

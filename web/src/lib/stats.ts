@@ -61,7 +61,7 @@ function cashToClose(inputs: Inputs, a: Hold): Stat {
     key: 'cash_to_close',
     name: 'Cash to close',
     value: money(a.metrics.cash_to_close),
-    label: 'cash to close',
+    label: 'paid on closing day',
     title: `Where ${money(a.metrics.cash_to_close)} comes from`,
     explain,
     depends,

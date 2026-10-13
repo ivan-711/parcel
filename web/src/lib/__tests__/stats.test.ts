@@ -10,7 +10,7 @@ describe('stats', () => {
     expect(stats.map((s) => [s.value, s.label])).toEqual([
       ['$308', 'a month in your pocket'],
       ['15.5%', 'a year on your money'],
-      ['$61,040', 'cash to close'],
+      ['$61,040', 'paid on closing day'],
       ['1.4x', 'rent covers the loan'],
     ])
   })

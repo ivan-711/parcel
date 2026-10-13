@@ -1,7 +1,7 @@
 // Renders the public pages to static HTML after `vite build`, so crawlers and
 // first paint get real content. The app hydrates over it on load.
 import { spawn } from 'node:child_process'
-import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
 
 const PAGES = ['/', '/methodology']
@@ -40,27 +40,46 @@ try {
   await wait()
   // Only the public pages get prerendered markup. Everything else is served the plain
   // shell, kept aside here before the landing page takes over index.html.
-  await copyFile(`${DIR}/index.html`, `${DIR}/app.html`)
+  // The routes write the title and description themselves, so the shell carries only a
+  // name for the moment before the app loads.
+  await writeFile(
+    `${DIR}/app.html`,
+    (await readFile(`${DIR}/index.html`, 'utf8')).replace(
+      '</head>',
+      '    <title>Parcel</title>\n  </head>',
+    ),
+  )
   const browser = await chromium.launch()
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+  // Every page is rendered before any is written: once index.html holds the landing page,
+  // the preview server would hand it out as the shell for the pages still to come.
+  const rendered = new Map()
   for (const path of PAGES) {
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 900 },
+      colorScheme: 'dark',
+    })
     await page.goto(`http://127.0.0.1:${PORT}${path}`, { waitUntil: 'networkidle' })
     // The trace overlay is measured at runtime, so it stays out of the static markup.
     await page
       .locator('svg[aria-hidden="true"][class*="layer"]')
       .evaluateAll((els) => els.forEach((el) => el.remove()))
     // Preload links the app adds at runtime carry the preview server's origin.
+    // The appearance is decided on the visitor's device before first paint.
     const html =
       '<!doctype html>' +
       (await page.content())
         .replace(/^<!DOCTYPE html>/i, '')
+        .replace(/<html([^>]*) data-theme="[^"]*"/, '<html$1')
         .replaceAll(`http://127.0.0.1:${PORT}`, '')
-    const out = path === '/' ? `${DIR}/index.html` : `${DIR}${path}/index.html`
-    await mkdir(out.slice(0, out.lastIndexOf('/')), { recursive: true })
-    await writeFile(out, html)
-    console.log(`prerendered ${path} -> ${out}`)
+    rendered.set(path === '/' ? `${DIR}/index.html` : `${DIR}${path}/index.html`, html)
+    await page.close()
   }
   await browser.close()
+  for (const [out, html] of rendered) {
+    await mkdir(out.slice(0, out.lastIndexOf('/')), { recursive: true })
+    await writeFile(out, html)
+    console.log(`prerendered ${out}`)
+  }
 } finally {
   server.kill()
 }

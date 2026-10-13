@@ -48,7 +48,7 @@ test('a rental opens with a verdict and stats that explain themselves', async ({
 
   await expect(page.getByText('Yes, it works')).toBeVisible()
   const tiles = page.getByRole('button', {
-    name: /a year on your money|a month|rent covers the loan|cash to close/,
+    name: /a year on your money|a month|rent covers the loan|paid on closing day/,
   })
   await expect(tiles.first()).toBeVisible()
   expect(await tiles.count()).toBeGreaterThanOrEqual(3)
