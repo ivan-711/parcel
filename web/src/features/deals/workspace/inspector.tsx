@@ -85,8 +85,13 @@ function Row({
         inputMode="decimal"
         value={draft ?? show(field.kind, value)}
         onFocus={(e) => {
+          const input = e.currentTarget
           setDraft(raw(field.kind, value))
-          requestAnimationFrame(() => e.target.select())
+          // The raw value lands on the next render. Chromium's select() also focuses, so
+          // skip it when focus has already moved on.
+          requestAnimationFrame(() => {
+            if (document.activeElement === input) input.select()
+          })
         }}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}

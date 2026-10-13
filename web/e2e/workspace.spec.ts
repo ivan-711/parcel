@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
 import { signIn } from './account'
+import { setInput as edit } from './inputs'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -29,10 +30,7 @@ async function startDeal(page: Page, search: string, strategy: RegExp, name: str
 }
 
 async function setInput(page: Page, id: string, value: string) {
-  const field = page.locator(`#${id}-input`)
-  await field.click()
-  await field.fill(value)
-  await field.press('Enter')
+  await edit(page.locator(`#${id}-input`), value)
 }
 
 test.beforeEach(async ({ page }) => {

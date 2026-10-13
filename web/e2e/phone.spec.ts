@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { setInput } from './inputs'
+
 test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 
 test('on a phone the rail still names its links and the assumptions open in a sheet', async ({
@@ -24,14 +26,24 @@ test('on a phone the rail still names its links and the assumptions open in a sh
   await page.getByRole('button', { name: /^Assumptions/ }).click()
   const sheet = page.getByRole('dialog', { name: 'Assumptions' })
   await expect(sheet).toBeVisible()
+  // Which element in the sheet has focus, or -1 when focus has left it. Waiting for
+  // the number to change after each press keeps the loop in step with the page.
+  const focused = () =>
+    page.evaluate(() => {
+      const dialog = document.querySelector('dialog[open]')
+      const active = document.activeElement
+      return dialog && active && dialog.contains(active)
+        ? [...dialog.querySelectorAll('*')].indexOf(active)
+        : -1
+    })
+  let last = await focused()
   for (let i = 0; i < 40; i++) {
     await page.keyboard.press(i % 7 === 6 ? 'Shift+Tab' : 'Tab')
-    await expect(sheet.locator(':focus')).toHaveCount(1)
+    await expect.poll(focused).not.toBe(last)
+    last = await focused()
+    expect(last, `press ${i}`).toBeGreaterThanOrEqual(0)
   }
-  const rent = sheet.locator('#in-operations-monthly_rent-input')
-  await rent.click()
-  await rent.fill('2800')
-  await rent.press('Enter')
+  await setInput(sheet.locator('#in-operations-monthly_rent-input'), '2800')
   await expect(page.getByText('$658 a month')).toBeVisible()
   await expect(page.getByText('$308 a month')).toHaveCount(0)
 

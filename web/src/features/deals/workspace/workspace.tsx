@@ -95,10 +95,34 @@ export function Workspace({ dealId }: { dealId: string }) {
       if (e.target === dialog) setSheet(false)
     }
     dialog.addEventListener('click', onClick)
+    // Chromium lets Tab leave a modal dialog for the browser chrome. Wrap it so the
+    // keyboard stays in the sheet.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const tabbable = [
+        ...dialog.querySelectorAll<HTMLElement>(
+          'a[href], button, input, select, textarea, [tabindex]',
+        ),
+      ].filter(
+        (el) => el.tabIndex >= 0 && !el.hasAttribute('disabled') && el.getClientRects().length > 0,
+      )
+      const first = tabbable.at(0)
+      const last = tabbable.at(-1)
+      if (!first || !last) return
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    dialog.addEventListener('keydown', onKey)
     const { overflow } = document.body.style
     document.body.style.overflow = 'hidden'
     return () => {
       dialog.removeEventListener('click', onClick)
+      dialog.removeEventListener('keydown', onKey)
       document.body.style.overflow = overflow
       if (dialog.open) dialog.close()
       opener?.focus()

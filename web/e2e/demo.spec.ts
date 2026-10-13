@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
+import { setInput } from './inputs'
+
 async function accessible(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
   expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([])
@@ -33,10 +35,7 @@ test('the demo opens without an account and the workspace explains itself', asyn
   await expect(page.getByRole('heading', { name: 'Where 15.5% a year comes from' })).toBeVisible()
   await expect(page.getByText('You put in $61,040')).toBeVisible()
 
-  const rent = page.locator('#in-operations-monthly_rent-input')
-  await rent.click()
-  await rent.fill('2800')
-  await rent.press('Enter')
+  await setInput(page.locator('#in-operations-monthly_rent-input'), '2800')
   await expect(page.getByText('$658 a month')).toBeVisible()
   await expect(page.getByText('22% a year', { exact: true })).toBeVisible()
 
