@@ -1,4 +1,5 @@
 import json
+import secrets
 from collections.abc import Iterator
 
 import httpx
@@ -105,6 +106,29 @@ def test_sentry_events_lose_the_share_token() -> None:
     assert TOKEN not in json.dumps(cleaned)
     assert cleaned["request"]["url"] == "https://api.parceldesk.io/v1/shared/{token}?v=1"
     assert cleaned["request"]["headers"] == {"Host": "api.parceldesk.io"}
+
+
+def test_a_share_token_is_scrubbed_wherever_it_turns_up() -> None:
+    token = secrets.token_urlsafe(32)
+    event = {
+        "exception": {
+            "values": [
+                {
+                    "value": (
+                        "(asyncpg.exceptions.ConnectionDoesNotExistError) connection was closed\n"
+                        "[SQL: SELECT deals.id FROM deals WHERE deals.share_token = $1::VARCHAR]\n"
+                        f"[parameters: ('{token}',)]"
+                    )
+                }
+            ]
+        },
+        "breadcrumbs": {"values": [{"message": f"share token {token} looked up"}]},
+    }
+
+    cleaned = scrub_event(event, {})  # type: ignore[arg-type]
+
+    assert token not in json.dumps(cleaned)
+    assert "[parameters: ('{token}',)]" in cleaned["exception"]["values"][0]["value"]
 
 
 def test_sentry_is_started_with_the_scrubber(monkeypatch: pytest.MonkeyPatch) -> None:
