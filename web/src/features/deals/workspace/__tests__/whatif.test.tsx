@@ -50,3 +50,34 @@ describe('Monte Carlo panel', () => {
     expect(screen.queryByText(/needs Pro/)).toBeNull()
   })
 })
+
+describe('What would it take', () => {
+  afterEach(() => {
+    cleanup()
+    post.mockReset()
+  })
+
+  it('labels the answer with the input it solved for, whatever the menu says now', async () => {
+    post.mockImplementation((path) =>
+      path.endsWith('/solve')
+        ? Promise.resolve({ data: { value: 180_000 }, response: { status: 200 } })
+        : Promise.resolve({
+            error: { code: 'internal', title: 'No', status: 500 },
+            response: { status: 500 },
+          }),
+    )
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <WhatIf inputs={duplex as HoldingInputs} />
+      </QueryClientProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Work it out' }))
+    expect(await screen.findByText(/Price would need to be/)).toBeTruthy()
+    fireEvent.change(screen.getByLabelText('Which input'), {
+      target: { value: 'operations.monthly_rent' },
+    })
+    expect(screen.getByText(/Price would need to be/)).toBeTruthy()
+    expect(screen.queryByText(/Rent would need to be/)).toBeNull()
+  })
+})

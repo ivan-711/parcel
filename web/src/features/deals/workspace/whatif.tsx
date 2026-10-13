@@ -68,14 +68,21 @@ function Solve({ inputs }: { inputs: HoldingInputs }) {
   const [target, setTarget] = useState('12')
   const spec = METRICS.find((m) => m.value === metric) ?? IRR
   const solve = useMutation({
-    mutationFn: async () =>
+    mutationFn: async (ask: { field: SolveField; metric: MetricSpec; target: string }) =>
       unwrap(
         await api.POST('/v1/analyze/solve', {
-          body: { inputs, field, metric, target: spec.parse(target) },
+          body: {
+            inputs,
+            field: ask.field,
+            metric: ask.metric.value,
+            target: ask.metric.parse(ask.target),
+          },
         }),
       ),
   })
-  const chosen = fields.find((f) => f.path === field) ?? fields[0]
+  // The answer is labelled with the input it was solved for, not whatever the menu says now.
+  const asked = solve.variables?.field
+  const chosen = fields.find((f) => f.path === asked)
   return (
     <Card className={styles.wide}>
       <CardTitle sub="Work backwards from the return you want.">What would it take?</CardTitle>
@@ -83,7 +90,7 @@ function Solve({ inputs }: { inputs: HoldingInputs }) {
         className={styles.solve}
         onSubmit={(e) => {
           e.preventDefault()
-          solve.mutate()
+          solve.mutate({ field, metric: spec, target })
         }}
       >
         <span>To get</span>
