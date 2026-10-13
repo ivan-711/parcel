@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useId, useState } from 'react'
 
@@ -177,6 +177,7 @@ function entered(inputs: Draft, field: Field): number | null {
 
 export function NewDeal() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [address, setAddress] = useState<string | null>(null)
   const [strategy, setStrategy] = useState<Strategy>('buy_and_hold')
   const [inputs, setInputs] = useState<Draft>(() => blank('buy_and_hold'))
@@ -275,7 +276,10 @@ export function NewDeal() {
         }),
       )
     },
-    onSuccess: (deal) => void navigate({ to: '/deals/$dealId', params: { dealId: deal.id } }),
+    onSuccess: (deal) => {
+      void queryClient.invalidateQueries({ queryKey: ['deals'] })
+      void navigate({ to: '/deals/$dealId', params: { dealId: deal.id } })
+    },
   })
 
   const lookupError =

@@ -6,6 +6,7 @@ import { api, unwrap } from '../../../lib/api/client'
 import {
   analysisQuery,
   dealQuery,
+  dealsQuery,
   ledgerOf,
   type AnyAnalysis,
   type Inputs,
@@ -88,7 +89,14 @@ export function Workspace({ dealId }: { dealId: string }) {
     mutationFn: (body: SaveBody) => patchDeal(dealId, body),
     onSuccess: (_, body) => {
       setSaved(JSON.stringify(body.inputs))
-      void queryClient.invalidateQueries({ queryKey: ['deals'] })
+      void queryClient.invalidateQueries({ queryKey: dealsQuery.queryKey, exact: true })
+      void queryClient.invalidateQueries({ queryKey: ['portfolio'] })
+      // Fetched even with nobody watching, since a save sent on the way out lands after
+      // the page is gone and the next visit should open on it.
+      void queryClient.invalidateQueries({
+        queryKey: dealQuery(dealId).queryKey,
+        refetchType: 'all',
+      })
     },
   })
   const { mutate } = save
@@ -97,6 +105,19 @@ export function Workspace({ dealId }: { dealId: string }) {
     const id = setTimeout(() => mutate({ inputs: debounced, provenance }), 700)
     return () => clearTimeout(id)
   }, [debounced, provenance, saved, mutate])
+
+  // The stored deal can change under the page: that save from the last visit can land after
+  // this one opened, or another tab can edit. Take it when nothing here is waiting to go out.
+  const [seen, setSeen] = useState(deal)
+  if (deal !== seen) {
+    setSeen(deal)
+    const stored = JSON.stringify(deal.inputs)
+    if (stored !== saved && JSON.stringify(inputs) === saved) {
+      setInputs(deal.inputs)
+      setProvenance(deal.provenance)
+      setSaved(stored)
+    }
+  }
 
   // Whatever hasn't been sent yet, for the moments the timers above never get to run.
   const waiting = useRef<SaveBody | null>(null)

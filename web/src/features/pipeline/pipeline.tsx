@@ -69,7 +69,11 @@ export function Pipeline() {
     onError: (_error, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(dealsQuery.queryKey, context.previous)
     },
-    onSettled: () => void queryClient.invalidateQueries({ queryKey: ['deals'] }),
+    // A move into or out of Owned changes what the portfolio counts.
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['deals'] })
+      void queryClient.invalidateQueries({ queryKey: ['portfolio'] })
+    },
   })
 
   const drop = (stage: Stage) => (e: DragEvent) => {

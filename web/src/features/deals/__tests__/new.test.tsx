@@ -73,6 +73,7 @@ function mount() {
       <NewDeal />
     </QueryClientProvider>,
   )
+  return client
 }
 
 function skipLookup(strategy: RegExp) {
@@ -136,6 +137,23 @@ describe('NewDeal', () => {
     ).toBe(false)
     submit()
     expect((await created()).inputs.rehab_cost).toBe(0)
+  })
+
+  it('marks the deal list out of date once the deal is made', async () => {
+    const client = mount()
+    client.setQueryData(['deals'], [])
+    skipLookup(/^Flip/)
+    fill({
+      Price: '100000',
+      Repairs: '5000',
+      'Resale price': '150000',
+      'Property tax': '1200',
+      Insurance: '800',
+      'Call it': 'Flip on Oak',
+    })
+    submit()
+    await created()
+    await waitFor(() => expect(client.getQueryState(['deals'])?.isInvalidated).toBe(true))
   })
 
   it('shows the 0 that was entered', () => {

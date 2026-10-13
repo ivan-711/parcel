@@ -10,6 +10,7 @@ import {
   type Inputs,
   type Provenance,
 } from '../../../../lib/api/queries'
+import { setPath } from '../../../../lib/paths'
 import { Workspace } from '../workspace'
 
 vi.mock('@tanstack/react-router', () => ({
@@ -73,11 +74,15 @@ const deal: DealDetail = {
 const ok = () => new Response(null, { status: 200 })
 const { PATCH: patch, GET: get, POST: post } = api
 
-function mount() {
+function newClient() {
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },
   })
   client.setQueryData(dealQuery(DEAL_ID).queryKey, deal)
+  return client
+}
+
+function mount(client = newClient()) {
   return render(
     <QueryClientProvider client={client}>
       <Workspace dealId={DEAL_ID} />
@@ -85,12 +90,49 @@ function mount() {
   )
 }
 
-function editRent(value: string) {
+function rentInput(): HTMLInputElement {
   const input = document.getElementById('in-operations-monthly_rent-input')
   if (!(input instanceof HTMLInputElement)) throw new Error('rent input missing')
+  return input
+}
+
+function editRent(value: string) {
+  const input = rentInput()
   fireEvent.focus(input)
   fireEvent.change(input, { target: { value } })
   fireEvent.blur(input)
+}
+
+const withRent = (rent: number): DealDetail => ({
+  ...deal,
+  inputs: setPath(deal.inputs, 'operations.monthly_rent', rent),
+})
+
+function stubBrowser() {
+  vi.useFakeTimers()
+  window.matchMedia = vi.fn().mockReturnValue({
+    matches: false,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  })
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe = vi.fn()
+      unobserve = vi.fn()
+      disconnect = vi.fn()
+    },
+  )
+  patch.mockResolvedValue({ data: deal, response: ok() })
+  get.mockResolvedValue({ data: deal, response: ok() })
+  post.mockResolvedValue({ data: analysis, response: ok() })
+}
+
+function restoreBrowser() {
+  cleanup()
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 }
 
 // React only renders when act exits, so each timer needs its own act to see the next one set up.
@@ -108,32 +150,8 @@ function sentRent(call: number): number | undefined {
 }
 
 describe('Workspace autosave', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    window.matchMedia = vi.fn().mockReturnValue({
-      matches: false,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    })
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe = vi.fn()
-        unobserve = vi.fn()
-        disconnect = vi.fn()
-      },
-    )
-    patch.mockResolvedValue({ data: deal, response: ok() })
-    get.mockResolvedValue({ data: deal, response: ok() })
-    post.mockResolvedValue({ data: analysis, response: ok() })
-  })
-
-  afterEach(() => {
-    cleanup()
-    vi.useRealTimers()
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
+  beforeEach(stubBrowser)
+  afterEach(restoreBrowser)
 
   it('sends an edit that is still waiting when the page is left', async () => {
     const view = mount()
@@ -196,5 +214,52 @@ describe('Workspace autosave', () => {
     view.unmount()
     await pass(50)
     expect(patch).not.toHaveBeenCalled()
+  })
+})
+
+describe('Workspace and what the server has', () => {
+  beforeEach(stubBrowser)
+  afterEach(restoreBrowser)
+
+  it('fetches the deal again after a save sent on the way out', async () => {
+    get.mockResolvedValue({ data: withRent(2500), response: ok() })
+    const client = newClient()
+    const view = mount(client)
+    editRent('2500')
+    await pass(300)
+    view.unmount()
+    await pass(200)
+    expect(patch).toHaveBeenCalledTimes(1)
+    expect(get).toHaveBeenCalledWith('/v1/deals/{deal_id}', expect.anything())
+    mount(client)
+    expect(rentInput().value).toBe('$2,500/mo')
+    expect(screen.getByText('Saved')).toBeTruthy()
+  })
+
+  it('adopts a change that lands after the page opened', async () => {
+    const client = newClient()
+    mount(client)
+    expect(rentInput().value).toBe('$2,350/mo')
+    act(() => {
+      client.setQueryData(dealQuery(DEAL_ID).queryKey, withRent(2500))
+    })
+    await pass(50)
+    expect(rentInput().value).toBe('$2,500/mo')
+    expect(screen.getByText('Saved')).toBeTruthy()
+    await pass(1100)
+    expect(patch).not.toHaveBeenCalled()
+  })
+
+  it('keeps an edit in progress over a change from the server', async () => {
+    const client = newClient()
+    mount(client)
+    editRent('2600')
+    act(() => {
+      client.setQueryData(dealQuery(DEAL_ID).queryKey, withRent(2500))
+    })
+    await pass(50)
+    expect(rentInput().value).toBe('$2,600/mo')
+    await pass(1100)
+    expect(sentRent(0)).toBe(2600)
   })
 })
