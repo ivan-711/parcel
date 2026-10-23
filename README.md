@@ -120,7 +120,7 @@ Measured on 2026-10-09 on a laptop, API running two workers, 20 virtual users fo
 | List deals with their summaries | 12 ms | 25 ms |
 | Sensitivity (tornado and grid) | 24 ms | 54 ms |
 
-192 requests a second with no failures. Before the analysis cache and the second worker (PR #5), the same load test measured a p95 of 166 ms for recalculating a deal and 252 ms for the deal list. Two things to know when reading these: the script varies rent across about 400 values, so after warm-up most recalculations are cache hits, and a single uncontended request took 5.6 ms end to end. Measured from Wisconsin against production on 2026-10-23, the same call took about 270 to 430 ms, most of it network: the empty health check alone took about 200 ms.
+192 requests a second with no failures. Before the analysis cache and the second worker (PR #5), the same load test measured a p95 of 166 ms for recalculating a deal and 252 ms for the deal list. Two things to know when reading these: the script requests the monthly ledger, whose cache holds only 8 entries, and varies rent across about 400 values, so most of those calls were computed rather than cached; and a single uncontended request took 5.6 ms end to end. Measured from Wisconsin against production on 2026-10-23, the same call took about 270 to 430 ms, most of it network: the empty health check alone took about 200 ms.
 
 The web app's main bundle is about 95 KB gzipped; the public pages are prerendered.
 
