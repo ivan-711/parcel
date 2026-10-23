@@ -106,7 +106,7 @@ cd web && pnpm e2e  # Playwright through the demo, with axe accessibility checks
 k6 run api/loadtest/analyze.js   # the workspace's paths under load
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) runs four jobs on every push to `main` and every pull request: `api` (ruff, mypy strict, pytest against Postgres 17 with the 95% floor), `web` (ESLint, tsc, Vitest, a production build), `e2e` (Playwright against a local API) and `image` (the Docker build). As of October 2026 the suite is 313 pytest tests at 97.5% line and branch coverage, 160 Vitest tests in 24 files, and 25 Playwright tests, five of which run axe accessibility scans. The signed-in Playwright specs need a Clerk development instance; CI reads its keys and test accounts from repository secrets.
+GitHub Actions (`.github/workflows/ci.yml`) runs four jobs on every push to `main` and every pull request: `api` (ruff, mypy strict, pytest against Postgres 17 with the 95% floor), `web` (ESLint, tsc, Vitest, a production build), `e2e` (Playwright against a local API) and `image` (the Docker build). As of October 2026 the suite is 313 pytest tests at 97.5% line and branch coverage, 160 Vitest tests in 24 files, and 25 Playwright end-to-end tests plus the Clerk sign-in setup step, which Playwright's summary counts as a 26th. Five of the Playwright spec files run axe accessibility scans. The signed-in specs need a Clerk development instance; CI reads its keys and test accounts from repository secrets.
 
 The engine's tests check every formula on the [methodology page](web/src/features/methodology/methodology.tsx) against worked examples, and property tests confirm that solving backwards then forwards lands where it started. An offline set of twenty deals exercises the memo check.
 
