@@ -1,14 +1,36 @@
 from collections.abc import AsyncIterator, Sequence
 from typing import Literal, Protocol
 
-from anthropic import APIError, AsyncAnthropic, DefaultAsyncHttpxClient
+from anthropic import (
+    APIError,
+    AsyncAnthropic,
+    AuthenticationError,
+    BadRequestError,
+    DefaultAsyncHttpxClient,
+    NotFoundError,
+    PermissionDeniedError,
+    UnprocessableEntityError,
+)
 from anthropic.types import MessageParam
 
 type Turn = tuple[Literal["user", "assistant"], str]
 
+LASTING = (
+    AuthenticationError,
+    PermissionDeniedError,
+    NotFoundError,
+    BadRequestError,
+    UnprocessableEntityError,
+)
+"""Refusals that repeat on every call until someone changes the setup: a key that
+was rejected, an account out of credit, a model name the API doesn't know.
+Rate limits, overloads, server errors and dropped connections pass with time."""
+
 
 class WriterError(Exception):
-    pass
+    def __init__(self, message: str, *, retryable: bool = True) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class Writer(Protocol):
@@ -42,4 +64,4 @@ class ClaudeWriter:
                 async for text in response.text_stream:
                     yield text
         except APIError as e:
-            raise WriterError(str(e)) from e
+            raise WriterError(str(e), retryable=not isinstance(e, LASTING)) from e

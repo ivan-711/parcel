@@ -21,6 +21,8 @@ from parcel.settings import get_settings
 log = structlog.get_logger()
 router = APIRouter(prefix="/v1/deals/{deal_id}/memo", tags=["memo"])
 
+UNAVAILABLE = "Memos aren't available right now."
+
 
 @router.get("")
 async def get_memo(deal_id: uuid.UUID, session: Tenant) -> MemoOut:
@@ -55,7 +57,7 @@ async def start(deal_id: uuid.UUID, request: Request, principal: CurrentPrincipa
         if existing is not None and existing.scenario_hash == scenario:
             return replace(job, cached=memos.to_out(existing, scenario))
         if request.app.state.writer is None:
-            raise Problem(503, "memo_unavailable", "Memos aren't available right now.")
+            raise Problem(503, "memo_unavailable", UNAVAILABLE)
         pro = principal.plan is Plan.pro
         limit = settings.memos_per_day_pro if pro else settings.memos_per_day_free
         today = date.today()
@@ -108,8 +110,14 @@ async def write_memo(
                     log.info("memo_written", deal=str(job.deal_id), grounded=saved.grounded)
                     yield ServerSentEvent(event="done", data=memos.to_out(saved, job.scenario))
     except WriterError as e:
-        log.warning("memo_failed", deal=str(job.deal_id), error=str(e))
-        failure = MemoProblem(
-            code="memo_failed", title="The memo couldn't be written. Try again in a minute."
-        )
+        if e.retryable:
+            log.warning("memo_failed", deal=str(job.deal_id), retryable=True, error=str(e))
+            failure = MemoProblem(
+                code="memo_failed", title="The memo couldn't be written. Try again in a minute."
+            )
+        else:
+            # A rejected key, no credit or an unknown model: asking again won't help,
+            # so say memos are off rather than inviting a retry.
+            log.error("memo_failed", deal=str(job.deal_id), retryable=False, error=str(e))
+            failure = MemoProblem(code="memo_unavailable", title=UNAVAILABLE)
         yield ServerSentEvent(event="error", data=failure)

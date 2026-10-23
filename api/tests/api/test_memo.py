@@ -5,6 +5,9 @@ import httpx
 import pytest
 from fastapi import FastAPI
 
+from parcel.adapters.anthropic import WriterError
+from parcel.http.routes.memo import UNAVAILABLE
+
 from ..writer import FakeWriter
 from .conftest import Login, OverrideSettings, deal_body
 
@@ -135,7 +138,7 @@ async def test_the_shared_daily_budget(
     assert writer.calls == []
 
 
-async def test_a_model_outage_ends_the_stream_cleanly(
+async def test_a_model_failure_ends_the_stream_cleanly(
     client: httpx.AsyncClient, me: dict[str, str], writer: FakeWriter
 ) -> None:
     deal_id = await _deal(client, me)
@@ -143,6 +146,13 @@ async def test_a_model_outage_ends_the_stream_cleanly(
     events = _events(await _write(client, me, deal_id))
     assert [kind for kind, _ in events] == ["error"]
     assert events[0][1]["code"] == "memo_failed"
+    assert (await client.get(f"/v1/deals/{deal_id}/memo", headers=me)).status_code == 404
+
+    # A rejected key won't pass with time, so the reader is told memos are off
+    # rather than invited to try again in a minute.
+    writer.fail = WriterError("invalid x-api-key", retryable=False)
+    events = _events(await _write(client, me, deal_id))
+    assert events == [("error", {"code": "memo_unavailable", "title": UNAVAILABLE})]
     assert (await client.get(f"/v1/deals/{deal_id}/memo", headers=me)).status_code == 404
 
 

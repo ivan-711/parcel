@@ -8,7 +8,7 @@ The old frontend had a sensitivity matrix with its own formulas, including a str
 
 ## Decision
 
-The web app computes nothing financial. Every number on screen comes from the API, including the live recalculation while you type, which is a debounced call to the analyze endpoint that answers in well under a millisecond of engine time. The client is generated from the API's OpenAPI schema, so a renamed field fails the typecheck instead of showing a blank. What the browser does own is words: turning the engine's figures into the plain sentences and explanations the app leads with, and that module has unit tests of its own.
+The web app computes nothing financial. Every number on screen comes from the API, including the live recalculation after you change an input (a field takes its new value when you leave it or press Enter), which is a debounced call to the analyze endpoint that answers in well under a millisecond of engine time. The client is generated from the API's OpenAPI schema, so a renamed field fails the typecheck instead of showing a blank. What the browser does own is words: turning the engine's figures into the plain sentences and explanations the app leads with, and that module has unit tests of its own.
 
 ## Consequences
 
