@@ -61,9 +61,32 @@ async def test_text_arrives_piece_by_piece() -> None:
 
 
 async def test_an_api_error_becomes_a_writer_error() -> None:
-    def handler(_: httpx2.Request) -> httpx2.Response:
+    def refused(_: httpx2.Request) -> httpx2.Response:
         error = {"type": "invalid_request_error", "message": "bad model"}
         return httpx2.Response(400, json={"type": "error", "error": error})
 
-    with pytest.raises(WriterError):
-        [t async for t in _writer(handler).stream("s", [("user", "hi")])]
+    with pytest.raises(WriterError) as refusal:
+        [t async for t in _writer(refused).stream("s", [("user", "hi")])]
+    assert not refusal.value.retryable
+
+    def overloaded(_: httpx2.Request) -> httpx2.Response:
+        error = {"type": "overloaded_error", "message": "Overloaded"}
+        # The header turns off the SDK's own retries, so the test doesn't sit through them.
+        headers = {"x-should-retry": "false"}
+        return httpx2.Response(529, json={"type": "error", "error": error}, headers=headers)
+
+    with pytest.raises(WriterError) as outage:
+        [t async for t in _writer(overloaded).stream("s", [("user", "hi")])]
+    assert outage.value.retryable
+
+    # An error partway through a stream arrives on a 200 response, so it is judged
+    # by its kind of exception, not its status code.
+    overload = {"type": "error", "error": {"type": "overloaded_error", "message": "Overloaded"}}
+    cut_off = STREAM.split(b"event: content_block_stop")[0] + _sse(overload)
+
+    def midway(_: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=cut_off, headers={"content-type": "text/event-stream"})
+
+    with pytest.raises(WriterError) as dropped:
+        [t async for t in _writer(midway).stream("s", [("user", "hi")])]
+    assert dropped.value.retryable

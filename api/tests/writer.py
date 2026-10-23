@@ -8,7 +8,7 @@ class FakeWriter:
 
     model = "fake-writer"
 
-    def __init__(self, *drafts: str, fail: bool = False) -> None:
+    def __init__(self, *drafts: str, fail: bool | WriterError = False) -> None:
         self.drafts = list(drafts)
         self.fail = fail
         self.calls: list[list[Turn]] = []
@@ -17,6 +17,8 @@ class FakeWriter:
     async def stream(self, system: str, turns: Sequence[Turn]) -> AsyncIterator[str]:
         self.system = system
         self.calls.append(list(turns))
+        if isinstance(self.fail, WriterError):
+            raise self.fail
         if self.fail:
             raise WriterError("overloaded")
         draft = self.drafts.pop(0)
